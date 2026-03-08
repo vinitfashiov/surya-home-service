@@ -95,7 +95,9 @@ const App = () => (
                     <Route path="/provider-signup" element={<ProviderSignupPage />} />
                     <Route path="/forgot-password" element={<ForgotPasswordPage />} />
                     <Route path="/reset-password" element={<ResetPasswordPage />} />
+                    <Route path="/profile" element={<ProfilePage />} />
                     <Route path="/provider" element={<ProviderDashboard />} />
+                    <Route path="/provider/analytics" element={<ProviderAnalytics />} />
                     <Route path="/provider/bookings" element={<ProviderBookings />} />
                     <Route path="/provider/servicemen" element={<ProviderServicemen />} />
                     <Route path="/provider/profile" element={<ProviderProfile />} />
