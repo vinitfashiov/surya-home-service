@@ -82,6 +82,4 @@ function ProviderBookingsList({ bookings, userId, onStatus }: { bookings: any[];
       )}
     </>
   );
-    </div>
-  );
 }
