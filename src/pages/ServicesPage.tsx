@@ -293,6 +293,9 @@ export default function ServicesPage() {
                   <Badge variant="secondary" className="absolute top-2 left-2 text-xs">
                     {service.category?.name}
                   </Badge>
+                  <div className="absolute top-2 right-2 bg-card/90 rounded-full">
+                    <FavoriteButton serviceId={service.id} size="sm" />
+                  </div>
                 </div>
                 <div className="p-5">
                   <div className="flex justify-between items-start">
