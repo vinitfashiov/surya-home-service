@@ -10,6 +10,7 @@ import HomePage from "@/pages/HomePage";
 import ServicesPage from "@/pages/ServicesPage";
 import BookingPage from "@/pages/BookingPage";
 import MyBookingsPage from "@/pages/MyBookingsPage";
+import MyAddressesPage from "@/pages/MyAddressesPage";
 import AdminLayout from "@/components/admin/AdminLayout";
 import AdminDashboard from "@/pages/admin/AdminDashboard";
 import AdminBookings from "@/pages/admin/AdminBookings";
@@ -18,6 +19,7 @@ import AdminProviders from "@/pages/admin/AdminProviders";
 import AdminEmployees from "@/pages/admin/AdminEmployees";
 import AdminServices from "@/pages/admin/AdminServices";
 import AdminSettings from "@/pages/admin/AdminSettings";
+import AdminCities from "@/pages/admin/AdminCities";
 import ProviderDashboard from "@/pages/provider/ProviderDashboard";
 import ProviderBookings from "@/pages/provider/ProviderBookings";
 import ProviderServicemen from "@/pages/provider/ProviderServicemen";
@@ -38,7 +40,7 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <Routes>
-            {/* Admin routes — protected, sidebar layout, no Navbar */}
+            {/* Admin routes */}
             <Route
               path="/admin"
               element={
@@ -53,10 +55,11 @@ const App = () => (
               <Route path="providers" element={<AdminProviders />} />
               <Route path="employees" element={<AdminEmployees />} />
               <Route path="services" element={<AdminServices />} />
+              <Route path="cities" element={<AdminCities />} />
               <Route path="settings" element={<AdminSettings />} />
             </Route>
 
-            {/* Public / customer routes — use Navbar */}
+            {/* Public / customer routes */}
             <Route
               path="*"
               element={
@@ -67,6 +70,7 @@ const App = () => (
                     <Route path="/services" element={<ServicesPage />} />
                     <Route path="/book/:serviceId" element={<BookingPage />} />
                     <Route path="/my-bookings" element={<MyBookingsPage />} />
+                    <Route path="/my-addresses" element={<MyAddressesPage />} />
                     <Route path="/login" element={<LoginPage />} />
                     <Route path="/signup" element={<SignupPage />} />
                     <Route path="/forgot-password" element={<ForgotPasswordPage />} />

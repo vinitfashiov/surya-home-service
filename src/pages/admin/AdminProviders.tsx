@@ -1,9 +1,10 @@
 import { useProviders } from '@/hooks/useSupabaseData';
 import { useUpdateProvider, useDeleteProvider } from '@/hooks/useAdminMutations';
+import { useCreateNotification } from '@/hooks/useNotifications';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Star, Pencil, Trash2, Building2, Search } from 'lucide-react';
+import { Star, Pencil, Trash2, Building2, Search, CheckCircle, XCircle, Shield } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -17,20 +18,52 @@ export default function AdminProviders() {
   const { data: providers = [], isLoading } = useProviders();
   const updateMut = useUpdateProvider();
   const deleteMut = useDeleteProvider();
+  const createNotification = useCreateNotification();
 
   const [editProvider, setEditProvider] = useState<any>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [form, setForm] = useState({ company_name: '', owner_name: '', email: '', phone: '', address: '', status: 'pending' });
   const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
 
-  const filtered = providers.filter((p: any) =>
-    p.company_name.toLowerCase().includes(search.toLowerCase()) ||
-    p.owner_name.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = providers
+    .filter((p: any) => statusFilter === 'all' || p.status === statusFilter)
+    .filter((p: any) =>
+      p.company_name.toLowerCase().includes(search.toLowerCase()) ||
+      p.owner_name.toLowerCase().includes(search.toLowerCase())
+    );
+
+  const pendingCount = providers.filter((p: any) => p.status === 'pending').length;
 
   const openEdit = (p: any) => {
     setEditProvider(p);
     setForm({ company_name: p.company_name, owner_name: p.owner_name, email: p.email, phone: p.phone || '', address: p.address || '', status: p.status });
+  };
+
+  const handleApprove = async (provider: any) => {
+    try {
+      await updateMut.mutateAsync({ id: provider.id, status: 'active' });
+      await createNotification.mutateAsync({
+        user_id: provider.user_id,
+        title: 'Provider Approved!',
+        message: `Your provider account "${provider.company_name}" has been approved. You can now start offering services.`,
+        type: 'status',
+      });
+      toast.success(`${provider.company_name} approved`);
+    } catch (e: any) { toast.error(e.message); }
+  };
+
+  const handleReject = async (provider: any) => {
+    try {
+      await updateMut.mutateAsync({ id: provider.id, status: 'suspended' });
+      await createNotification.mutateAsync({
+        user_id: provider.user_id,
+        title: 'Provider Application Rejected',
+        message: `Your provider account "${provider.company_name}" has been rejected. Please contact support for more information.`,
+        type: 'status',
+      });
+      toast.success(`${provider.company_name} rejected`);
+    } catch (e: any) { toast.error(e.message); }
   };
 
   const handleSave = async () => {
@@ -54,28 +87,45 @@ export default function AdminProviders() {
   const statusColor = (s: string) =>
     s === 'active' ? 'bg-success/10 text-success' :
     s === 'pending' ? 'bg-warning/10 text-warning' :
-    'bg-muted text-muted-foreground';
+    'bg-destructive/10 text-destructive';
 
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-heading font-bold text-foreground">Providers</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">Manage registered service providers</p>
+          <p className="text-sm text-muted-foreground mt-0.5">Manage & approve service providers</p>
         </div>
-        <Badge variant="outline" className="text-sm gap-1.5 py-1.5 px-3">
-          <Building2 className="h-3.5 w-3.5" /> {providers.length} total
-        </Badge>
+        <div className="flex items-center gap-2">
+          {pendingCount > 0 && (
+            <Badge className="bg-warning/10 text-warning border-0 gap-1.5 py-1.5 px-3">
+              <Shield className="h-3.5 w-3.5" /> {pendingCount} pending approval
+            </Badge>
+          )}
+          <Badge variant="outline" className="text-sm gap-1.5 py-1.5 px-3">
+            <Building2 className="h-3.5 w-3.5" /> {providers.length} total
+          </Badge>
+        </div>
       </div>
 
-      <div className="relative max-w-sm">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Search providers..."
-          className="pl-9"
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-        />
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="relative max-w-sm flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input placeholder="Search providers..." className="pl-9" value={search} onChange={e => setSearch(e.target.value)} />
+        </div>
+        <div className="flex gap-2">
+          {['all', 'pending', 'active', 'suspended'].map((s) => (
+            <button
+              key={s}
+              onClick={() => setStatusFilter(s)}
+              className={`px-3 py-1.5 rounded-full text-xs font-medium capitalize transition-colors ${
+                statusFilter === s ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-muted/80'
+              }`}
+            >
+              {s}
+            </button>
+          ))}
+        </div>
       </div>
 
       {isLoading ? (
@@ -118,6 +168,16 @@ export default function AdminProviders() {
                         </td>
                         <td className="px-6 py-3.5">
                           <div className="flex gap-1">
+                            {p.status === 'pending' && (
+                              <>
+                                <Button size="sm" variant="outline" className="h-7 text-xs gap-1 text-success border-success/30 hover:bg-success/10" onClick={() => handleApprove(p)}>
+                                  <CheckCircle className="h-3 w-3" /> Approve
+                                </Button>
+                                <Button size="sm" variant="outline" className="h-7 text-xs gap-1 text-destructive border-destructive/30 hover:bg-destructive/10" onClick={() => handleReject(p)}>
+                                  <XCircle className="h-3 w-3" /> Reject
+                                </Button>
+                              </>
+                            )}
                             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(p)}><Pencil className="h-3.5 w-3.5" /></Button>
                             <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => setDeleteId(p.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
                           </div>

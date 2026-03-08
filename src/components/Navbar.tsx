@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthContext } from '@/contexts/AuthContext';
-import { Menu, X, Bell, User, ChevronDown, LogOut, LogIn } from 'lucide-react';
+import { Menu, X, User, ChevronDown, LogOut, LogIn, MapPin } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
@@ -12,6 +12,7 @@ import {
   DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
+import NotificationBell from '@/components/NotificationBell';
 import { toast } from 'sonner';
 
 const roleLabels: Record<string, string> = {
@@ -48,15 +49,7 @@ export default function Navbar() {
     { to: '/', label: 'Home' },
     { to: '/services', label: 'Services' },
     { to: '/my-bookings', label: 'My Bookings' },
-  ];
-
-  const adminLinks = [
-    { to: '/admin', label: 'Dashboard' },
-    { to: '/admin/bookings', label: 'Bookings' },
-    { to: '/admin/categories', label: 'Categories' },
-    { to: '/admin/providers', label: 'Providers' },
-    { to: '/admin/employees', label: 'Employees' },
-    { to: '/admin/services', label: 'Services' },
+    { to: '/my-addresses', label: 'Addresses' },
   ];
 
   const providerLinks = [
@@ -70,7 +63,7 @@ export default function Navbar() {
   ];
 
   const links = roles.includes('admin') || roles.includes('employee')
-    ? adminLinks
+    ? [{ to: '/admin', label: 'Admin Panel' }, ...customerLinks]
     : roles.includes('provider')
     ? providerLinks
     : roles.includes('serviceman')
@@ -107,9 +100,7 @@ export default function Navbar() {
           <div className="flex items-center gap-2">
             {!loading && user ? (
               <>
-                <Button variant="ghost" size="icon" className="hidden md:flex">
-                  <Bell className="h-4 w-4" />
-                </Button>
+                <NotificationBell userId={user.id} />
 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -141,6 +132,10 @@ export default function Navbar() {
                         <DropdownMenuSeparator />
                       </>
                     )}
+                    <DropdownMenuItem onClick={() => navigate('/my-addresses')} className="cursor-pointer">
+                      <MapPin className="h-4 w-4 mr-2" /> My Addresses
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleSignOut} className="text-destructive cursor-pointer">
                       <LogOut className="h-4 w-4 mr-2" /> Sign out
                     </DropdownMenuItem>

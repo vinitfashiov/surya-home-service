@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 export function useCreateCategory() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (cat: { name: string; description?: string; icon?: string; image_url?: string }) => {
+    mutationFn: async (cat: { name: string; description?: string; icon?: string; image_url?: string; commission_rate?: number }) => {
       const { data, error } = await supabase.from('service_categories').insert(cat).select().single();
       if (error) throw error;
       return data;
@@ -17,7 +17,7 @@ export function useCreateCategory() {
 export function useUpdateCategory() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, ...updates }: { id: string; name?: string; description?: string; icon?: string; is_active?: boolean }) => {
+    mutationFn: async ({ id, ...updates }: { id: string; name?: string; description?: string; icon?: string; is_active?: boolean; commission_rate?: number }) => {
       const { data, error } = await supabase.from('service_categories').update(updates).eq('id', id).select().single();
       if (error) throw error;
       return data;
@@ -101,7 +101,7 @@ export function useDeleteEmployee() {
 export function useCreateService() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (svc: { name: string; description?: string; price: number; duration: number; category_id: string; provider_id: string; image_url?: string }) => {
+    mutationFn: async (svc: { name: string; description?: string; price: number; duration: number; category_id: string; provider_id: string; image_url?: string; city_id?: string }) => {
       const { data, error } = await supabase.from('services').insert(svc).select().single();
       if (error) throw error;
       return data;
@@ -113,7 +113,7 @@ export function useCreateService() {
 export function useUpdateService() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, ...updates }: { id: string; name?: string; description?: string; price?: number; duration?: number; category_id?: string; provider_id?: string; is_active?: boolean; image_url?: string }) => {
+    mutationFn: async ({ id, ...updates }: { id: string; name?: string; description?: string; price?: number; duration?: number; category_id?: string; provider_id?: string; is_active?: boolean; image_url?: string; city_id?: string }) => {
       const { data, error } = await supabase.from('services').update(updates).eq('id', id).select().single();
       if (error) throw error;
       return data;

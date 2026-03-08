@@ -7,10 +7,9 @@ import {
   Wrench,
   Settings,
   LogOut,
-  ChevronLeft,
+  MapPin,
 } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
-import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuthContext } from '@/contexts/AuthContext';
 import {
   Sidebar,
@@ -28,12 +27,14 @@ import {
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 
 const mainNav = [
   { title: 'Dashboard', url: '/admin', icon: LayoutDashboard },
   { title: 'Bookings', url: '/admin/bookings', icon: CalendarDays },
   { title: 'Services', url: '/admin/services', icon: Wrench },
   { title: 'Categories', url: '/admin/categories', icon: FolderTree },
+  { title: 'Cities', url: '/admin/cities', icon: MapPin },
 ];
 
 const managementNav = [
