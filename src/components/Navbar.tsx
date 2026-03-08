@@ -57,6 +57,7 @@ export default function Navbar() {
   const providerLinks = [
     { to: '/provider', label: 'Dashboard' },
     { to: '/provider/bookings', label: 'Bookings' },
+    { to: '/provider/availability', label: 'Availability' },
     { to: '/provider/servicemen', label: 'Servicemen' },
     { to: '/provider/profile', label: 'Profile' },
   ];
