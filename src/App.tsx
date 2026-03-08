@@ -25,6 +25,7 @@ import AdminServices from "@/pages/admin/AdminServices";
 import AdminSettings from "@/pages/admin/AdminSettings";
 import AdminCities from "@/pages/admin/AdminCities";
 import AdminCheckoutFields from "@/pages/admin/AdminCheckoutFields";
+import AdminCoupons from "@/pages/admin/AdminCoupons";
 import ProviderDashboard from "@/pages/provider/ProviderDashboard";
 import ProviderBookings from "@/pages/provider/ProviderBookings";
 import ProviderServicemen from "@/pages/provider/ProviderServicemen";
@@ -64,6 +65,7 @@ const App = () => (
               <Route path="services" element={<AdminServices />} />
               <Route path="cities" element={<AdminCities />} />
               <Route path="checkout-fields" element={<AdminCheckoutFields />} />
+              <Route path="coupons" element={<AdminCoupons />} />
               <Route path="settings" element={<AdminSettings />} />
             </Route>
 
