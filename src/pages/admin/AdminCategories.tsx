@@ -17,7 +17,15 @@ import { toast } from 'sonner';
 const iconOptions = ['Scissors', 'Zap', 'Droplets', 'SprayCan', 'Wrench', 'Paintbrush', 'Bug', 'Hammer'];
 const iconMap: Record<string, React.ElementType> = { Scissors, Zap, Droplets, SprayCan, Wrench, Paintbrush, Bug, Hammer };
 
-const emptyForm = { name: '', description: '', icon: 'Wrench', commission_rate: 20 };
+const categoryTypes = [
+  { value: 'standard', label: 'Standard (Date + Time + Address)' },
+  { value: 'event', label: 'Event (Date + Time + Venue + Guests)' },
+  { value: 'transport', label: 'Transport (Pickup + Drop + Date)' },
+  { value: 'accommodation', label: 'Accommodation (Check-in/out + Rooms)' },
+  { value: 'virtual', label: 'Virtual (Date + Time, No Address)' },
+];
+
+const emptyForm = { name: '', description: '', icon: 'Wrench', commission_rate: 20, category_type: 'standard' };
 
 export default function AdminCategories() {
   const { data: categories = [], isLoading } = useCategories();
