@@ -37,6 +37,7 @@ export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  const cartCount = useCartCount(user?.id);
 
   const primaryRole = roles[0] || 'customer';
 
