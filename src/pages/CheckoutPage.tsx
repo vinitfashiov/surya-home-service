@@ -193,7 +193,9 @@ export default function CheckoutPage() {
 
   const handlePlaceOrder = async () => {
     if (!user || !canCheckout) return;
+    setProcessingPayment(true);
     try {
+      // 1. Create all bookings first
       const bookingIds: string[] = [];
       for (const item of lineItems) {
         for (let q = 0; q < item.quantity; q++) {
@@ -213,7 +215,7 @@ export default function CheckoutPage() {
         }
       }
 
-      // Save custom field values for each booking
+      // 2. Save custom field values
       if (checkoutFields.length > 0 && bookingIds.length > 0) {
         const customFieldRows = bookingIds.flatMap(bookingId =>
           checkoutFields
@@ -229,21 +231,73 @@ export default function CheckoutPage() {
         }
       }
 
+      // 3. Handle payment
+      if (paymentMethod === 'online' && total > 0) {
+        await loadRazorpayScript();
+        const order = await createRazorpayOrder({
+          amount: total,
+          bookingIds,
+          receipt: `rcpt_${bookingIds[0]}`,
+        });
+
+        openRazorpayCheckout({
+          orderId: order.order_id,
+          amount: order.amount,
+          currency: order.currency,
+          keyId: order.key_id,
+          userName: user.user_metadata?.full_name,
+          userEmail: user.email,
+          description: `Payment for ${lineItems.map(i => i.name).join(', ')}`,
+          onSuccess: async (response) => {
+            try {
+              const result = await verifyRazorpayPayment({
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+                booking_ids: bookingIds,
+              });
+              if (result.verified) {
+                await createNotification.mutateAsync({
+                  user_id: user.id,
+                  title: 'Payment Successful',
+                  message: `Payment of ₹${total} received for ${lineItems.map(i => i.name).join(', ')}.`,
+                  type: 'payment',
+                });
+                if (!isQuickBook) await clearCart.mutateAsync(user.id);
+                sessionStorage.removeItem('quickBook');
+                setConfirmed(true);
+                toast.success('Payment successful! Booking confirmed.');
+              } else {
+                toast.error('Payment verification failed. Contact support.');
+              }
+            } catch (err: any) {
+              toast.error(err.message || 'Payment verification error');
+            }
+            setProcessingPayment(false);
+          },
+          onFailure: (error) => {
+            toast.error(error?.description || 'Payment failed or cancelled');
+            setProcessingPayment(false);
+          },
+        });
+        return; // Don't set processingPayment=false here, callbacks handle it
+      }
+
+      // COD flow
       await createNotification.mutateAsync({
         user_id: user.id,
         title: 'Booking Confirmed',
-        message: `Your booking for ${lineItems.map(i => i.name).join(', ')} on ${date} at ${time} has been placed.`,
+        message: `Your booking for ${lineItems.map(i => i.name).join(', ')} on ${date} at ${time} has been placed. Pay after service.`,
         type: 'booking',
       });
-      if (!isQuickBook) {
-        await clearCart.mutateAsync(user.id);
-      }
+      if (!isQuickBook) await clearCart.mutateAsync(user.id);
       sessionStorage.removeItem('quickBook');
       setConfirmed(true);
       toast.success('Booking placed successfully!');
     } catch (err: any) {
       toast.error(err.message || 'Failed to place booking');
     }
+    setProcessingPayment(false);
   };
 
   if (!user) return null;
