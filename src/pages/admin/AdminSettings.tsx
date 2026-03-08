@@ -33,7 +33,7 @@ function useUpdateSettings() {
   return useMutation({
     mutationFn: async (settings: Record<string, string>) => {
       const updates = Object.entries(settings).map(([key, value]) =>
-        supabase.from('platform_settings').update({ value, updated_at: new Date().toISOString() }).eq('key', key)
+        (supabase as any).from('platform_settings').update({ value, updated_at: new Date().toISOString() }).eq('key', key)
       );
       const results = await Promise.all(updates);
       const err = results.find(r => r.error);
