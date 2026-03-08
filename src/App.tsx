@@ -23,6 +23,7 @@ import AdminCities from "@/pages/admin/AdminCities";
 import ProviderDashboard from "@/pages/provider/ProviderDashboard";
 import ProviderBookings from "@/pages/provider/ProviderBookings";
 import ProviderServicemen from "@/pages/provider/ProviderServicemen";
+import ProviderProfile from "@/pages/provider/ProviderProfile";
 import ServicemanDashboard from "@/pages/serviceman/ServicemanDashboard";
 import LoginPage from "@/pages/auth/LoginPage";
 import SignupPage from "@/pages/auth/SignupPage";
