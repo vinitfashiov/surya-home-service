@@ -14,6 +14,7 @@ import AdminBookings from "@/pages/admin/AdminBookings";
 import AdminCategories from "@/pages/admin/AdminCategories";
 import AdminProviders from "@/pages/admin/AdminProviders";
 import AdminEmployees from "@/pages/admin/AdminEmployees";
+import AdminServices from "@/pages/admin/AdminServices";
 import ProviderDashboard from "@/pages/provider/ProviderDashboard";
 import ProviderBookings from "@/pages/provider/ProviderBookings";
 import ProviderServicemen from "@/pages/provider/ProviderServicemen";
