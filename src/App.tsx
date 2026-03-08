@@ -9,6 +9,7 @@ import HomePage from "@/pages/HomePage";
 import ServicesPage from "@/pages/ServicesPage";
 import BookingPage from "@/pages/BookingPage";
 import MyBookingsPage from "@/pages/MyBookingsPage";
+import AdminLayout from "@/components/admin/AdminLayout";
 import AdminDashboard from "@/pages/admin/AdminDashboard";
 import AdminBookings from "@/pages/admin/AdminBookings";
 import AdminCategories from "@/pages/admin/AdminCategories";
@@ -34,27 +35,41 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <Navbar />
           <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/services" element={<ServicesPage />} />
-            <Route path="/book/:serviceId" element={<BookingPage />} />
-            <Route path="/my-bookings" element={<MyBookingsPage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/signup" element={<SignupPage />} />
-            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-            <Route path="/reset-password" element={<ResetPasswordPage />} />
-            <Route path="/admin" element={<AdminDashboard />} />
-            <Route path="/admin/bookings" element={<AdminBookings />} />
-            <Route path="/admin/categories" element={<AdminCategories />} />
-            <Route path="/admin/providers" element={<AdminProviders />} />
-            <Route path="/admin/employees" element={<AdminEmployees />} />
-            <Route path="/admin/services" element={<AdminServices />} />
-            <Route path="/provider" element={<ProviderDashboard />} />
-            <Route path="/provider/bookings" element={<ProviderBookings />} />
-            <Route path="/provider/servicemen" element={<ProviderServicemen />} />
-            <Route path="/serviceman" element={<ServicemanDashboard />} />
-            <Route path="*" element={<NotFound />} />
+            {/* Admin routes — no Navbar, uses sidebar layout */}
+            <Route path="/admin" element={<AdminLayout />}>
+              <Route index element={<AdminDashboard />} />
+              <Route path="bookings" element={<AdminBookings />} />
+              <Route path="categories" element={<AdminCategories />} />
+              <Route path="providers" element={<AdminProviders />} />
+              <Route path="employees" element={<AdminEmployees />} />
+              <Route path="services" element={<AdminServices />} />
+            </Route>
+
+            {/* Public / customer routes — use Navbar */}
+            <Route
+              path="*"
+              element={
+                <>
+                  <Navbar />
+                  <Routes>
+                    <Route path="/" element={<HomePage />} />
+                    <Route path="/services" element={<ServicesPage />} />
+                    <Route path="/book/:serviceId" element={<BookingPage />} />
+                    <Route path="/my-bookings" element={<MyBookingsPage />} />
+                    <Route path="/login" element={<LoginPage />} />
+                    <Route path="/signup" element={<SignupPage />} />
+                    <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                    <Route path="/reset-password" element={<ResetPasswordPage />} />
+                    <Route path="/provider" element={<ProviderDashboard />} />
+                    <Route path="/provider/bookings" element={<ProviderBookings />} />
+                    <Route path="/provider/servicemen" element={<ProviderServicemen />} />
+                    <Route path="/serviceman" element={<ServicemanDashboard />} />
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </>
+              }
+            />
           </Routes>
         </AuthProvider>
       </BrowserRouter>

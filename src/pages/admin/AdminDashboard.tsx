@@ -1,61 +1,146 @@
-import { useAllBookings, useProviders, useCategories } from '@/hooks/useSupabaseData';
+import { useAllBookings, useProviders, useCategories, useServices } from '@/hooks/useSupabaseData';
 import StatCard from '@/components/StatCard';
 import StatusBadge from '@/components/StatusBadge';
-import { CalendarDays, Building2, Package, DollarSign } from 'lucide-react';
+import { CalendarDays, Building2, Package, DollarSign, Wrench, Users, TrendingUp, ArrowUpRight } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Link } from 'react-router-dom';
 
 export default function AdminDashboard() {
   const { data: bookings = [], isLoading } = useAllBookings();
   const { data: providers = [] } = useProviders();
   const { data: categories = [] } = useCategories();
+  const { data: services = [] } = useServices();
   const totalRevenue = bookings.filter((b: any) => b.payment_status === 'paid').reduce((s: number, b: any) => s + Number(b.amount), 0);
+  const pendingBookings = bookings.filter((b: any) => b.status === 'pending').length;
+  const completedBookings = bookings.filter((b: any) => b.status === 'completed').length;
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-heading font-bold text-foreground">Admin Dashboard</h1>
-      <p className="text-muted-foreground mt-1">Platform overview and management</p>
-
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-8">
-        <StatCard title="Total Bookings" value={bookings.length} change="+12% this week" changeType="positive" icon={CalendarDays} />
-        <StatCard title="Revenue" value={`$${totalRevenue}`} change="+8% this week" changeType="positive" icon={DollarSign} />
-        <StatCard title="Providers" value={providers.length} change="+2 new" changeType="positive" icon={Building2} />
-        <StatCard title="Categories" value={categories.length} icon={Package} />
+    <div className="p-6 space-y-6">
+      {/* Page header */}
+      <div>
+        <h1 className="text-2xl font-heading font-bold text-foreground">Dashboard</h1>
+        <p className="text-sm text-muted-foreground mt-0.5">Welcome back! Here's your platform overview.</p>
       </div>
 
-      <div className="mt-8">
-        <h2 className="text-xl font-heading font-bold text-foreground mb-4">Recent Bookings</h2>
-        {isLoading ? (
-          <Skeleton className="h-64 rounded-xl" />
-        ) : (
-          <div className="bg-card rounded-xl shadow-card border overflow-hidden">
+      {/* Stats grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card className="border bg-card shadow-sm hover:shadow-md transition-shadow">
+          <CardContent className="p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Total Bookings</p>
+                <p className="text-2xl font-heading font-bold text-foreground mt-1">{bookings.length}</p>
+                <p className="text-xs text-success flex items-center gap-1 mt-1">
+                  <TrendingUp className="h-3 w-3" /> {pendingBookings} pending
+                </p>
+              </div>
+              <div className="h-11 w-11 rounded-xl bg-primary/10 flex items-center justify-center">
+                <CalendarDays className="h-5 w-5 text-primary" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border bg-card shadow-sm hover:shadow-md transition-shadow">
+          <CardContent className="p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Revenue</p>
+                <p className="text-2xl font-heading font-bold text-foreground mt-1">${totalRevenue.toLocaleString()}</p>
+                <p className="text-xs text-success flex items-center gap-1 mt-1">
+                  <TrendingUp className="h-3 w-3" /> {completedBookings} completed
+                </p>
+              </div>
+              <div className="h-11 w-11 rounded-xl bg-success/10 flex items-center justify-center">
+                <DollarSign className="h-5 w-5 text-success" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border bg-card shadow-sm hover:shadow-md transition-shadow">
+          <CardContent className="p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Providers</p>
+                <p className="text-2xl font-heading font-bold text-foreground mt-1">{providers.length}</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {providers.filter((p: any) => p.status === 'active').length} active
+                </p>
+              </div>
+              <div className="h-11 w-11 rounded-xl bg-info/10 flex items-center justify-center">
+                <Building2 className="h-5 w-5 text-info" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border bg-card shadow-sm hover:shadow-md transition-shadow">
+          <CardContent className="p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Services</p>
+                <p className="text-2xl font-heading font-bold text-foreground mt-1">{services.length}</p>
+                <p className="text-xs text-muted-foreground mt-1">{categories.length} categories</p>
+              </div>
+              <div className="h-11 w-11 rounded-xl bg-warning/10 flex items-center justify-center">
+                <Wrench className="h-5 w-5 text-warning" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Recent Bookings */}
+      <Card className="border shadow-sm">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-lg font-heading">Recent Bookings</CardTitle>
+            <Link to="/admin/bookings">
+              <Button variant="ghost" size="sm" className="text-primary gap-1">
+                View all <ArrowUpRight className="h-3.5 w-3.5" />
+              </Button>
+            </Link>
+          </div>
+        </CardHeader>
+        <CardContent className="p-0">
+          {isLoading ? (
+            <div className="p-6"><Skeleton className="h-48 rounded-lg" /></div>
+          ) : bookings.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              <CalendarDays className="h-10 w-10 mx-auto mb-3 opacity-40" />
+              <p className="text-sm">No bookings yet</p>
+            </div>
+          ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b bg-muted/50">
-                    <th className="text-left p-4 font-medium text-muted-foreground">Customer</th>
-                    <th className="text-left p-4 font-medium text-muted-foreground">Service</th>
-                    <th className="text-left p-4 font-medium text-muted-foreground">Date</th>
-                    <th className="text-left p-4 font-medium text-muted-foreground">Amount</th>
-                    <th className="text-left p-4 font-medium text-muted-foreground">Status</th>
+                  <tr className="border-b bg-muted/30">
+                    <th className="text-left px-6 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wider">Customer</th>
+                    <th className="text-left px-6 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wider">Service</th>
+                    <th className="text-left px-6 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wider">Date</th>
+                    <th className="text-left px-6 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wider">Amount</th>
+                    <th className="text-left px-6 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wider">Status</th>
                   </tr>
                 </thead>
-                <tbody>
-                  {bookings.slice(0, 10).map((b: any) => (
-                    <tr key={b.id} className="border-b last:border-0 hover:bg-muted/30">
-                      <td className="p-4 font-medium text-foreground">{b.customer?.full_name || 'Customer'}</td>
-                      <td className="p-4 text-foreground">{b.service?.name}</td>
-                      <td className="p-4 text-muted-foreground">{b.booking_date}</td>
-                      <td className="p-4 font-medium text-primary">${b.amount}</td>
-                      <td className="p-4"><StatusBadge status={b.status} /></td>
+                <tbody className="divide-y">
+                  {bookings.slice(0, 8).map((b: any) => (
+                    <tr key={b.id} className="hover:bg-muted/20 transition-colors">
+                      <td className="px-6 py-3.5 font-medium text-foreground">{b.customer?.full_name || 'Customer'}</td>
+                      <td className="px-6 py-3.5 text-foreground">{b.service?.name}</td>
+                      <td className="px-6 py-3.5 text-muted-foreground">{b.booking_date}</td>
+                      <td className="px-6 py-3.5 font-semibold text-foreground">${b.amount}</td>
+                      <td className="px-6 py-3.5"><StatusBadge status={b.status} /></td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
-            {bookings.length === 0 && <p className="text-center py-10 text-muted-foreground">No bookings yet.</p>}
-          </div>
-        )}
-      </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
