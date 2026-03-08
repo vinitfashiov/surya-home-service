@@ -5,9 +5,11 @@ import { useService, useCreateBooking } from '@/hooks/useSupabaseData';
 import { useServiceAddons } from '@/hooks/useServiceAddons';
 import { useMyAddresses } from '@/hooks/useAddresses';
 import { useCreateNotification } from '@/hooks/useNotifications';
+import { useAvailableTimeSlots, ALL_SLOTS } from '@/hooks/useAvailableTimeSlots';
+import { useValidateCoupon, CouponResult } from '@/hooks/useCoupons';
 import AddressManager from '@/components/AddressManager';
 import { useState, useEffect, useMemo } from 'react';
-import { ArrowLeft, CheckCircle, Clock, CreditCard, Tag } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Clock, CreditCard, Tag, Loader2, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -26,6 +28,7 @@ export default function CheckoutPage() {
   const createBooking = useCreateBooking();
   const createNotification = useCreateNotification();
   const clearCart = useClearCart();
+  const validateCoupon = useValidateCoupon();
 
   // Quick book data
   const quickBookData = useMemo(() => {
@@ -42,11 +45,11 @@ export default function CheckoutPage() {
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
   const [notes, setNotes] = useState('');
-  const [coupon, setCoupon] = useState('');
+  const [couponCode, setCouponCode] = useState('');
+  const [couponResult, setCouponResult] = useState<CouponResult | null>(null);
   const [confirmed, setConfirmed] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
 
-  const timeSlots = ['9:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM'];
   const finalAddress = selectedAddress?.address_line || manualAddress;
 
   // Redirect unauthenticated users
@@ -91,17 +94,61 @@ export default function CheckoutPage() {
     });
   }, [isQuickBook, quickService, quickAddons, quickBookData, cartItems]);
 
+  // Dynamic pricing
   const subtotal = lineItems.reduce((sum, item) => sum + (item.price + item.addonsTotal) * item.quantity, 0);
   const platformFee = Math.round(subtotal * 0.05);
-  const total = subtotal + platformFee;
+  const discount = couponResult?.valid ? couponResult.discountAmount : 0;
+  const total = Math.max(0, subtotal + platformFee - discount);
   const totalDuration = lineItems.reduce((sum, item) => sum + item.duration * item.quantity, 0);
+
+  // Real-time time slot availability
+  const providerIds = useMemo(() => 
+    [...new Set(lineItems.map(i => i.providerId).filter(Boolean))],
+    [lineItems]
+  );
+
+  const { data: availableSlots = ALL_SLOTS, isLoading: slotsLoading } = useAvailableTimeSlots({
+    date,
+    providerIds,
+    duration: totalDuration,
+  });
+
+  // Reset time if selected slot becomes unavailable
+  useEffect(() => {
+    if (time && !availableSlots.includes(time)) {
+      setTime('');
+    }
+  }, [availableSlots, time]);
+
+  // Reset coupon when subtotal changes
+  useEffect(() => {
+    if (couponResult?.valid) {
+      setCouponResult(null);
+      setCouponCode('');
+    }
+  }, [subtotal]);
+
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) return;
+    const result = await validateCoupon.mutateAsync({ code: couponCode, orderTotal: subtotal + platformFee });
+    setCouponResult(result);
+    if (result.valid) {
+      toast.success(result.message);
+    } else {
+      toast.error(result.message);
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setCouponResult(null);
+    setCouponCode('');
+  };
 
   const canCheckout = finalAddress && date && time && lineItems.length > 0;
 
   const handlePlaceOrder = async () => {
     if (!user || !canCheckout) return;
     try {
-      // Create a booking for each service/provider
       for (const item of lineItems) {
         for (let q = 0; q < item.quantity; q++) {
           await createBooking.mutateAsync({
@@ -116,14 +163,12 @@ export default function CheckoutPage() {
           });
         }
       }
-      // Notification
       await createNotification.mutateAsync({
         user_id: user.id,
         title: 'Booking Confirmed',
         message: `Your booking for ${lineItems.map(i => i.name).join(', ')} on ${date} at ${time} has been placed.`,
         type: 'booking',
       });
-      // Clear cart if not quick book
       if (!isQuickBook) {
         await clearCart.mutateAsync(user.id);
       }
@@ -196,6 +241,9 @@ export default function CheckoutPage() {
               <Separator />
               <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span>₹{subtotal}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">Platform Fee</span><span>₹{platformFee}</span></div>
+              {discount > 0 && (
+                <div className="flex justify-between text-success"><span>Discount</span><span>-₹{discount}</span></div>
+              )}
               <Separator />
               <div className="flex justify-between text-base font-bold"><span className="text-foreground">Total</span><span className="text-primary">₹{total}</span></div>
               <Separator />
@@ -238,16 +286,12 @@ export default function CheckoutPage() {
           {/* Address */}
           <div className="bg-card rounded-xl shadow-card border p-6">
             <h3 className="font-heading font-semibold text-foreground mb-4">Service Address</h3>
-            {addresses.length > 0 ? (
-              <AddressManager
-                userId={user.id}
-                selectable
-                selectedAddressId={selectedAddress?.id}
-                onSelect={(a) => { setSelectedAddress(a); setManualAddress(''); }}
-              />
-            ) : (
-              <AddressManager userId={user.id} selectable selectedAddressId={selectedAddress?.id} onSelect={(a) => { setSelectedAddress(a); setManualAddress(''); }} />
-            )}
+            <AddressManager
+              userId={user.id}
+              selectable
+              selectedAddressId={selectedAddress?.id}
+              onSelect={(a) => { setSelectedAddress(a); setManualAddress(''); }}
+            />
             <div className="relative my-4">
               <div className="absolute inset-0 flex items-center"><div className="w-full border-t" /></div>
               <div className="relative flex justify-center text-xs uppercase"><span className="bg-card px-2 text-muted-foreground">or enter manually</span></div>
@@ -270,13 +314,44 @@ export default function CheckoutPage() {
               </div>
               <div>
                 <label className="text-sm font-medium text-foreground mb-1 block">Time Slot</label>
-                <div className="grid grid-cols-3 gap-2">
-                  {timeSlots.map((slot) => (
-                    <button key={slot} onClick={() => setTime(slot)} className={`px-3 py-2 rounded-lg text-sm border transition-colors ${time === slot ? 'bg-primary text-primary-foreground border-primary' : 'bg-card text-foreground hover:bg-muted'}`}>
-                      {slot}
-                    </button>
-                  ))}
-                </div>
+                {slotsLoading && date ? (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground py-3">
+                    <Loader2 className="h-4 w-4 animate-spin" /> Checking availability...
+                  </div>
+                ) : !date ? (
+                  <p className="text-sm text-muted-foreground py-2">Select a date first to see available slots</p>
+                ) : availableSlots.length === 0 ? (
+                  <div className="flex items-center gap-2 text-sm text-destructive py-3">
+                    <AlertCircle className="h-4 w-4" /> No slots available on this date. Please try another date.
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-3 gap-2">
+                    {ALL_SLOTS.map((slot) => {
+                      const isAvailable = availableSlots.includes(slot);
+                      return (
+                        <button
+                          key={slot}
+                          onClick={() => isAvailable && setTime(slot)}
+                          disabled={!isAvailable}
+                          className={`px-3 py-2 rounded-lg text-sm border transition-colors ${
+                            time === slot
+                              ? 'bg-primary text-primary-foreground border-primary'
+                              : isAvailable
+                                ? 'bg-card text-foreground hover:bg-muted'
+                                : 'bg-muted/50 text-muted-foreground/50 border-transparent cursor-not-allowed line-through'
+                          }`}
+                        >
+                          {slot}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+                {date && availableSlots.length > 0 && (
+                  <p className="text-xs text-muted-foreground mt-2">
+                    {availableSlots.length} of {ALL_SLOTS.length} slots available · Updates in real-time
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -291,13 +366,43 @@ export default function CheckoutPage() {
               </div>
               <div>
                 <label className="text-sm font-medium text-foreground mb-1 block">Coupon Code</label>
-                <div className="flex gap-2">
-                  <div className="relative flex-1">
-                    <Tag className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input placeholder="Enter coupon code" value={coupon} onChange={(e) => setCoupon(e.target.value)} className="pl-9" />
+                {couponResult?.valid ? (
+                  <div className="flex items-center justify-between p-3 rounded-lg border border-success/30 bg-success/5">
+                    <div className="flex items-center gap-2">
+                      <Tag className="h-4 w-4 text-success" />
+                      <div>
+                        <p className="text-sm font-medium text-success">{couponCode.toUpperCase()} applied</p>
+                        <p className="text-xs text-muted-foreground">You save ₹{couponResult.discountAmount}</p>
+                      </div>
+                    </div>
+                    <Button variant="ghost" size="sm" onClick={handleRemoveCoupon} className="text-destructive hover:text-destructive">
+                      Remove
+                    </Button>
                   </div>
-                  <Button variant="outline">Apply</Button>
-                </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <div className="relative flex-1">
+                      <Tag className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Enter coupon code"
+                        value={couponCode}
+                        onChange={(e) => setCouponCode(e.target.value)}
+                        className="pl-9"
+                        onKeyDown={(e) => e.key === 'Enter' && handleApplyCoupon()}
+                      />
+                    </div>
+                    <Button
+                      variant="outline"
+                      onClick={handleApplyCoupon}
+                      disabled={validateCoupon.isPending || !couponCode.trim()}
+                    >
+                      {validateCoupon.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Apply'}
+                    </Button>
+                  </div>
+                )}
+                {couponResult && !couponResult.valid && (
+                  <p className="text-xs text-destructive mt-1">{couponResult.message}</p>
+                )}
               </div>
             </div>
           </div>
@@ -321,13 +426,13 @@ export default function CheckoutPage() {
                 </div>
               )}
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Platform Fee</span>
+                <span className="text-muted-foreground">Platform Fee (5%)</span>
                 <span className="text-foreground">₹{platformFee}</span>
               </div>
-              {coupon && (
+              {discount > 0 && (
                 <div className="flex justify-between text-success">
-                  <span>Discount</span>
-                  <span>-₹0</span>
+                  <span>Coupon Discount</span>
+                  <span>-₹{discount}</span>
                 </div>
               )}
               <Separator />
