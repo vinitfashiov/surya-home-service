@@ -608,9 +608,38 @@ export default function CheckoutPage() {
             {/* Payment method */}
             <div className="mb-4">
               <h4 className="text-sm font-medium text-foreground mb-2">Payment Method</h4>
-              <div className="flex items-center gap-2 p-3 rounded-lg border bg-muted/50">
-                <CreditCard className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm text-foreground">Pay after service</span>
+              <div className="space-y-2">
+                <button
+                  onClick={() => setPaymentMethod('online')}
+                  className={`w-full flex items-center gap-3 p-3 rounded-lg border transition-colors ${
+                    paymentMethod === 'online' ? 'border-primary bg-primary/5' : 'bg-muted/50 hover:bg-muted'
+                  }`}
+                >
+                  <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${paymentMethod === 'online' ? 'border-primary' : 'border-muted-foreground'}`}>
+                    {paymentMethod === 'online' && <div className="w-2 h-2 rounded-full bg-primary" />}
+                  </div>
+                  <CreditCard className="h-4 w-4 text-muted-foreground" />
+                  <div className="text-left">
+                    <span className="text-sm font-medium text-foreground">Pay Online</span>
+                    <p className="text-xs text-muted-foreground">UPI, Card, Net Banking via Razorpay</p>
+                  </div>
+                  <Shield className="h-3.5 w-3.5 text-success ml-auto" />
+                </button>
+                <button
+                  onClick={() => setPaymentMethod('cod')}
+                  className={`w-full flex items-center gap-3 p-3 rounded-lg border transition-colors ${
+                    paymentMethod === 'cod' ? 'border-primary bg-primary/5' : 'bg-muted/50 hover:bg-muted'
+                  }`}
+                >
+                  <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${paymentMethod === 'cod' ? 'border-primary' : 'border-muted-foreground'}`}>
+                    {paymentMethod === 'cod' && <div className="w-2 h-2 rounded-full bg-primary" />}
+                  </div>
+                  <CreditCard className="h-4 w-4 text-muted-foreground" />
+                  <div className="text-left">
+                    <span className="text-sm font-medium text-foreground">Pay After Service</span>
+                    <p className="text-xs text-muted-foreground">Cash on delivery</p>
+                  </div>
+                </button>
               </div>
             </div>
 
