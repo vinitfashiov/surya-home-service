@@ -200,6 +200,15 @@ export default function OrderTrackingPage() {
         )}
       </motion.div>
 
+      {/* Chat button */}
+      {!isCancelled && currentStatus !== 'completed' && (
+        <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="mb-6">
+          <Button variant="outline" className="w-full gap-2" onClick={() => setChatOpen(true)}>
+            <MessageCircle className="h-4 w-4" /> Chat with Provider
+          </Button>
+        </motion.div>
+      )}
+
       {/* Actions */}
       {!isCancelled && currentStatus !== 'completed' && canCancel(currentStatus) && (
         <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="bg-card rounded-2xl shadow-card border p-6">
