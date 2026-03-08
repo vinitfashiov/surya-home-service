@@ -56,9 +56,9 @@ export function useCategories() {
 }
 
 // Services with provider info
-export function useServices(categoryId?: string) {
+export function useServices(categoryId?: string, cityId?: string | null) {
   return useQuery({
-    queryKey: ['services', categoryId],
+    queryKey: ['services', categoryId, cityId],
     queryFn: async () => {
       let query = supabase
         .from('services')
@@ -72,6 +72,9 @@ export function useServices(categoryId?: string) {
 
       if (categoryId && categoryId !== 'all') {
         query = query.eq('category_id', categoryId);
+      }
+      if (cityId) {
+        query = query.eq('city_id', cityId);
       }
       const { data, error } = await query;
       if (error) throw error;
