@@ -103,7 +103,7 @@ export default function ServicesPage() {
   }, [services, searchQuery, selectedSubcategory, priceRange, minRating, maxDuration, sortBy]);
 
   const activeFilterCount = [
-    selectedCity !== 'all',
+    minRating > 0,
     minRating > 0,
     maxDuration < 480,
     priceRange[0] > 0 || priceRange[1] < maxPrice,
