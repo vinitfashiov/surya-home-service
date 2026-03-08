@@ -13,6 +13,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
+import ChatDialog from '@/components/ChatDialog';
 
 function BookingCard({ booking, userId }: { booking: any; userId: string }) {
   const [reviewOpen, setReviewOpen] = useState(false);
