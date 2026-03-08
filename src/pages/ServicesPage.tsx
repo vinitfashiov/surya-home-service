@@ -100,7 +100,7 @@ export default function ServicesPage() {
     }
 
     return result;
-  }, [services, searchQuery, selectedCity, selectedSubcategory, priceRange, minRating, maxDuration, sortBy]);
+  }, [services, searchQuery, selectedSubcategory, priceRange, minRating, maxDuration, sortBy]);
 
   const activeFilterCount = [
     selectedCity !== 'all',
