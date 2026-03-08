@@ -10,6 +10,7 @@ import {
   MapPin,
   ListChecks,
   Ticket,
+  Megaphone,
 } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useAuthContext } from '@/contexts/AuthContext';
