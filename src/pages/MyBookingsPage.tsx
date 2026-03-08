@@ -116,6 +116,7 @@ function BookingCard({ booking, userId }: { booking: any; userId: string }) {
         </div>
       </motion.div>
       <ReviewDialog open={reviewOpen} onOpenChange={setReviewOpen} booking={booking} userId={userId} />
+      <ChatDialog open={chatOpen} onOpenChange={setChatOpen} bookingId={booking.id} userId={userId} otherPartyName={booking.provider?.company_name || 'Provider'} />
     </>
   );
 }

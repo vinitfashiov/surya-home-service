@@ -27,6 +27,16 @@ export default function ProviderBookings() {
       <h1 className="text-3xl font-heading font-bold text-foreground">Booking Requests</h1>
       <p className="text-muted-foreground mt-1">Manage incoming booking requests</p>
 
+      <ProviderBookingsList bookings={bookings} userId={user.id} onStatus={handleStatus} />
+    </div>
+  );
+}
+
+function ProviderBookingsList({ bookings, userId, onStatus }: { bookings: any[]; userId: string; onStatus: (id: string, status: string) => void }) {
+  const [chatBooking, setChatBooking] = useState<any>(null);
+
+  return (
+    <>
       <div className="mt-8 space-y-4">
         {bookings.map((b: any) => (
           <div key={b.id} className="bg-card rounded-xl p-5 shadow-card border">
@@ -41,21 +51,37 @@ export default function ProviderBookings() {
                 <StatusBadge status={b.status} />
               </div>
             </div>
-            {b.status === 'pending' && (
-              <div className="flex gap-2 mt-4">
-                <Button size="sm" onClick={() => handleStatus(b.id, 'accepted')}>Accept</Button>
-                <Button size="sm" variant="outline" onClick={() => handleStatus(b.id, 'cancelled')}>Decline</Button>
-              </div>
-            )}
-            {b.status === 'accepted' && (
-              <div className="mt-4">
-                <Button size="sm" onClick={() => handleStatus(b.id, 'assigned')}>Assign Serviceman</Button>
-              </div>
-            )}
+            <div className="flex gap-2 mt-4 flex-wrap">
+              {b.status === 'pending' && (
+                <>
+                  <Button size="sm" onClick={() => onStatus(b.id, 'accepted')}>Accept</Button>
+                  <Button size="sm" variant="outline" onClick={() => onStatus(b.id, 'cancelled')}>Decline</Button>
+                </>
+              )}
+              {b.status === 'accepted' && (
+                <Button size="sm" onClick={() => onStatus(b.id, 'assigned')}>Assign Serviceman</Button>
+              )}
+              {!['completed', 'cancelled'].includes(b.status) && (
+                <Button size="sm" variant="outline" className="gap-1.5" onClick={() => setChatBooking(b)}>
+                  <MessageCircle className="h-3.5 w-3.5" /> Chat
+                </Button>
+              )}
+            </div>
           </div>
         ))}
         {bookings.length === 0 && <p className="text-center py-10 text-muted-foreground">No booking requests.</p>}
       </div>
+      {chatBooking && (
+        <ChatDialog
+          open={!!chatBooking}
+          onOpenChange={(open) => !open && setChatBooking(null)}
+          bookingId={chatBooking.id}
+          userId={userId}
+          otherPartyName={chatBooking.customer?.full_name || 'Customer'}
+        />
+      )}
+    </>
+  );
     </div>
   );
 }

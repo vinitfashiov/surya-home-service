@@ -226,6 +226,13 @@ export default function OrderTrackingPage() {
           </div>
         </motion.div>
       )}
+      <ChatDialog
+        open={chatOpen}
+        onOpenChange={setChatOpen}
+        bookingId={booking.id}
+        userId={user.id}
+        otherPartyName={booking.provider?.company_name || 'Provider'}
+      />
     </div>
   );
 }
