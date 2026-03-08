@@ -14,6 +14,7 @@ import AdminBookings from "@/pages/admin/AdminBookings";
 import AdminCategories from "@/pages/admin/AdminCategories";
 import AdminProviders from "@/pages/admin/AdminProviders";
 import AdminEmployees from "@/pages/admin/AdminEmployees";
+import AdminServices from "@/pages/admin/AdminServices";
 import ProviderDashboard from "@/pages/provider/ProviderDashboard";
 import ProviderBookings from "@/pages/provider/ProviderBookings";
 import ProviderServicemen from "@/pages/provider/ProviderServicemen";
@@ -48,6 +49,7 @@ const App = () => (
             <Route path="/admin/categories" element={<AdminCategories />} />
             <Route path="/admin/providers" element={<AdminProviders />} />
             <Route path="/admin/employees" element={<AdminEmployees />} />
+            <Route path="/admin/services" element={<AdminServices />} />
             <Route path="/provider" element={<ProviderDashboard />} />
             <Route path="/provider/bookings" element={<ProviderBookings />} />
             <Route path="/provider/servicemen" element={<ProviderServicemen />} />

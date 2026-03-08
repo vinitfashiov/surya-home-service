@@ -56,6 +56,7 @@ export default function Navbar() {
     { to: '/admin/categories', label: 'Categories' },
     { to: '/admin/providers', label: 'Providers' },
     { to: '/admin/employees', label: 'Employees' },
+    { to: '/admin/services', label: 'Services' },
   ];
 
   const providerLinks = [
