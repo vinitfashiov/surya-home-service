@@ -1,8 +1,10 @@
 import { useCategories } from '@/hooks/useSupabaseData';
 import { useCreateCategory, useUpdateCategory, useDeleteCategory } from '@/hooks/useAdminMutations';
-import { Scissors, Zap, Droplets, SprayCan, Wrench, Paintbrush, Bug, Hammer, Plus, Pencil, Trash2 } from 'lucide-react';
+import { Scissors, Zap, Droplets, SprayCan, Wrench, Paintbrush, Bug, Hammer, Plus, Pencil, Trash2, FolderTree } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
@@ -57,40 +59,61 @@ export default function AdminCategories() {
   const isSaving = createMut.isPending || updateMut.isPending;
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-heading font-bold text-foreground">Categories</h1>
-          <p className="text-muted-foreground mt-1">Manage service categories</p>
+          <h1 className="text-2xl font-heading font-bold text-foreground">Categories</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">Manage service categories</p>
         </div>
-        <Button onClick={openCreate}><Plus className="h-4 w-4 mr-2" /> Add Category</Button>
+        <Button onClick={openCreate} className="gap-2">
+          <Plus className="h-4 w-4" /> Add Category
+        </Button>
       </div>
 
       {isLoading ? (
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 mt-8">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {[...Array(6)].map((_, i) => <Skeleton key={i} className="h-28 rounded-xl" />)}
         </div>
+      ) : categories.length === 0 ? (
+        <Card className="border shadow-sm">
+          <CardContent className="text-center py-16">
+            <FolderTree className="h-10 w-10 mx-auto mb-3 text-muted-foreground/40" />
+            <p className="text-sm text-muted-foreground">No categories yet. Create your first category.</p>
+          </CardContent>
+        </Card>
       ) : (
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 mt-8">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {categories.map((cat: any) => {
             const Icon = iconMap[cat.icon] || Wrench;
             return (
-              <div key={cat.id} className="bg-card rounded-xl p-5 shadow-card border flex items-start gap-4">
-                <div className="p-3 rounded-xl bg-primary/10">
-                  <Icon className="h-5 w-5 text-primary" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-heading font-semibold text-foreground">{cat.name}</h3>
-                  <p className="text-sm text-muted-foreground">{cat.description}</p>
-                </div>
-                <div className="flex gap-1">
-                  <Button variant="ghost" size="icon" onClick={() => openEdit(cat)}><Pencil className="h-4 w-4" /></Button>
-                  <Button variant="ghost" size="icon" className="text-destructive" onClick={() => setDeleteId(cat.id)}><Trash2 className="h-4 w-4" /></Button>
-                </div>
-              </div>
+              <Card key={cat.id} className="border shadow-sm hover:shadow-md transition-shadow group">
+                <CardContent className="p-5">
+                  <div className="flex items-start gap-4">
+                    <div className="h-11 w-11 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                      <Icon className="h-5 w-5 text-primary" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-heading font-semibold text-foreground">{cat.name}</h3>
+                      <p className="text-sm text-muted-foreground line-clamp-2 mt-0.5">{cat.description || 'No description'}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between mt-4 pt-3 border-t">
+                    <Badge variant="outline" className="text-xs">
+                      {cat.is_active ? 'Active' : 'Inactive'}
+                    </Badge>
+                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(cat)}>
+                        <Pencil className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => setDeleteId(cat.id)}>
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             );
           })}
-          {categories.length === 0 && <p className="text-muted-foreground col-span-full text-center py-10">No categories yet.</p>}
         </div>
       )}
 
@@ -98,9 +121,9 @@ export default function AdminCategories() {
         <DialogContent>
           <DialogHeader><DialogTitle>{editId ? 'Edit Category' : 'New Category'}</DialogTitle></DialogHeader>
           <div className="space-y-4">
-            <div><Label>Name</Label><Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} /></div>
-            <div><Label>Description</Label><Textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} /></div>
-            <div>
+            <div className="space-y-1.5"><Label>Name</Label><Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="e.g. Plumbing" /></div>
+            <div className="space-y-1.5"><Label>Description</Label><Textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} placeholder="Brief description..." rows={3} /></div>
+            <div className="space-y-1.5">
               <Label>Icon</Label>
               <Select value={form.icon} onValueChange={v => setForm(f => ({ ...f, icon: v }))}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
@@ -116,7 +139,7 @@ export default function AdminCategories() {
 
       <AlertDialog open={!!deleteId} onOpenChange={o => !o && setDeleteId(null)}>
         <AlertDialogContent>
-          <AlertDialogHeader><AlertDialogTitle>Delete category?</AlertDialogTitle><AlertDialogDescription>This will permanently delete this category. Services in this category may become orphaned.</AlertDialogDescription></AlertDialogHeader>
+          <AlertDialogHeader><AlertDialogTitle>Delete category?</AlertDialogTitle><AlertDialogDescription>This will permanently delete this category.</AlertDialogDescription></AlertDialogHeader>
           <AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Delete</AlertDialogAction></AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
