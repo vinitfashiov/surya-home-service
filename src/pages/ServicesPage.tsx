@@ -62,7 +62,7 @@ export default function ServicesPage() {
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5 mt-8">
           {filteredServices.map((service: any, i: number) => (
             <motion.div key={service.id} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}>
-              <Link to={`/book/${service.id}`} className="block bg-card rounded-xl shadow-card border overflow-hidden hover:shadow-card-hover transition-shadow">
+              <Link to={`/service/${service.id}`} className="block bg-card rounded-xl shadow-card border overflow-hidden hover:shadow-card-hover transition-shadow">
                 <div className="h-28 bg-gradient-to-br from-primary/10 to-accent/10" />
                 <div className="p-5">
                   <div className="flex justify-between items-start">

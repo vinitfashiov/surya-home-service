@@ -97,6 +97,71 @@ export type Database = {
           },
         ]
       }
+      cart_item_addons: {
+        Row: {
+          addon_id: string
+          cart_item_id: string
+          id: string
+        }
+        Insert: {
+          addon_id: string
+          cart_item_id: string
+          id?: string
+        }
+        Update: {
+          addon_id?: string
+          cart_item_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cart_item_addons_addon_id_fkey"
+            columns: ["addon_id"]
+            isOneToOne: false
+            referencedRelation: "service_addons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cart_item_addons_cart_item_id_fkey"
+            columns: ["cart_item_id"]
+            isOneToOne: false
+            referencedRelation: "cart_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cart_items: {
+        Row: {
+          created_at: string
+          id: string
+          quantity: number
+          service_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          quantity?: number
+          service_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          quantity?: number
+          service_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cart_items_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cities: {
         Row: {
           created_at: string
@@ -391,6 +456,44 @@ export type Database = {
             columns: ["serviceman_id"]
             isOneToOne: false
             referencedRelation: "servicemen"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_addons: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          price: number
+          service_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          price?: number
+          service_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          price?: number
+          service_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_addons_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
             referencedColumns: ["id"]
           },
         ]

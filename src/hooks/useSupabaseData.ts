@@ -89,7 +89,8 @@ export function useService(serviceId?: string) {
         .from('services')
         .select(`
           *,
-          provider:providers(id, company_name)
+          provider:providers(id, company_name),
+          category:service_categories(id, name, icon)
         `)
         .eq('id', serviceId)
         .single();
