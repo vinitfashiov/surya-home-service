@@ -78,6 +78,7 @@ const App = () => (
                     <Route path="/book/:serviceId" element={<BookingPage />} />
                     <Route path="/cart" element={<CartPage />} />
                     <Route path="/checkout" element={<CheckoutPage />} />
+                    <Route path="/order/:bookingId" element={<OrderTrackingPage />} />
                     <Route path="/my-bookings" element={<MyBookingsPage />} />
                     <Route path="/my-addresses" element={<MyAddressesPage />} />
                     <Route path="/login" element={<LoginPage />} />
