@@ -186,7 +186,15 @@ export default function AdminServices() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-1.5"><Label>Image URL (optional)</Label><Input value={form.image_url} onChange={e => setForm(f => ({ ...f, image_url: e.target.value }))} placeholder="https://..." /></div>
+            <div className="space-y-1.5">
+              <Label>Service Image</Label>
+              <ImageUpload
+                bucket="service-images"
+                path={editId ? `${editId}/main` : `new-${Date.now()}/main`}
+                currentUrl={form.image_url || null}
+                onUpload={(url) => setForm(f => ({ ...f, image_url: url }))}
+              />
+            </div>
           </div>
           <DialogFooter><Button onClick={handleSave} disabled={isSaving}>{isSaving ? 'Saving…' : 'Save'}</Button></DialogFooter>
         </DialogContent>
