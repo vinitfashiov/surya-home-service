@@ -9,10 +9,11 @@ import { useAvailableTimeSlots, ALL_SLOTS } from '@/hooks/useAvailableTimeSlots'
 import { useValidateCoupon, CouponResult } from '@/hooks/useCoupons';
 import { useCategoryCheckoutFields, useSaveBookingCustomFields } from '@/hooks/useCheckoutFields';
 import { usePricingRulesForServices, calculateDynamicPrice } from '@/hooks/usePricingRules';
+import { loadRazorpayScript, createRazorpayOrder, verifyRazorpayPayment, openRazorpayCheckout } from '@/lib/razorpay';
 import AddressManager from '@/components/AddressManager';
 import DynamicCheckoutFields from '@/components/DynamicCheckoutFields';
 import { useState, useEffect, useMemo } from 'react';
-import { ArrowLeft, CheckCircle, Clock, CreditCard, Tag, Loader2, AlertCircle, TrendingUp } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Clock, CreditCard, Tag, Loader2, AlertCircle, TrendingUp, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -54,6 +55,8 @@ export default function CheckoutPage() {
   const [confirmed, setConfirmed] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
   const [customFieldValues, setCustomFieldValues] = useState<Record<string, string>>({});
+  const [paymentMethod, setPaymentMethod] = useState<'online' | 'cod'>('online');
+  const [processingPayment, setProcessingPayment] = useState(false);
 
   const finalAddress = selectedAddress?.address_line || manualAddress;
 
@@ -190,7 +193,9 @@ export default function CheckoutPage() {
 
   const handlePlaceOrder = async () => {
     if (!user || !canCheckout) return;
+    setProcessingPayment(true);
     try {
+      // 1. Create all bookings first
       const bookingIds: string[] = [];
       for (const item of lineItems) {
         for (let q = 0; q < item.quantity; q++) {
@@ -210,7 +215,7 @@ export default function CheckoutPage() {
         }
       }
 
-      // Save custom field values for each booking
+      // 2. Save custom field values
       if (checkoutFields.length > 0 && bookingIds.length > 0) {
         const customFieldRows = bookingIds.flatMap(bookingId =>
           checkoutFields
@@ -226,21 +231,73 @@ export default function CheckoutPage() {
         }
       }
 
+      // 3. Handle payment
+      if (paymentMethod === 'online' && total > 0) {
+        await loadRazorpayScript();
+        const order = await createRazorpayOrder({
+          amount: total,
+          bookingIds,
+          receipt: `rcpt_${bookingIds[0]}`,
+        });
+
+        openRazorpayCheckout({
+          orderId: order.order_id,
+          amount: order.amount,
+          currency: order.currency,
+          keyId: order.key_id,
+          userName: user.user_metadata?.full_name,
+          userEmail: user.email,
+          description: `Payment for ${lineItems.map(i => i.name).join(', ')}`,
+          onSuccess: async (response) => {
+            try {
+              const result = await verifyRazorpayPayment({
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+                booking_ids: bookingIds,
+              });
+              if (result.verified) {
+                await createNotification.mutateAsync({
+                  user_id: user.id,
+                  title: 'Payment Successful',
+                  message: `Payment of ₹${total} received for ${lineItems.map(i => i.name).join(', ')}.`,
+                  type: 'payment',
+                });
+                if (!isQuickBook) await clearCart.mutateAsync(user.id);
+                sessionStorage.removeItem('quickBook');
+                setConfirmed(true);
+                toast.success('Payment successful! Booking confirmed.');
+              } else {
+                toast.error('Payment verification failed. Contact support.');
+              }
+            } catch (err: any) {
+              toast.error(err.message || 'Payment verification error');
+            }
+            setProcessingPayment(false);
+          },
+          onFailure: (error) => {
+            toast.error(error?.description || 'Payment failed or cancelled');
+            setProcessingPayment(false);
+          },
+        });
+        return; // Don't set processingPayment=false here, callbacks handle it
+      }
+
+      // COD flow
       await createNotification.mutateAsync({
         user_id: user.id,
         title: 'Booking Confirmed',
-        message: `Your booking for ${lineItems.map(i => i.name).join(', ')} on ${date} at ${time} has been placed.`,
+        message: `Your booking for ${lineItems.map(i => i.name).join(', ')} on ${date} at ${time} has been placed. Pay after service.`,
         type: 'booking',
       });
-      if (!isQuickBook) {
-        await clearCart.mutateAsync(user.id);
-      }
+      if (!isQuickBook) await clearCart.mutateAsync(user.id);
       sessionStorage.removeItem('quickBook');
       setConfirmed(true);
       toast.success('Booking placed successfully!');
     } catch (err: any) {
       toast.error(err.message || 'Failed to place booking');
     }
+    setProcessingPayment(false);
   };
 
   if (!user) return null;
@@ -327,8 +384,8 @@ export default function CheckoutPage() {
             </div>
             <div className="flex gap-3 mt-6">
               <Button variant="outline" className="flex-1" onClick={() => setShowSummary(false)}>Edit</Button>
-              <Button className="flex-1" onClick={handlePlaceOrder} disabled={createBooking.isPending}>
-                {createBooking.isPending ? 'Placing...' : 'Confirm & Pay'}
+              <Button className="flex-1" onClick={handlePlaceOrder} disabled={createBooking.isPending || processingPayment}>
+                {processingPayment ? <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Processing...</> : paymentMethod === 'online' ? 'Pay Now' : 'Confirm & Book'}
               </Button>
             </div>
           </motion.div>
@@ -551,9 +608,38 @@ export default function CheckoutPage() {
             {/* Payment method */}
             <div className="mb-4">
               <h4 className="text-sm font-medium text-foreground mb-2">Payment Method</h4>
-              <div className="flex items-center gap-2 p-3 rounded-lg border bg-muted/50">
-                <CreditCard className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm text-foreground">Pay after service</span>
+              <div className="space-y-2">
+                <button
+                  onClick={() => setPaymentMethod('online')}
+                  className={`w-full flex items-center gap-3 p-3 rounded-lg border transition-colors ${
+                    paymentMethod === 'online' ? 'border-primary bg-primary/5' : 'bg-muted/50 hover:bg-muted'
+                  }`}
+                >
+                  <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${paymentMethod === 'online' ? 'border-primary' : 'border-muted-foreground'}`}>
+                    {paymentMethod === 'online' && <div className="w-2 h-2 rounded-full bg-primary" />}
+                  </div>
+                  <CreditCard className="h-4 w-4 text-muted-foreground" />
+                  <div className="text-left">
+                    <span className="text-sm font-medium text-foreground">Pay Online</span>
+                    <p className="text-xs text-muted-foreground">UPI, Card, Net Banking via Razorpay</p>
+                  </div>
+                  <Shield className="h-3.5 w-3.5 text-success ml-auto" />
+                </button>
+                <button
+                  onClick={() => setPaymentMethod('cod')}
+                  className={`w-full flex items-center gap-3 p-3 rounded-lg border transition-colors ${
+                    paymentMethod === 'cod' ? 'border-primary bg-primary/5' : 'bg-muted/50 hover:bg-muted'
+                  }`}
+                >
+                  <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${paymentMethod === 'cod' ? 'border-primary' : 'border-muted-foreground'}`}>
+                    {paymentMethod === 'cod' && <div className="w-2 h-2 rounded-full bg-primary" />}
+                  </div>
+                  <CreditCard className="h-4 w-4 text-muted-foreground" />
+                  <div className="text-left">
+                    <span className="text-sm font-medium text-foreground">Pay After Service</span>
+                    <p className="text-xs text-muted-foreground">Cash on delivery</p>
+                  </div>
+                </button>
               </div>
             </div>
 
@@ -561,8 +647,8 @@ export default function CheckoutPage() {
               <p className="text-xs text-destructive mb-3">Please fill all required fields marked with *</p>
             )}
 
-            <Button className="w-full" size="lg" disabled={!canCheckout} onClick={() => setShowSummary(true)}>
-              Review & Confirm
+            <Button className="w-full" size="lg" disabled={!canCheckout || processingPayment} onClick={() => setShowSummary(true)}>
+              {paymentMethod === 'online' ? 'Review & Pay Online' : 'Review & Confirm'}
             </Button>
           </div>
         </div>
