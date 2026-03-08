@@ -40,9 +40,7 @@ export default function HomePage() {
     }
   };
 
-  const filteredCategories = selectedCity
-    ? categories
-    : categories;
+  const filteredCategories = categories;
 
   return (
     <div className="min-h-screen">
