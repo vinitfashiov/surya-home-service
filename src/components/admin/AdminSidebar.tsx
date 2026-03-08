@@ -11,6 +11,7 @@ import {
   ListChecks,
   Ticket,
   Megaphone,
+  DollarSign,
 } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useAuthContext } from '@/contexts/AuthContext';
