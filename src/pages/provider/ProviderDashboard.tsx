@@ -19,6 +19,11 @@ export default function ProviderDashboard() {
     return <div className="container mx-auto px-4 py-20 text-center text-muted-foreground">Please log in as a provider.</div>;
   }
 
+  // Show onboarding for pending/rejected providers
+  if (provider && provider.status !== 'active') {
+    return <ProviderOnboarding provider={provider} />;
+  }
+
   const totalEarnings = bookings.filter((b: any) => b.payment_status === 'paid').reduce((s: number, b: any) => s + Number(b.amount), 0);
   const activeBookings = bookings.filter((b: any) => !['completed', 'cancelled'].includes(b.status)).length;
   const completedBookings = bookings.filter((b: any) => b.status === 'completed').length;
