@@ -1,4 +1,5 @@
 import { useAuth, useProviderBookings, useMyProvider, useServicemen, useCategories, useServices } from '@/hooks/useSupabaseData';
+import ProviderOnboarding from '@/components/provider/ProviderOnboarding';
 import { useReviewsForProvider } from '@/hooks/useReviews';
 import StatCard from '@/components/StatCard';
 import StatusBadge from '@/components/StatusBadge';
