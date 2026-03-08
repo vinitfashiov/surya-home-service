@@ -1,18 +1,19 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { services } from '@/lib/mock-data';
-import { useAppStore } from '@/lib/store';
+import { useService, useCreateBooking, useAuth } from '@/hooks/useSupabaseData';
 import { useState } from 'react';
-import { Star, Clock, MapPin, CalendarDays, ArrowLeft, CheckCircle } from 'lucide-react';
+import { Star, Clock, ArrowLeft, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 
 export default function BookingPage() {
   const { serviceId } = useParams();
   const navigate = useNavigate();
-  const { addBooking } = useAppStore();
-  const service = services.find((s) => s.id === serviceId);
+  const { user } = useAuth();
+  const { data: service, isLoading } = useService(serviceId);
+  const createBooking = useCreateBooking();
 
   const [step, setStep] = useState(1);
   const [date, setDate] = useState('');
@@ -23,39 +24,48 @@ export default function BookingPage() {
 
   const timeSlots = ['9:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM'];
 
-  if (!service) {
+  if (isLoading) {
     return (
-      <div className="container mx-auto px-4 py-20 text-center">
-        <p className="text-muted-foreground">Service not found.</p>
-        <Button variant="outline" className="mt-4" onClick={() => navigate('/services')}>
-          Browse Services
-        </Button>
+      <div className="container mx-auto px-4 py-8 max-w-2xl">
+        <Skeleton className="h-32 rounded-xl mb-6" />
+        <Skeleton className="h-64 rounded-xl" />
       </div>
     );
   }
 
-  const handleConfirm = () => {
-    const newBooking = {
-      id: `BK${Date.now()}`,
-      customerId: 'current',
-      customerName: 'You',
-      serviceId: service.id,
-      serviceName: service.name,
-      providerId: service.providerId,
-      providerName: service.providerName,
-      date,
-      time,
-      address,
-      status: 'pending' as const,
-      amount: service.price,
-      paymentStatus: 'pending' as const,
-      createdAt: new Date().toISOString().split('T')[0],
-      notes,
-    };
-    addBooking(newBooking);
-    setConfirmed(true);
-    toast.success('Booking placed successfully!');
+  if (!service) {
+    return (
+      <div className="container mx-auto px-4 py-20 text-center">
+        <p className="text-muted-foreground">Service not found.</p>
+        <Button variant="outline" className="mt-4" onClick={() => navigate('/services')}>Browse Services</Button>
+      </div>
+    );
+  }
+
+  const handleConfirm = async () => {
+    if (!user) {
+      toast.error('Please log in to book a service.');
+      return;
+    }
+    try {
+      await createBooking.mutateAsync({
+        customer_id: user.id,
+        service_id: service.id,
+        provider_id: service.provider_id,
+        booking_date: date,
+        booking_time: time,
+        address,
+        notes: notes || undefined,
+        amount: Number(service.price),
+      });
+      setConfirmed(true);
+      toast.success('Booking placed successfully!');
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to create booking');
+    }
   };
+
+  const providerName = service.provider?.company_name || 'Provider';
 
   if (confirmed) {
     return (
@@ -73,12 +83,8 @@ export default function BookingPage() {
             <p><span className="text-muted-foreground">Amount:</span> <span className="font-medium text-primary">${service.price}</span></p>
           </div>
           <div className="mt-6 flex gap-3">
-            <Button variant="outline" className="flex-1" onClick={() => navigate('/my-bookings')}>
-              View Bookings
-            </Button>
-            <Button className="flex-1" onClick={() => navigate('/')}>
-              Home
-            </Button>
+            <Button variant="outline" className="flex-1" onClick={() => navigate('/my-bookings')}>View Bookings</Button>
+            <Button className="flex-1" onClick={() => navigate('/')}>Home</Button>
           </div>
         </div>
       </div>
@@ -91,10 +97,9 @@ export default function BookingPage() {
         <ArrowLeft className="h-4 w-4" /> Back
       </button>
 
-      {/* Service Summary */}
       <div className="bg-card rounded-xl p-6 shadow-card border mb-6">
         <h2 className="font-heading font-bold text-xl text-foreground">{service.name}</h2>
-        <p className="text-sm text-muted-foreground mt-1">{service.providerName}</p>
+        <p className="text-sm text-muted-foreground mt-1">{providerName}</p>
         <div className="flex items-center gap-4 mt-3 text-sm">
           <span className="flex items-center gap-1"><Star className="h-4 w-4 text-warning fill-warning" /> {service.rating}</span>
           <span className="flex items-center gap-1 text-muted-foreground"><Clock className="h-4 w-4" /> {service.duration} min</span>
@@ -102,13 +107,16 @@ export default function BookingPage() {
         </div>
       </div>
 
-      {/* Steps */}
+      {!user && (
+        <div className="bg-warning/10 border border-warning/20 rounded-xl p-4 mb-6 text-sm text-warning">
+          You need to log in to place a booking.
+        </div>
+      )}
+
       <div className="flex items-center gap-2 mb-6">
         {[1, 2, 3].map((s) => (
           <div key={s} className="flex items-center gap-2">
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
-              step >= s ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
-            }`}>{s}</div>
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${step >= s ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>{s}</div>
             {s < 3 && <div className={`w-12 h-0.5 ${step > s ? 'bg-primary' : 'bg-muted'}`} />}
           </div>
         ))}
@@ -127,22 +135,14 @@ export default function BookingPage() {
                 <label className="text-sm font-medium text-foreground mb-1 block">Time Slot</label>
                 <div className="grid grid-cols-3 gap-2">
                   {timeSlots.map((slot) => (
-                    <button
-                      key={slot}
-                      onClick={() => setTime(slot)}
-                      className={`px-3 py-2 rounded-lg text-sm border transition-colors ${
-                        time === slot ? 'bg-primary text-primary-foreground border-primary' : 'bg-card text-foreground hover:bg-muted'
-                      }`}
-                    >
+                    <button key={slot} onClick={() => setTime(slot)} className={`px-3 py-2 rounded-lg text-sm border transition-colors ${time === slot ? 'bg-primary text-primary-foreground border-primary' : 'bg-card text-foreground hover:bg-muted'}`}>
                       {slot}
                     </button>
                   ))}
                 </div>
               </div>
             </div>
-            <Button className="w-full mt-6" disabled={!date || !time} onClick={() => setStep(2)}>
-              Continue
-            </Button>
+            <Button className="w-full mt-6" disabled={!date || !time} onClick={() => setStep(2)}>Continue</Button>
           </div>
         )}
 
@@ -152,21 +152,11 @@ export default function BookingPage() {
             <div className="space-y-4">
               <div>
                 <label className="text-sm font-medium text-foreground mb-1 block">Full Address</label>
-                <Textarea
-                  placeholder="Enter your complete address..."
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                  rows={3}
-                />
+                <Textarea placeholder="Enter your complete address..." value={address} onChange={(e) => setAddress(e.target.value)} rows={3} />
               </div>
               <div>
                 <label className="text-sm font-medium text-foreground mb-1 block">Special Instructions (Optional)</label>
-                <Textarea
-                  placeholder="Any special instructions for the service professional..."
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  rows={2}
-                />
+                <Textarea placeholder="Any special instructions..." value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} />
               </div>
             </div>
             <div className="flex gap-3 mt-6">
@@ -181,7 +171,7 @@ export default function BookingPage() {
             <h3 className="font-heading font-semibold text-lg text-foreground mb-4">Confirm Booking</h3>
             <div className="space-y-3 bg-muted rounded-xl p-4 text-sm">
               <div className="flex justify-between"><span className="text-muted-foreground">Service</span><span className="font-medium text-foreground">{service.name}</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Provider</span><span className="font-medium text-foreground">{service.providerName}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Provider</span><span className="font-medium text-foreground">{providerName}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">Date</span><span className="font-medium text-foreground">{date}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">Time</span><span className="font-medium text-foreground">{time}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">Address</span><span className="font-medium text-foreground text-right max-w-[200px]">{address}</span></div>
@@ -190,7 +180,9 @@ export default function BookingPage() {
             </div>
             <div className="flex gap-3 mt-6">
               <Button variant="outline" onClick={() => setStep(2)}>Back</Button>
-              <Button className="flex-1" onClick={handleConfirm}>Confirm & Pay</Button>
+              <Button className="flex-1" onClick={handleConfirm} disabled={createBooking.isPending || !user}>
+                {createBooking.isPending ? 'Placing...' : 'Confirm & Pay'}
+              </Button>
             </div>
           </div>
         )}

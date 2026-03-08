@@ -1,16 +1,21 @@
-import { useAppStore } from '@/lib/store';
+import { useAllBookings, useUpdateBookingStatus } from '@/hooks/useSupabaseData';
 import StatusBadge from '@/components/StatusBadge';
 import { Button } from '@/components/ui/button';
-import { BookingStatus } from '@/lib/types';
+import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 
 export default function AdminBookings() {
-  const { bookings, updateBookingStatus } = useAppStore();
+  const { data: bookings = [], isLoading } = useAllBookings();
+  const updateStatus = useUpdateBookingStatus();
 
-  const handleStatusChange = (id: string, status: BookingStatus) => {
-    updateBookingStatus(id, status);
-    toast.success(`Booking ${id} updated to ${status}`);
+  const handleStatusChange = (id: string, status: string) => {
+    updateStatus.mutate({ bookingId: id, status }, {
+      onSuccess: () => toast.success(`Booking updated to ${status}`),
+      onError: (err) => toast.error(err.message),
+    });
   };
+
+  if (isLoading) return <div className="container mx-auto px-4 py-8"><Skeleton className="h-96 rounded-xl" /></div>;
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -22,7 +27,6 @@ export default function AdminBookings() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b bg-muted/50">
-                <th className="text-left p-4 font-medium text-muted-foreground">ID</th>
                 <th className="text-left p-4 font-medium text-muted-foreground">Customer</th>
                 <th className="text-left p-4 font-medium text-muted-foreground">Service</th>
                 <th className="text-left p-4 font-medium text-muted-foreground">Provider</th>
@@ -33,13 +37,12 @@ export default function AdminBookings() {
               </tr>
             </thead>
             <tbody>
-              {bookings.map((b) => (
+              {bookings.map((b: any) => (
                 <tr key={b.id} className="border-b last:border-0 hover:bg-muted/30">
-                  <td className="p-4 font-mono text-xs text-muted-foreground">{b.id}</td>
-                  <td className="p-4 font-medium text-foreground">{b.customerName}</td>
-                  <td className="p-4 text-foreground">{b.serviceName}</td>
-                  <td className="p-4 text-muted-foreground">{b.providerName}</td>
-                  <td className="p-4 text-muted-foreground">{b.date} {b.time}</td>
+                  <td className="p-4 font-medium text-foreground">{b.customer?.full_name || 'Customer'}</td>
+                  <td className="p-4 text-foreground">{b.service?.name}</td>
+                  <td className="p-4 text-muted-foreground">{b.provider?.company_name}</td>
+                  <td className="p-4 text-muted-foreground">{b.booking_date} {b.booking_time}</td>
                   <td className="p-4 font-medium text-primary">${b.amount}</td>
                   <td className="p-4"><StatusBadge status={b.status} /></td>
                   <td className="p-4">
@@ -55,6 +58,7 @@ export default function AdminBookings() {
             </tbody>
           </table>
         </div>
+        {bookings.length === 0 && <p className="text-center py-10 text-muted-foreground">No bookings yet.</p>}
       </div>
     </div>
   );

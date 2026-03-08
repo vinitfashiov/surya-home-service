@@ -1,12 +1,14 @@
-import { useAppStore } from '@/lib/store';
-import { bookings as allBookings, providers, employees, categories } from '@/lib/mock-data';
+import { useAllBookings, useProviders, useCategories } from '@/hooks/useSupabaseData';
 import StatCard from '@/components/StatCard';
 import StatusBadge from '@/components/StatusBadge';
-import { CalendarDays, Users, Building2, Package, UserCog, DollarSign } from 'lucide-react';
+import { CalendarDays, Building2, Package, DollarSign } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function AdminDashboard() {
-  const { bookings } = useAppStore();
-  const totalRevenue = bookings.filter(b => b.paymentStatus === 'paid').reduce((s, b) => s + b.amount, 0);
+  const { data: bookings = [], isLoading } = useAllBookings();
+  const { data: providers = [] } = useProviders();
+  const { data: categories = [] } = useCategories();
+  const totalRevenue = bookings.filter((b: any) => b.payment_status === 'paid').reduce((s: number, b: any) => s + Number(b.amount), 0);
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -22,34 +24,37 @@ export default function AdminDashboard() {
 
       <div className="mt-8">
         <h2 className="text-xl font-heading font-bold text-foreground mb-4">Recent Bookings</h2>
-        <div className="bg-card rounded-xl shadow-card border overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b bg-muted/50">
-                  <th className="text-left p-4 font-medium text-muted-foreground">ID</th>
-                  <th className="text-left p-4 font-medium text-muted-foreground">Customer</th>
-                  <th className="text-left p-4 font-medium text-muted-foreground">Service</th>
-                  <th className="text-left p-4 font-medium text-muted-foreground">Date</th>
-                  <th className="text-left p-4 font-medium text-muted-foreground">Amount</th>
-                  <th className="text-left p-4 font-medium text-muted-foreground">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {bookings.map((b) => (
-                  <tr key={b.id} className="border-b last:border-0 hover:bg-muted/30">
-                    <td className="p-4 font-mono text-xs text-muted-foreground">{b.id}</td>
-                    <td className="p-4 font-medium text-foreground">{b.customerName}</td>
-                    <td className="p-4 text-foreground">{b.serviceName}</td>
-                    <td className="p-4 text-muted-foreground">{b.date}</td>
-                    <td className="p-4 font-medium text-primary">${b.amount}</td>
-                    <td className="p-4"><StatusBadge status={b.status} /></td>
+        {isLoading ? (
+          <Skeleton className="h-64 rounded-xl" />
+        ) : (
+          <div className="bg-card rounded-xl shadow-card border overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b bg-muted/50">
+                    <th className="text-left p-4 font-medium text-muted-foreground">Customer</th>
+                    <th className="text-left p-4 font-medium text-muted-foreground">Service</th>
+                    <th className="text-left p-4 font-medium text-muted-foreground">Date</th>
+                    <th className="text-left p-4 font-medium text-muted-foreground">Amount</th>
+                    <th className="text-left p-4 font-medium text-muted-foreground">Status</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {bookings.slice(0, 10).map((b: any) => (
+                    <tr key={b.id} className="border-b last:border-0 hover:bg-muted/30">
+                      <td className="p-4 font-medium text-foreground">{b.customer?.full_name || 'Customer'}</td>
+                      <td className="p-4 text-foreground">{b.service?.name}</td>
+                      <td className="p-4 text-muted-foreground">{b.booking_date}</td>
+                      <td className="p-4 font-medium text-primary">${b.amount}</td>
+                      <td className="p-4"><StatusBadge status={b.status} /></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {bookings.length === 0 && <p className="text-center py-10 text-muted-foreground">No bookings yet.</p>}
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

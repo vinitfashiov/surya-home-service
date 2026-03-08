@@ -14,16 +14,366 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      bookings: {
+        Row: {
+          address: string
+          amount: number
+          booking_date: string
+          booking_time: string
+          created_at: string
+          customer_id: string
+          id: string
+          notes: string | null
+          payment_status: Database["public"]["Enums"]["payment_status"]
+          provider_id: string
+          service_id: string
+          serviceman_id: string | null
+          status: Database["public"]["Enums"]["booking_status"]
+          updated_at: string
+        }
+        Insert: {
+          address: string
+          amount?: number
+          booking_date: string
+          booking_time: string
+          created_at?: string
+          customer_id: string
+          id?: string
+          notes?: string | null
+          payment_status?: Database["public"]["Enums"]["payment_status"]
+          provider_id: string
+          service_id: string
+          serviceman_id?: string | null
+          status?: Database["public"]["Enums"]["booking_status"]
+          updated_at?: string
+        }
+        Update: {
+          address?: string
+          amount?: number
+          booking_date?: string
+          booking_time?: string
+          created_at?: string
+          customer_id?: string
+          id?: string
+          notes?: string | null
+          payment_status?: Database["public"]["Enums"]["payment_status"]
+          provider_id?: string
+          service_id?: string
+          serviceman_id?: string | null
+          status?: Database["public"]["Enums"]["booking_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookings_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "providers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_serviceman_id_fkey"
+            columns: ["serviceman_id"]
+            isOneToOne: false
+            referencedRelation: "servicemen"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employees: {
+        Row: {
+          created_at: string
+          department: string | null
+          email: string
+          id: string
+          name: string
+          permissions: string[] | null
+          phone: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          department?: string | null
+          email: string
+          id?: string
+          name: string
+          permissions?: string[] | null
+          phone?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          department?: string | null
+          email?: string
+          id?: string
+          name?: string
+          permissions?: string[] | null
+          phone?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string
+          full_name?: string
+          id: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      providers: {
+        Row: {
+          address: string | null
+          company_name: string
+          created_at: string
+          email: string
+          id: string
+          owner_name: string
+          phone: string | null
+          rating: number | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          address?: string | null
+          company_name: string
+          created_at?: string
+          email: string
+          id?: string
+          owner_name: string
+          phone?: string | null
+          rating?: number | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          address?: string | null
+          company_name?: string
+          created_at?: string
+          email?: string
+          id?: string
+          owner_name?: string
+          phone?: string | null
+          rating?: number | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      service_categories: {
+        Row: {
+          created_at: string
+          description: string | null
+          icon: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          name: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          name?: string
+        }
+        Relationships: []
+      }
+      servicemen: {
+        Row: {
+          completed_jobs: number | null
+          created_at: string
+          email: string
+          id: string
+          name: string
+          phone: string | null
+          provider_id: string
+          rating: number | null
+          skills: string[] | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          completed_jobs?: number | null
+          created_at?: string
+          email: string
+          id?: string
+          name: string
+          phone?: string | null
+          provider_id: string
+          rating?: number | null
+          skills?: string[] | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          completed_jobs?: number | null
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          phone?: string | null
+          provider_id?: string
+          rating?: number | null
+          skills?: string[] | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "servicemen_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      services: {
+        Row: {
+          category_id: string
+          created_at: string
+          description: string | null
+          duration: number
+          id: string
+          image_url: string | null
+          is_active: boolean
+          name: string
+          price: number
+          provider_id: string
+          rating: number | null
+          review_count: number | null
+        }
+        Insert: {
+          category_id: string
+          created_at?: string
+          description?: string | null
+          duration?: number
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          name: string
+          price?: number
+          provider_id: string
+          rating?: number | null
+          review_count?: number | null
+        }
+        Update: {
+          category_id?: string
+          created_at?: string
+          description?: string | null
+          duration?: number
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          name?: string
+          price?: number
+          provider_id?: string
+          rating?: number | null
+          review_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "services_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "service_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "services_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "employee" | "customer" | "provider" | "serviceman"
+      booking_status:
+        | "pending"
+        | "accepted"
+        | "assigned"
+        | "on_the_way"
+        | "started"
+        | "completed"
+        | "cancelled"
+      payment_status: "pending" | "paid" | "refunded"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +500,18 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "employee", "customer", "provider", "serviceman"],
+      booking_status: [
+        "pending",
+        "accepted",
+        "assigned",
+        "on_the_way",
+        "started",
+        "completed",
+        "cancelled",
+      ],
+      payment_status: ["pending", "paid", "refunded"],
+    },
   },
 } as const
