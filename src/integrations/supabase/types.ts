@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      booking_custom_fields: {
+        Row: {
+          booking_id: string
+          field_id: string
+          field_value: string
+          id: string
+        }
+        Insert: {
+          booking_id: string
+          field_id: string
+          field_value?: string
+          id?: string
+        }
+        Update: {
+          booking_id?: string
+          field_id?: string
+          field_value?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_custom_fields_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "booking_custom_fields_field_id_fkey"
+            columns: ["field_id"]
+            isOneToOne: false
+            referencedRelation: "category_checkout_fields"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bookings: {
         Row: {
           address: string
@@ -158,6 +194,53 @@ export type Database = {
             columns: ["service_id"]
             isOneToOne: false
             referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      category_checkout_fields: {
+        Row: {
+          category_id: string
+          created_at: string
+          display_order: number
+          field_label: string
+          field_name: string
+          field_type: string
+          id: string
+          is_required: boolean
+          options: Json | null
+          placeholder: string | null
+        }
+        Insert: {
+          category_id: string
+          created_at?: string
+          display_order?: number
+          field_label: string
+          field_name: string
+          field_type?: string
+          id?: string
+          is_required?: boolean
+          options?: Json | null
+          placeholder?: string | null
+        }
+        Update: {
+          category_id?: string
+          created_at?: string
+          display_order?: number
+          field_label?: string
+          field_name?: string
+          field_type?: string
+          id?: string
+          is_required?: boolean
+          options?: Json | null
+          placeholder?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "category_checkout_fields_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "service_categories"
             referencedColumns: ["id"]
           },
         ]
@@ -542,6 +625,7 @@ export type Database = {
       }
       service_categories: {
         Row: {
+          category_type: string
           commission_rate: number
           created_at: string
           description: string | null
@@ -552,6 +636,7 @@ export type Database = {
           name: string
         }
         Insert: {
+          category_type?: string
           commission_rate?: number
           created_at?: string
           description?: string | null
@@ -562,6 +647,7 @@ export type Database = {
           name: string
         }
         Update: {
+          category_type?: string
           commission_rate?: number
           created_at?: string
           description?: string | null
