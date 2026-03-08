@@ -1,5 +1,6 @@
 import { useServices, useCategories, useProviders } from '@/hooks/useSupabaseData';
 import { useCities } from '@/hooks/useCities';
+import ImageUpload from '@/components/ImageUpload';
 import { useCreateService, useUpdateService, useDeleteService } from '@/hooks/useAdminMutations';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
