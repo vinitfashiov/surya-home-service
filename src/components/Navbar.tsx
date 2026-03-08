@@ -112,6 +112,7 @@ export default function Navbar() {
               </Link>
             )}
             {!loading && user ? (
+              <>
                 <NotificationBell userId={user.id} />
 
                 <DropdownMenu>
