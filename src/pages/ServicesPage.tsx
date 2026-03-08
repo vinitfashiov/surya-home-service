@@ -37,8 +37,7 @@ export default function ServicesPage() {
   const [showFilters, setShowFilters] = useState(false);
 
   const { data: categories = [] } = useCategories();
-  const { data: cities = [] } = useCities();
-  const { data: services = [], isLoading } = useServices(selectedCategory);
+  const { data: services = [], isLoading } = useServices(selectedCategory, selectedCityId);
   const { data: subcategories = [] } = useSubcategories(selectedCategory === 'all' ? undefined : selectedCategory);
 
   // Reset subcategory when category changes
