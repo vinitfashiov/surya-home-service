@@ -1,11 +1,12 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useService } from '@/hooks/useSupabaseData';
 import { useServiceAddons } from '@/hooks/useServiceAddons';
+import { useServiceVariants, ServiceVariant } from '@/hooks/useSubcategoriesVariants';
 import { useReviewsForProvider } from '@/hooks/useReviews';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { useAddToCart } from '@/hooks/useCart';
 import { useState } from 'react';
-import { Star, Clock, ArrowLeft, ShoppingCart, Zap, Check, X, Plus, Minus } from 'lucide-react';
+import { Star, Clock, ArrowLeft, ShoppingCart, Zap, Check, X, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
@@ -19,8 +20,10 @@ export default function ServiceDetailsPage() {
   const { user } = useAuthContext();
   const { data: service, isLoading } = useService(serviceId);
   const { data: addons = [] } = useServiceAddons(serviceId);
+  const { data: variants = [] } = useServiceVariants(serviceId);
   const addToCart = useAddToCart();
   const [selectedAddons, setSelectedAddons] = useState<string[]>([]);
+  const [selectedVariant, setSelectedVariant] = useState<ServiceVariant | null>(null);
 
   const providerId = service?.provider?.id;
   const { data: reviews = [] } = useReviewsForProvider(providerId);
@@ -35,7 +38,9 @@ export default function ServiceDetailsPage() {
     .filter((a: any) => selectedAddons.includes(a.id))
     .reduce((sum: number, a: any) => sum + Number(a.price), 0);
 
-  const totalPrice = Number(service?.price || 0) + addonsTotal;
+  const basePrice = selectedVariant ? selectedVariant.price : Number(service?.price || 0);
+  const baseDuration = selectedVariant ? selectedVariant.duration : Number(service?.duration || 0);
+  const totalPrice = basePrice + addonsTotal;
 
   const handleAddToCart = async () => {
     if (!user) { toast.error('Please log in to add to cart.'); navigate('/login?redirect=/service/' + serviceId); return; }
@@ -49,8 +54,11 @@ export default function ServiceDetailsPage() {
 
   const handleBookNow = () => {
     if (!user) { navigate('/login?redirect=/service/' + serviceId); return; }
-    // Store selected addons in session for checkout
-    sessionStorage.setItem('quickBook', JSON.stringify({ serviceId, addonIds: selectedAddons }));
+    sessionStorage.setItem('quickBook', JSON.stringify({
+      serviceId,
+      addonIds: selectedAddons,
+      variantId: selectedVariant?.id || null,
+    }));
     navigate('/checkout?mode=quick');
   };
 
@@ -113,12 +121,17 @@ export default function ServiceDetailsPage() {
               <p className="text-muted-foreground mt-1">by {providerName}</p>
               <div className="flex items-center gap-4 mt-3">
                 <span className="flex items-center gap-1 text-sm"><Star className="h-4 w-4 text-warning fill-warning" /> {service.rating} ({service.review_count} reviews)</span>
-                <span className="flex items-center gap-1 text-sm text-muted-foreground"><Clock className="h-4 w-4" /> {service.duration} min</span>
+                <span className="flex items-center gap-1 text-sm text-muted-foreground"><Clock className="h-4 w-4" /> {baseDuration} min</span>
               </div>
             </div>
             <div className="text-right">
               <div className="text-3xl font-heading font-bold text-primary">₹{totalPrice}</div>
-              {addonsTotal > 0 && <p className="text-xs text-muted-foreground">Base ₹{service.price} + Add-ons ₹{addonsTotal}</p>}
+              {(addonsTotal > 0 || selectedVariant) && (
+                <p className="text-xs text-muted-foreground">
+                  {selectedVariant ? `${selectedVariant.name} ₹${selectedVariant.price}` : `Base ₹${service.price}`}
+                  {addonsTotal > 0 && ` + Add-ons ₹${addonsTotal}`}
+                </p>
+              )}
             </div>
           </div>
 
@@ -134,6 +147,65 @@ export default function ServiceDetailsPage() {
       <div className="grid md:grid-cols-3 gap-6 mt-6">
         {/* Left column */}
         <div className="md:col-span-2 space-y-6">
+          {/* Variants / Packages */}
+          {variants.length > 0 && (
+            <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="bg-card rounded-xl shadow-card border p-6">
+              <h3 className="font-heading font-semibold text-foreground mb-4 flex items-center gap-2">
+                <Package className="h-5 w-5 text-primary" /> Choose a Package
+              </h3>
+              <div className="grid gap-3">
+                {/* Default / base option */}
+                <button
+                  onClick={() => setSelectedVariant(null)}
+                  className={`w-full flex items-center justify-between p-4 rounded-xl border-2 transition-all text-left ${
+                    !selectedVariant
+                      ? 'border-primary bg-primary/5 shadow-sm'
+                      : 'border-border hover:border-muted-foreground/30 hover:bg-muted/50'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                      !selectedVariant ? 'border-primary bg-primary' : 'border-muted-foreground'
+                    }`}>
+                      {!selectedVariant && <Check className="h-3 w-3 text-primary-foreground" />}
+                    </div>
+                    <div>
+                      <p className="font-medium text-foreground">Standard</p>
+                      <p className="text-xs text-muted-foreground">{service.duration} min</p>
+                    </div>
+                  </div>
+                  <span className="font-heading font-bold text-primary">₹{service.price}</span>
+                </button>
+
+                {variants.map((variant) => (
+                  <button
+                    key={variant.id}
+                    onClick={() => setSelectedVariant(variant)}
+                    className={`w-full flex items-center justify-between p-4 rounded-xl border-2 transition-all text-left ${
+                      selectedVariant?.id === variant.id
+                        ? 'border-primary bg-primary/5 shadow-sm'
+                        : 'border-border hover:border-muted-foreground/30 hover:bg-muted/50'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                        selectedVariant?.id === variant.id ? 'border-primary bg-primary' : 'border-muted-foreground'
+                      }`}>
+                        {selectedVariant?.id === variant.id && <Check className="h-3 w-3 text-primary-foreground" />}
+                      </div>
+                      <div>
+                        <p className="font-medium text-foreground">{variant.name}</p>
+                        {variant.description && <p className="text-xs text-muted-foreground">{variant.description}</p>}
+                        <p className="text-xs text-muted-foreground">{variant.duration} min</p>
+                      </div>
+                    </div>
+                    <span className="font-heading font-bold text-primary">₹{variant.price}</span>
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+          )}
+
           {/* What's included */}
           <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="bg-card rounded-xl shadow-card border p-6">
             <h3 className="font-heading font-semibold text-foreground mb-4">What's Included</h3>
@@ -221,8 +293,10 @@ export default function ServiceDetailsPage() {
             <h3 className="font-heading font-semibold text-foreground mb-4">Book this service</h3>
             <div className="space-y-3 mb-6">
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Base price</span>
-                <span className="text-foreground font-medium">₹{service.price}</span>
+                <span className="text-muted-foreground">
+                  {selectedVariant ? selectedVariant.name : 'Base price'}
+                </span>
+                <span className="text-foreground font-medium">₹{basePrice}</span>
               </div>
               {selectedAddons.length > 0 && (
                 <div className="flex justify-between text-sm">
@@ -234,6 +308,10 @@ export default function ServiceDetailsPage() {
               <div className="flex justify-between">
                 <span className="font-semibold text-foreground">Total</span>
                 <span className="font-heading font-bold text-primary text-lg">₹{totalPrice}</span>
+              </div>
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>Duration</span>
+                <span>{baseDuration} min</span>
               </div>
             </div>
             <div className="space-y-3">
