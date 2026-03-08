@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth, useMyProvider } from '@/hooks/useSupabaseData';
 import { useCities } from '@/hooks/useCities';
 import { supabase } from '@/integrations/supabase/client';
+import ImageUpload from '@/components/ImageUpload';
 import { useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -101,6 +102,23 @@ export default function ProviderProfile() {
           {provider.status}
         </Badge>
       </div>
+
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="text-lg">Company Logo</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ImageUpload
+            bucket="provider-logos"
+            path={`${provider.id}/logo`}
+            currentUrl={null}
+            onUpload={(url) => {
+              // Logo is visual-only for now; could be stored in a column later
+              toast.success('Logo uploaded');
+            }}
+          />
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>

@@ -1,5 +1,6 @@
 import { useCategories } from '@/hooks/useSupabaseData';
 import { useCreateCategory, useUpdateCategory, useDeleteCategory } from '@/hooks/useAdminMutations';
+import ImageUpload from '@/components/ImageUpload';
 import { Scissors, Zap, Droplets, SprayCan, Wrench, Paintbrush, Bug, Hammer, Plus, Pencil, Trash2, FolderTree, Percent } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -25,7 +26,7 @@ const categoryTypes = [
   { value: 'virtual', label: 'Virtual (Date + Time, No Address)' },
 ];
 
-const emptyForm = { name: '', description: '', icon: 'Wrench', commission_rate: 20, category_type: 'standard' };
+const emptyForm = { name: '', description: '', icon: 'Wrench', commission_rate: 20, category_type: 'standard', image_url: '' };
 
 export default function AdminCategories() {
   const { data: categories = [], isLoading } = useCategories();
@@ -41,7 +42,7 @@ export default function AdminCategories() {
   const openCreate = () => { setEditId(null); setForm(emptyForm); setDialogOpen(true); };
   const openEdit = (cat: any) => {
     setEditId(cat.id);
-    setForm({ name: cat.name, description: cat.description || '', icon: cat.icon || 'Wrench', commission_rate: cat.commission_rate ?? 20, category_type: cat.category_type || 'standard' });
+    setForm({ name: cat.name, description: cat.description || '', icon: cat.icon || 'Wrench', commission_rate: cat.commission_rate ?? 20, category_type: cat.category_type || 'standard', image_url: cat.image_url || '' });
     setDialogOpen(true);
   };
 
@@ -175,6 +176,15 @@ export default function AdminCategories() {
                 </SelectContent>
               </Select>
               <p className="text-xs text-muted-foreground">Controls which checkout sections appear for this category's services</p>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Category Image</Label>
+              <ImageUpload
+                bucket="service-images"
+                path={editId ? `categories/${editId}/main` : `categories/new-${Date.now()}/main`}
+                currentUrl={form.image_url || null}
+                onUpload={(url) => setForm(f => ({ ...f, image_url: url }))}
+              />
             </div>
           </div>
           <DialogFooter><Button onClick={handleSave} disabled={isSaving}>{isSaving ? 'Saving…' : 'Save'}</Button></DialogFooter>
