@@ -3,6 +3,9 @@ import StatusBadge from '@/components/StatusBadge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
+import { useState } from 'react';
+import { MessageCircle } from 'lucide-react';
+import ChatDialog from '@/components/ChatDialog';
 
 export default function ProviderBookings() {
   const { user } = useAuth();
