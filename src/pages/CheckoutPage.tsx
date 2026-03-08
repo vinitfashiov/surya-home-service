@@ -55,6 +55,8 @@ export default function CheckoutPage() {
   const [confirmed, setConfirmed] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
   const [customFieldValues, setCustomFieldValues] = useState<Record<string, string>>({});
+  const [paymentMethod, setPaymentMethod] = useState<'online' | 'cod'>('online');
+  const [processingPayment, setProcessingPayment] = useState(false);
 
   const finalAddress = selectedAddress?.address_line || manualAddress;
 
