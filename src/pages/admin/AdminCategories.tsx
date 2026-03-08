@@ -42,7 +42,7 @@ export default function AdminCategories() {
   const openCreate = () => { setEditId(null); setForm(emptyForm); setDialogOpen(true); };
   const openEdit = (cat: any) => {
     setEditId(cat.id);
-    setForm({ name: cat.name, description: cat.description || '', icon: cat.icon || 'Wrench', commission_rate: cat.commission_rate ?? 20, category_type: cat.category_type || 'standard' });
+    setForm({ name: cat.name, description: cat.description || '', icon: cat.icon || 'Wrench', commission_rate: cat.commission_rate ?? 20, category_type: cat.category_type || 'standard', image_url: cat.image_url || '' });
     setDialogOpen(true);
   };
 
