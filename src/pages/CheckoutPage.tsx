@@ -109,12 +109,34 @@ export default function CheckoutPage() {
 
   const { data: checkoutFields = [] } = useCategoryCheckoutFields(categoryIds);
 
-  // Dynamic pricing
-  const subtotal = lineItems.reduce((sum, item) => sum + (item.price + item.addonsTotal) * item.quantity, 0);
+  // Fetch pricing rules for all services in the checkout
+  const serviceIds = useMemo(() => lineItems.map(i => i.serviceId).filter(Boolean), [lineItems]);
+  const { data: allPricingRules = [] } = usePricingRulesForServices(serviceIds);
+
+  // Dynamic pricing: compute price per line item using pricing rules + custom field values
+  const pricedItems = useMemo(() => {
+    return lineItems.map(item => {
+      const itemRules = allPricingRules.filter(r => r.service_id === item.serviceId && r.is_active);
+      const { total: dynamicPrice, breakdown } = calculateDynamicPrice(
+        item.price,
+        itemRules,
+        customFieldValues,
+        checkoutFields,
+      );
+      return {
+        ...item,
+        dynamicPrice,
+        priceBreakdown: breakdown,
+        hasDynamicPricing: itemRules.length > 0,
+      };
+    });
+  }, [lineItems, allPricingRules, customFieldValues, checkoutFields]);
+
+  const subtotal = pricedItems.reduce((sum, item) => sum + (item.dynamicPrice + item.addonsTotal) * item.quantity, 0);
   const platformFee = Math.round(subtotal * 0.05);
   const discount = couponResult?.valid ? couponResult.discountAmount : 0;
   const total = Math.max(0, subtotal + platformFee - discount);
-  const totalDuration = lineItems.reduce((sum, item) => sum + item.duration * item.quantity, 0);
+  const totalDuration = pricedItems.reduce((sum, item) => sum + item.duration * item.quantity, 0);
 
   // Real-time time slot availability
   const providerIds = useMemo(() => 
