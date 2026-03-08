@@ -82,9 +82,14 @@ function BookingCard({ booking, userId }: { booking: any; userId: string }) {
         {/* Action buttons */}
         <div className="mt-4 flex flex-wrap gap-2">
           {!isCancelled && !isCompleted && (
-            <Button size="sm" variant="outline" className="gap-1.5" onClick={handleTrack}>
-              <Eye className="h-3.5 w-3.5" /> Track Order
-            </Button>
+            <>
+              <Button size="sm" variant="outline" className="gap-1.5" onClick={handleTrack}>
+                <Eye className="h-3.5 w-3.5" /> Track Order
+              </Button>
+              <Button size="sm" variant="outline" className="gap-1.5" onClick={() => setChatOpen(true)}>
+                <MessageCircle className="h-3.5 w-3.5" /> Chat
+              </Button>
+            </>
           )}
           {canReview && (
             <Button size="sm" variant="outline" className="gap-1.5" onClick={() => setReviewOpen(true)}>
