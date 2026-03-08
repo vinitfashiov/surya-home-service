@@ -164,6 +164,18 @@ export default function AdminCategories() {
                 />
               </div>
             </div>
+            <div className="space-y-1.5">
+              <Label>Category Type</Label>
+              <Select value={form.category_type} onValueChange={v => setForm(f => ({ ...f, category_type: v }))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {categoryTypes.map(ct => (
+                    <SelectItem key={ct.value} value={ct.value}>{ct.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">Controls which checkout sections appear for this category's services</p>
+            </div>
           </div>
           <DialogFooter><Button onClick={handleSave} disabled={isSaving}>{isSaving ? 'Saving…' : 'Save'}</Button></DialogFooter>
         </DialogContent>
