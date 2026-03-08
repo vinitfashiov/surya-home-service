@@ -1,7 +1,6 @@
-import { Link, useLocation } from 'react-router-dom';
-import { useAppStore } from '@/lib/store';
-import { UserRole } from '@/lib/types';
-import { Menu, X, Search, Bell, User, ChevronDown } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useAuthContext } from '@/contexts/AuthContext';
+import { Menu, X, Bell, User, ChevronDown, LogOut, LogIn } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
@@ -13,8 +12,9 @@ import {
   DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
+import { toast } from 'sonner';
 
-const roleLabels: Record<UserRole, string> = {
+const roleLabels: Record<string, string> = {
   admin: 'Admin',
   employee: 'Employee',
   customer: 'Customer',
@@ -22,7 +22,7 @@ const roleLabels: Record<UserRole, string> = {
   serviceman: 'Serviceman',
 };
 
-const roleColors: Record<UserRole, string> = {
+const roleColors: Record<string, string> = {
   admin: 'bg-destructive/10 text-destructive',
   employee: 'bg-info/10 text-info',
   customer: 'bg-primary/10 text-primary',
@@ -31,9 +31,18 @@ const roleColors: Record<UserRole, string> = {
 };
 
 export default function Navbar() {
-  const { currentRole, setCurrentRole } = useAppStore();
+  const { user, roles, signOut, loading } = useAuthContext();
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+
+  const primaryRole = roles[0] || 'customer';
+
+  const handleSignOut = async () => {
+    await signOut();
+    toast.success('Signed out');
+    navigate('/');
+  };
 
   const customerLinks = [
     { to: '/', label: 'Home' },
@@ -59,14 +68,13 @@ export default function Navbar() {
     { to: '/serviceman', label: 'My Jobs' },
   ];
 
-  const links =
-    currentRole === 'admin' || currentRole === 'employee'
-      ? adminLinks
-      : currentRole === 'provider'
-      ? providerLinks
-      : currentRole === 'serviceman'
-      ? servicemanLinks
-      : customerLinks;
+  const links = roles.includes('admin') || roles.includes('employee')
+    ? adminLinks
+    : roles.includes('provider')
+    ? providerLinks
+    : roles.includes('serviceman')
+    ? servicemanLinks
+    : customerLinks;
 
   return (
     <nav className="sticky top-0 z-50 bg-card/80 backdrop-blur-lg border-b">
@@ -96,35 +104,60 @@ export default function Navbar() {
           </div>
 
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" className="hidden md:flex">
-              <Bell className="h-4 w-4" />
-            </Button>
-
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="gap-2">
-                  <Badge className={`${roleColors[currentRole]} border-0 text-xs`}>
-                    {roleLabels[currentRole]}
-                  </Badge>
-                  <ChevronDown className="h-3 w-3" />
+            {!loading && user ? (
+              <>
+                <Button variant="ghost" size="icon" className="hidden md:flex">
+                  <Bell className="h-4 w-4" />
                 </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuLabel className="text-xs text-muted-foreground">Switch Role (Demo)</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                {(Object.keys(roleLabels) as UserRole[]).map((role) => (
-                  <DropdownMenuItem
-                    key={role}
-                    onClick={() => setCurrentRole(role)}
-                    className={currentRole === role ? 'bg-muted' : ''}
-                  >
-                    <Badge className={`${roleColors[role]} border-0 text-xs mr-2`}>
-                      {roleLabels[role]}
-                    </Badge>
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
+
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="gap-2">
+                      <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center">
+                        <User className="h-3.5 w-3.5 text-primary" />
+                      </div>
+                      <Badge className={`${roleColors[primaryRole] || roleColors.customer} border-0 text-xs`}>
+                        {roleLabels[primaryRole] || 'Customer'}
+                      </Badge>
+                      <ChevronDown className="h-3 w-3" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuLabel className="text-xs">
+                      {user.email}
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    {roles.length > 0 && (
+                      <>
+                        <DropdownMenuLabel className="text-xs text-muted-foreground">Roles</DropdownMenuLabel>
+                        {roles.map((role) => (
+                          <DropdownMenuItem key={role} className="cursor-default">
+                            <Badge className={`${roleColors[role] || ''} border-0 text-xs`}>
+                              {roleLabels[role] || role}
+                            </Badge>
+                          </DropdownMenuItem>
+                        ))}
+                        <DropdownMenuSeparator />
+                      </>
+                    )}
+                    <DropdownMenuItem onClick={handleSignOut} className="text-destructive cursor-pointer">
+                      <LogOut className="h-4 w-4 mr-2" /> Sign out
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </>
+            ) : !loading ? (
+              <div className="flex items-center gap-2">
+                <Link to="/login">
+                  <Button variant="ghost" size="sm" className="gap-1.5">
+                    <LogIn className="h-4 w-4" /> Sign in
+                  </Button>
+                </Link>
+                <Link to="/signup">
+                  <Button size="sm">Sign up</Button>
+                </Link>
+              </div>
+            ) : null}
 
             <button className="md:hidden" onClick={() => setMobileOpen(!mobileOpen)}>
               {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -148,6 +181,16 @@ export default function Navbar() {
                 {link.label}
               </Link>
             ))}
+            {!user && (
+              <div className="pt-2 flex gap-2 px-3">
+                <Link to="/login" onClick={() => setMobileOpen(false)}>
+                  <Button variant="outline" size="sm">Sign in</Button>
+                </Link>
+                <Link to="/signup" onClick={() => setMobileOpen(false)}>
+                  <Button size="sm">Sign up</Button>
+                </Link>
+              </div>
+            )}
           </div>
         )}
       </div>
