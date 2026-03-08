@@ -103,6 +103,23 @@ export default function ProviderProfile() {
         </Badge>
       </div>
 
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="text-lg">Company Logo</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ImageUpload
+            bucket="provider-logos"
+            path={`${provider.id}/logo`}
+            currentUrl={null}
+            onUpload={(url) => {
+              // Logo is visual-only for now; could be stored in a column later
+              toast.success('Logo uploaded');
+            }}
+          />
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <CardTitle className="text-lg">Company Details</CardTitle>

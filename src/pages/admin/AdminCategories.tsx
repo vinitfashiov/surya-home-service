@@ -177,6 +177,15 @@ export default function AdminCategories() {
               </Select>
               <p className="text-xs text-muted-foreground">Controls which checkout sections appear for this category's services</p>
             </div>
+            <div className="space-y-1.5">
+              <Label>Category Image</Label>
+              <ImageUpload
+                bucket="service-images"
+                path={editId ? `categories/${editId}/main` : `categories/new-${Date.now()}/main`}
+                currentUrl={form.image_url || null}
+                onUpload={(url) => setForm(f => ({ ...f, image_url: url }))}
+              />
+            </div>
           </div>
           <DialogFooter><Button onClick={handleSave} disabled={isSaving}>{isSaving ? 'Saving…' : 'Save'}</Button></DialogFooter>
         </DialogContent>
