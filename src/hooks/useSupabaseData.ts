@@ -238,7 +238,7 @@ export function useUpdateBookingStatus() {
     mutationFn: async ({ bookingId, status }: { bookingId: string; status: string }) => {
       const { data, error } = await supabase
         .from('bookings')
-        .update({ status })
+        .update({ status: status as any })
         .eq('id', bookingId)
         .select()
         .single();
