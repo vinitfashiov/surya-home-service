@@ -9,6 +9,7 @@ import {
   LogOut,
   MapPin,
   ListChecks,
+  Ticket,
 } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useAuthContext } from '@/contexts/AuthContext';
