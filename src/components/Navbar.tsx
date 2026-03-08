@@ -56,6 +56,7 @@ export default function Navbar() {
 
   const providerLinks = [
     { to: '/provider', label: 'Dashboard' },
+    { to: '/provider/analytics', label: 'Analytics' },
     { to: '/provider/bookings', label: 'Bookings' },
     { to: '/provider/availability', label: 'Availability' },
     { to: '/provider/servicemen', label: 'Servicemen' },
@@ -146,6 +147,9 @@ export default function Navbar() {
                         <DropdownMenuSeparator />
                       </>
                     )}
+                    <DropdownMenuItem onClick={() => navigate('/profile')} className="cursor-pointer">
+                      <User className="h-4 w-4 mr-2" /> My Profile
+                    </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => navigate('/my-addresses')} className="cursor-pointer">
                       <MapPin className="h-4 w-4 mr-2" /> My Addresses
                     </DropdownMenuItem>

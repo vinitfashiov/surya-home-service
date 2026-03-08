@@ -10,6 +10,7 @@ import {
   MapPin,
   ListChecks,
   Ticket,
+  Megaphone,
 } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useAuthContext } from '@/contexts/AuthContext';
@@ -44,6 +45,7 @@ const managementNav = [
   { title: 'Providers', url: '/admin/providers', icon: Building2 },
   { title: 'Employees', url: '/admin/employees', icon: Users },
   { title: 'Coupons', url: '/admin/coupons', icon: Ticket },
+  { title: 'Banners', url: '/admin/banners', icon: Megaphone },
   { title: 'Settings', url: '/admin/settings', icon: Settings },
 ];
 

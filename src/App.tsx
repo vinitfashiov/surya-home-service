@@ -26,7 +26,10 @@ import AdminSettings from "@/pages/admin/AdminSettings";
 import AdminCities from "@/pages/admin/AdminCities";
 import AdminCheckoutFields from "@/pages/admin/AdminCheckoutFields";
 import AdminCoupons from "@/pages/admin/AdminCoupons";
+import AdminBanners from "@/pages/admin/AdminBanners";
 import ProviderDashboard from "@/pages/provider/ProviderDashboard";
+import ProviderAnalytics from "@/pages/provider/ProviderAnalytics";
+import ProfilePage from "@/pages/ProfilePage";
 import ProviderBookings from "@/pages/provider/ProviderBookings";
 import ProviderServicemen from "@/pages/provider/ProviderServicemen";
 import ProviderProfile from "@/pages/provider/ProviderProfile";
@@ -67,6 +70,7 @@ const App = () => (
               <Route path="cities" element={<AdminCities />} />
               <Route path="checkout-fields" element={<AdminCheckoutFields />} />
               <Route path="coupons" element={<AdminCoupons />} />
+              <Route path="banners" element={<AdminBanners />} />
               <Route path="settings" element={<AdminSettings />} />
             </Route>
 
@@ -91,7 +95,9 @@ const App = () => (
                     <Route path="/provider-signup" element={<ProviderSignupPage />} />
                     <Route path="/forgot-password" element={<ForgotPasswordPage />} />
                     <Route path="/reset-password" element={<ResetPasswordPage />} />
+                    <Route path="/profile" element={<ProfilePage />} />
                     <Route path="/provider" element={<ProviderDashboard />} />
+                    <Route path="/provider/analytics" element={<ProviderAnalytics />} />
                     <Route path="/provider/bookings" element={<ProviderBookings />} />
                     <Route path="/provider/servicemen" element={<ProviderServicemen />} />
                     <Route path="/provider/profile" element={<ProviderProfile />} />
