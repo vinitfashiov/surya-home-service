@@ -15,6 +15,7 @@ import CheckoutPage from "@/pages/CheckoutPage";
 import OrderTrackingPage from "@/pages/OrderTrackingPage";
 import MyBookingsPage from "@/pages/MyBookingsPage";
 import MyAddressesPage from "@/pages/MyAddressesPage";
+import WishlistPage from "@/pages/WishlistPage";
 import AdminLayout from "@/components/admin/AdminLayout";
 import AdminDashboard from "@/pages/admin/AdminDashboard";
 import AdminBookings from "@/pages/admin/AdminBookings";
