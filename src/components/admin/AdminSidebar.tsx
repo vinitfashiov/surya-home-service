@@ -11,6 +11,7 @@ import {
   ListChecks,
   Ticket,
   Megaphone,
+  DollarSign,
 } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useAuthContext } from '@/contexts/AuthContext';
@@ -38,6 +39,7 @@ const mainNav = [
   { title: 'Services', url: '/admin/services', icon: Wrench },
   { title: 'Categories', url: '/admin/categories', icon: FolderTree },
   { title: 'Checkout Fields', url: '/admin/checkout-fields', icon: ListChecks },
+  { title: 'Pricing Rules', url: '/admin/pricing-rules', icon: DollarSign },
   { title: 'Cities', url: '/admin/cities', icon: MapPin },
 ];
 

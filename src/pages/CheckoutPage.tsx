@@ -8,10 +8,11 @@ import { useCreateNotification } from '@/hooks/useNotifications';
 import { useAvailableTimeSlots, ALL_SLOTS } from '@/hooks/useAvailableTimeSlots';
 import { useValidateCoupon, CouponResult } from '@/hooks/useCoupons';
 import { useCategoryCheckoutFields, useSaveBookingCustomFields } from '@/hooks/useCheckoutFields';
+import { usePricingRulesForServices, calculateDynamicPrice } from '@/hooks/usePricingRules';
 import AddressManager from '@/components/AddressManager';
 import DynamicCheckoutFields from '@/components/DynamicCheckoutFields';
 import { useState, useEffect, useMemo } from 'react';
-import { ArrowLeft, CheckCircle, Clock, CreditCard, Tag, Loader2, AlertCircle } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Clock, CreditCard, Tag, Loader2, AlertCircle, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -108,12 +109,34 @@ export default function CheckoutPage() {
 
   const { data: checkoutFields = [] } = useCategoryCheckoutFields(categoryIds);
 
-  // Dynamic pricing
-  const subtotal = lineItems.reduce((sum, item) => sum + (item.price + item.addonsTotal) * item.quantity, 0);
+  // Fetch pricing rules for all services in the checkout
+  const serviceIds = useMemo(() => lineItems.map(i => i.serviceId).filter(Boolean), [lineItems]);
+  const { data: allPricingRules = [] } = usePricingRulesForServices(serviceIds);
+
+  // Dynamic pricing: compute price per line item using pricing rules + custom field values
+  const pricedItems = useMemo(() => {
+    return lineItems.map(item => {
+      const itemRules = allPricingRules.filter(r => r.service_id === item.serviceId && r.is_active);
+      const { total: dynamicPrice, breakdown } = calculateDynamicPrice(
+        item.price,
+        itemRules,
+        customFieldValues,
+        checkoutFields,
+      );
+      return {
+        ...item,
+        dynamicPrice,
+        priceBreakdown: breakdown,
+        hasDynamicPricing: itemRules.length > 0,
+      };
+    });
+  }, [lineItems, allPricingRules, customFieldValues, checkoutFields]);
+
+  const subtotal = pricedItems.reduce((sum, item) => sum + (item.dynamicPrice + item.addonsTotal) * item.quantity, 0);
   const platformFee = Math.round(subtotal * 0.05);
   const discount = couponResult?.valid ? couponResult.discountAmount : 0;
   const total = Math.max(0, subtotal + platformFee - discount);
-  const totalDuration = lineItems.reduce((sum, item) => sum + item.duration * item.quantity, 0);
+  const totalDuration = pricedItems.reduce((sum, item) => sum + item.duration * item.quantity, 0);
 
   // Real-time time slot availability
   const providerIds = useMemo(() => 
@@ -171,6 +194,8 @@ export default function CheckoutPage() {
       const bookingIds: string[] = [];
       for (const item of lineItems) {
         for (let q = 0; q < item.quantity; q++) {
+          const pricedItem = pricedItems.find(p => p.serviceId === item.serviceId);
+          const bookingAmount = (pricedItem?.dynamicPrice ?? item.price) + item.addonsTotal;
           const booking = await createBooking.mutateAsync({
             customer_id: user.id,
             service_id: item.serviceId,
@@ -179,7 +204,7 @@ export default function CheckoutPage() {
             booking_time: time,
             address: finalAddress,
             notes: notes || undefined,
-            amount: item.price + item.addonsTotal,
+            amount: bookingAmount,
           });
           bookingIds.push(booking.id);
         }
@@ -270,10 +295,10 @@ export default function CheckoutPage() {
           <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-card rounded-2xl p-6 max-w-md w-full shadow-elevated border" onClick={(e) => e.stopPropagation()}>
             <h2 className="text-xl font-heading font-bold text-foreground mb-4">Confirm Your Booking</h2>
             <div className="space-y-3 text-sm">
-              {lineItems.map((item, i) => (
+              {pricedItems.map((item, i) => (
                 <div key={i} className="flex justify-between">
                   <span className="text-muted-foreground">{item.name} x{item.quantity}</span>
-                  <span className="text-foreground">₹{(item.price + item.addonsTotal) * item.quantity}</span>
+                  <span className="text-foreground">₹{(item.dynamicPrice + item.addonsTotal) * item.quantity}</span>
                 </div>
               ))}
               <Separator />
@@ -317,7 +342,7 @@ export default function CheckoutPage() {
           <div className="bg-card rounded-xl shadow-card border p-6">
             <h3 className="font-heading font-semibold text-foreground mb-4">Services</h3>
             <div className="space-y-3">
-              {lineItems.map((item, i) => (
+              {pricedItems.map((item, i) => (
                 <div key={i} className="flex justify-between items-center text-sm">
                   <div>
                     <p className="font-medium text-foreground">{item.name} {item.quantity > 1 && `x${item.quantity}`}</p>
@@ -325,8 +350,17 @@ export default function CheckoutPage() {
                     {item.addons.length > 0 && (
                       <p className="text-xs text-primary">+ {item.addons.map((a: any) => a.name).join(', ')}</p>
                     )}
+                    {item.hasDynamicPricing && (
+                      <div className="mt-1 space-y-0.5">
+                        {item.priceBreakdown.map((b, j) => (
+                          <p key={j} className="text-xs text-accent flex items-center gap-1">
+                            <TrendingUp className="h-3 w-3" /> {b.label}: ₹{Math.round(b.amount)}
+                          </p>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                  <span className="font-heading font-semibold text-foreground">₹{(item.price + item.addonsTotal) * item.quantity}</span>
+                  <span className="font-heading font-semibold text-foreground">₹{Math.round((item.dynamicPrice + item.addonsTotal) * item.quantity)}</span>
                 </div>
               ))}
             </div>
@@ -471,16 +505,24 @@ export default function CheckoutPage() {
           <div className="bg-card rounded-xl shadow-card border p-6 sticky top-24">
             <h3 className="font-heading font-semibold text-foreground mb-4">Price Breakdown</h3>
             <div className="space-y-2 text-sm">
-              {lineItems.map((item, i) => (
-                <div key={i} className="flex justify-between">
-                  <span className="text-muted-foreground">{item.name} x{item.quantity}</span>
-                  <span className="text-foreground">₹{item.price * item.quantity}</span>
+              {pricedItems.map((item, i) => (
+                <div key={i}>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">{item.name} x{item.quantity}</span>
+                    <span className="text-foreground">₹{Math.round(item.dynamicPrice * item.quantity)}</span>
+                  </div>
+                  {item.hasDynamicPricing && item.priceBreakdown.map((b, j) => (
+                    <div key={j} className="flex justify-between text-xs pl-3">
+                      <span className="text-muted-foreground/70">{b.label}</span>
+                      <span className="text-muted-foreground">₹{Math.round(b.amount)}</span>
+                    </div>
+                  ))}
                 </div>
               ))}
-              {lineItems.some(i => i.addonsTotal > 0) && (
+              {pricedItems.some(i => i.addonsTotal > 0) && (
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Add-ons</span>
-                  <span className="text-foreground">₹{lineItems.reduce((s, i) => s + i.addonsTotal * i.quantity, 0)}</span>
+                  <span className="text-foreground">₹{pricedItems.reduce((s, i) => s + i.addonsTotal * i.quantity, 0)}</span>
                 </div>
               )}
               <div className="flex justify-between">

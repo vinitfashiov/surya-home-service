@@ -450,6 +450,56 @@ export type Database = {
         }
         Relationships: []
       }
+      pricing_rules: {
+        Row: {
+          base_price: number
+          created_at: string
+          id: string
+          is_active: boolean
+          linked_field_name: string | null
+          max_units: number | null
+          min_units: number | null
+          rule_type: string
+          service_id: string
+          unit_label: string
+          unit_price: number
+        }
+        Insert: {
+          base_price?: number
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          linked_field_name?: string | null
+          max_units?: number | null
+          min_units?: number | null
+          rule_type?: string
+          service_id: string
+          unit_label?: string
+          unit_price?: number
+        }
+        Update: {
+          base_price?: number
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          linked_field_name?: string | null
+          max_units?: number | null
+          min_units?: number | null
+          rule_type?: string
+          service_id?: string
+          unit_label?: string
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pricing_rules_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null

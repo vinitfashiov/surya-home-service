@@ -27,6 +27,7 @@ import AdminCities from "@/pages/admin/AdminCities";
 import AdminCheckoutFields from "@/pages/admin/AdminCheckoutFields";
 import AdminCoupons from "@/pages/admin/AdminCoupons";
 import AdminBanners from "@/pages/admin/AdminBanners";
+import AdminPricingRules from "@/pages/admin/AdminPricingRules";
 import ProviderDashboard from "@/pages/provider/ProviderDashboard";
 import ProviderAnalytics from "@/pages/provider/ProviderAnalytics";
 import ProfilePage from "@/pages/ProfilePage";
@@ -71,6 +72,7 @@ const App = () => (
               <Route path="checkout-fields" element={<AdminCheckoutFields />} />
               <Route path="coupons" element={<AdminCoupons />} />
               <Route path="banners" element={<AdminBanners />} />
+              <Route path="pricing-rules" element={<AdminPricingRules />} />
               <Route path="settings" element={<AdminSettings />} />
             </Route>
 
