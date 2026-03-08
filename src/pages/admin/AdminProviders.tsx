@@ -68,7 +68,7 @@ export default function AdminProviders() {
 
   const handleReject = async (provider: any) => {
     try {
-      await updateMut.mutateAsync({ id: provider.id, status: 'suspended' });
+      await updateMut.mutateAsync({ id: provider.id, status: 'inactive' });
       await createNotification.mutateAsync({
         user_id: provider.user_id,
         title: 'Provider Application Rejected',
@@ -161,7 +161,7 @@ export default function AdminProviders() {
           <Input placeholder="Search providers..." className="pl-9" value={search} onChange={e => setSearch(e.target.value)} />
         </div>
         <div className="flex gap-2">
-          {['all', 'pending', 'active', 'suspended'].map((s) => (
+          {['all', 'pending', 'active', 'inactive'].map((s) => (
             <button
               key={s}
               onClick={() => setStatusFilter(s)}

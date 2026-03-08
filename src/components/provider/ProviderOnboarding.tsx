@@ -19,7 +19,7 @@ const steps = [
 export default function ProviderOnboarding({ provider }: ProviderOnboardingProps) {
   const status = provider?.status || 'pending';
   const isPending = status === 'pending';
-  const isRejected = status === 'rejected';
+  const isRejected = status === 'inactive';
 
   const currentStep = isRejected ? 2 : isPending ? 2 : 4;
   const progress = isRejected ? 50 : isPending ? 50 : 100;
