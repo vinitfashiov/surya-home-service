@@ -17,6 +17,7 @@ import ChatDialog from '@/components/ChatDialog';
 
 function BookingCard({ booking, userId }: { booking: any; userId: string }) {
   const [reviewOpen, setReviewOpen] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
   const { data: existingReview } = useReviewForBooking(booking.id);
   const { canCancel, cancellationFee, freeMinutes } = useCancellationRules();
   const updateStatus = useUpdateBookingStatus();
