@@ -114,6 +114,10 @@ export default function SignupPage() {
             Already have an account?{' '}
             <Link to="/login" className="text-primary font-medium hover:underline">Sign in</Link>
           </p>
+          <p className="text-center text-sm text-muted-foreground">
+            Want to register as a provider?{' '}
+            <Link to="/provider-signup" className="text-primary font-medium hover:underline">Provider signup</Link>
+          </p>
         </form>
       </div>
     </div>

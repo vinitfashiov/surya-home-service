@@ -26,6 +26,7 @@ import ProviderServicemen from "@/pages/provider/ProviderServicemen";
 import ServicemanDashboard from "@/pages/serviceman/ServicemanDashboard";
 import LoginPage from "@/pages/auth/LoginPage";
 import SignupPage from "@/pages/auth/SignupPage";
+import ProviderSignupPage from "@/pages/auth/ProviderSignupPage";
 import ForgotPasswordPage from "@/pages/auth/ForgotPasswordPage";
 import ResetPasswordPage from "@/pages/auth/ResetPasswordPage";
 import NotFound from "./pages/NotFound";
@@ -73,6 +74,7 @@ const App = () => (
                     <Route path="/my-addresses" element={<MyAddressesPage />} />
                     <Route path="/login" element={<LoginPage />} />
                     <Route path="/signup" element={<SignupPage />} />
+                    <Route path="/provider-signup" element={<ProviderSignupPage />} />
                     <Route path="/forgot-password" element={<ForgotPasswordPage />} />
                     <Route path="/reset-password" element={<ResetPasswordPage />} />
                     <Route path="/provider" element={<ProviderDashboard />} />
