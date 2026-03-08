@@ -131,18 +131,37 @@ export function useAllBookings() {
   return useQuery({
     queryKey: ['all-bookings'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: bookings, error } = await supabase
         .from('bookings')
         .select(`
           *,
           service:services(name),
           provider:providers(company_name),
-          serviceman:servicemen(name),
-          customer:profiles!bookings_customer_id_fkey(full_name)
+          serviceman:servicemen(name)
         `)
         .order('created_at', { ascending: false });
+
       if (error) throw error;
-      return data;
+      if (!bookings || bookings.length === 0) return [];
+
+      const customerIds = [...new Set(bookings.map((b: any) => b.customer_id).filter(Boolean))] as string[];
+      if (customerIds.length === 0) return bookings;
+
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, full_name')
+        .in('id', customerIds);
+
+      if (profilesError) throw profilesError;
+
+      const profileMap = new Map((profiles || []).map((p: any) => [p.id, p.full_name]));
+
+      return bookings.map((booking: any) => ({
+        ...booking,
+        customer: {
+          full_name: profileMap.get(booking.customer_id) || 'Customer',
+        },
+      }));
     },
   });
 }
