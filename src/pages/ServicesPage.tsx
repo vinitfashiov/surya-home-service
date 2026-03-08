@@ -26,9 +26,9 @@ const SORT_OPTIONS = [
 export default function ServicesPage() {
   const [searchParams] = useSearchParams();
   const categoryId = searchParams.get('category');
+  const { selectedCityId } = useCityStore();
   const [selectedCategory, setSelectedCategory] = useState(categoryId || 'all');
   const [selectedSubcategory, setSelectedSubcategory] = useState('all');
-  const [selectedCity, setSelectedCity] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('rating');
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 50000]);
