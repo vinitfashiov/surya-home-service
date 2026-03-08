@@ -3,6 +3,7 @@ import { useCategories, useServices } from '@/hooks/useSupabaseData';
 import { useCities } from '@/hooks/useCities';
 import { useSubcategories } from '@/hooks/useSubcategoriesVariants';
 import { Star, Clock, MapPin, Search, SlidersHorizontal, X } from 'lucide-react';
+import FavoriteButton from '@/components/FavoriteButton';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
