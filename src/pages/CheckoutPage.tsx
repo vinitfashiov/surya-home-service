@@ -295,10 +295,10 @@ export default function CheckoutPage() {
           <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-card rounded-2xl p-6 max-w-md w-full shadow-elevated border" onClick={(e) => e.stopPropagation()}>
             <h2 className="text-xl font-heading font-bold text-foreground mb-4">Confirm Your Booking</h2>
             <div className="space-y-3 text-sm">
-              {lineItems.map((item, i) => (
+              {pricedItems.map((item, i) => (
                 <div key={i} className="flex justify-between">
                   <span className="text-muted-foreground">{item.name} x{item.quantity}</span>
-                  <span className="text-foreground">₹{(item.price + item.addonsTotal) * item.quantity}</span>
+                  <span className="text-foreground">₹{(item.dynamicPrice + item.addonsTotal) * item.quantity}</span>
                 </div>
               ))}
               <Separator />
