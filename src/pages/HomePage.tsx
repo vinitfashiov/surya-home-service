@@ -19,12 +19,12 @@ const iconMap: Record<string, React.ElementType> = {
 export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState('');
   const navigate = useNavigate();
+  const { selectedCityId, selectedCityName } = useCityStore();
   const { data: categories = [], isLoading: catLoading } = useCategories();
-  const { data: services = [], isLoading: svcLoading } = useServices();
+  const { data: services = [], isLoading: svcLoading } = useServices(undefined, selectedCityId);
   const { data: cities = [] } = useCities();
   const { data: banners = [] } = useBanners();
   const [bannerIdx, setBannerIdx] = useState(0);
-  const [selectedCity, setSelectedCity] = useState<string | null>(null);
   const topServices = services.slice(0, 8);
 
   // Auto-rotate banners
