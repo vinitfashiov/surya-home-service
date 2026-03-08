@@ -67,10 +67,7 @@ export default function ServicesPage() {
       );
     }
 
-    // City
-    if (selectedCity !== 'all') {
-      result = result.filter((s: any) => s.city_id === selectedCity);
-    }
+    // City filtering is handled at the query level via selectedCityId
 
     // Subcategory
     if (selectedSubcategory !== 'all') {
