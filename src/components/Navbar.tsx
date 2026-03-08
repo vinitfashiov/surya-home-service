@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
 import NotificationBell from '@/components/NotificationBell';
+import CitySelector from '@/components/CitySelector';
 import { toast } from 'sonner';
 
 const roleLabels: Record<string, string> = {
@@ -85,6 +86,8 @@ export default function Navbar() {
             </div>
             <span className="font-heading font-bold text-xl text-foreground">ServisGo</span>
           </Link>
+
+          <CitySelector />
 
           <div className="hidden md:flex items-center gap-1">
             {links.map((link) => (

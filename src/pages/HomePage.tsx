@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { useCategories, useServices } from '@/hooks/useSupabaseData';
 import { useCities } from '@/hooks/useCities';
 import { useBanners } from '@/hooks/useBanners';
+import { useCityStore } from '@/lib/cityStore';
 import FavoriteButton from '@/components/FavoriteButton';
 import { useState, useEffect, useCallback } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -18,12 +19,12 @@ const iconMap: Record<string, React.ElementType> = {
 export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState('');
   const navigate = useNavigate();
+  const { selectedCityId, selectedCityName } = useCityStore();
   const { data: categories = [], isLoading: catLoading } = useCategories();
-  const { data: services = [], isLoading: svcLoading } = useServices();
+  const { data: services = [], isLoading: svcLoading } = useServices(undefined, selectedCityId);
   const { data: cities = [] } = useCities();
   const { data: banners = [] } = useBanners();
   const [bannerIdx, setBannerIdx] = useState(0);
-  const [selectedCity, setSelectedCity] = useState<string | null>(null);
   const topServices = services.slice(0, 8);
 
   // Auto-rotate banners
@@ -39,9 +40,7 @@ export default function HomePage() {
     }
   };
 
-  const filteredCategories = selectedCity
-    ? categories
-    : categories;
+  const filteredCategories = categories;
 
   return (
     <div className="min-h-screen">
@@ -148,34 +147,13 @@ export default function HomePage() {
         </section>
       )}
 
-      {/* City-based Browsing */}
-      {cities.length > 0 && (
-        <section className="py-8">
+      {/* City indicator */}
+      {selectedCityName && (
+        <section className="py-6">
           <div className="container mx-auto px-4">
-            <div className="flex items-center gap-2 mb-4">
+            <div className="flex items-center gap-2 bg-primary/5 rounded-xl px-4 py-3 border border-primary/10">
               <MapPin className="h-4 w-4 text-primary" />
-              <span className="text-sm font-medium text-foreground">Browse by city</span>
-            </div>
-            <div className="flex gap-2 flex-wrap">
-              <Button
-                variant={selectedCity === null ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setSelectedCity(null)}
-                className="rounded-full"
-              >
-                All Cities
-              </Button>
-              {cities.map((city: any) => (
-                <Button
-                  key={city.id}
-                  variant={selectedCity === city.id ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setSelectedCity(selectedCity === city.id ? null : city.id)}
-                  className="rounded-full"
-                >
-                  {city.name}
-                </Button>
-              ))}
+              <span className="text-sm text-foreground">Showing services in <span className="font-semibold text-primary">{selectedCityName}</span></span>
             </div>
           </div>
         </section>
@@ -206,7 +184,7 @@ export default function HomePage() {
                 return (
                   <motion.div key={cat.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04, duration: 0.4 }}>
                     <Link
-                      to={`/services?category=${cat.id}${selectedCity ? `&city=${selectedCity}` : ''}`}
+                      to={`/services?category=${cat.id}`}
                       className="block bg-card rounded-xl p-5 shadow-card border hover:shadow-card-hover transition-all group hover:-translate-y-0.5"
                     >
                       <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-3 group-hover:bg-primary/20 transition-colors">

@@ -2,6 +2,7 @@ import { useSearchParams, Link } from 'react-router-dom';
 import { useCategories, useServices } from '@/hooks/useSupabaseData';
 import { useCities } from '@/hooks/useCities';
 import { useSubcategories } from '@/hooks/useSubcategoriesVariants';
+import { useCityStore } from '@/lib/cityStore';
 import { Star, Clock, MapPin, Search, SlidersHorizontal, X } from 'lucide-react';
 import FavoriteButton from '@/components/FavoriteButton';
 import { Button } from '@/components/ui/button';
@@ -25,9 +26,9 @@ const SORT_OPTIONS = [
 export default function ServicesPage() {
   const [searchParams] = useSearchParams();
   const categoryId = searchParams.get('category');
+  const { selectedCityId } = useCityStore();
   const [selectedCategory, setSelectedCategory] = useState(categoryId || 'all');
   const [selectedSubcategory, setSelectedSubcategory] = useState('all');
-  const [selectedCity, setSelectedCity] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('rating');
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 50000]);
@@ -36,8 +37,7 @@ export default function ServicesPage() {
   const [showFilters, setShowFilters] = useState(false);
 
   const { data: categories = [] } = useCategories();
-  const { data: cities = [] } = useCities();
-  const { data: services = [], isLoading } = useServices(selectedCategory);
+  const { data: services = [], isLoading } = useServices(selectedCategory, selectedCityId);
   const { data: subcategories = [] } = useSubcategories(selectedCategory === 'all' ? undefined : selectedCategory);
 
   // Reset subcategory when category changes
@@ -67,10 +67,7 @@ export default function ServicesPage() {
       );
     }
 
-    // City
-    if (selectedCity !== 'all') {
-      result = result.filter((s: any) => s.city_id === selectedCity);
-    }
+    // City filtering is handled at the query level via selectedCityId
 
     // Subcategory
     if (selectedSubcategory !== 'all') {
@@ -103,10 +100,10 @@ export default function ServicesPage() {
     }
 
     return result;
-  }, [services, searchQuery, selectedCity, selectedSubcategory, priceRange, minRating, maxDuration, sortBy]);
+  }, [services, searchQuery, selectedSubcategory, priceRange, minRating, maxDuration, sortBy]);
 
   const activeFilterCount = [
-    selectedCity !== 'all',
+    minRating > 0,
     minRating > 0,
     maxDuration < 480,
     priceRange[0] > 0 || priceRange[1] < maxPrice,
@@ -116,7 +113,6 @@ export default function ServicesPage() {
     setPriceRange([0, maxPrice]);
     setMinRating(0);
     setMaxDuration(480);
-    setSelectedCity('all');
     setSearchQuery('');
     setSelectedSubcategory('all');
   };
@@ -176,23 +172,7 @@ export default function ServicesPage() {
             exit={{ height: 0, opacity: 0 }}
             className="overflow-hidden"
           >
-            <div className="bg-card rounded-xl border shadow-card p-6 mt-4 grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {/* City */}
-              <div className="space-y-2">
-                <Label className="text-sm font-medium text-foreground">City</Label>
-                <Select value={selectedCity} onValueChange={setSelectedCity}>
-                  <SelectTrigger>
-                    <MapPin className="h-4 w-4 mr-2 text-muted-foreground" />
-                    <SelectValue placeholder="All Cities" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Cities</SelectItem>
-                    {cities.map((c: any) => (
-                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+            <div className="bg-card rounded-xl border shadow-card p-6 mt-4 grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
 
               {/* Price range */}
               <div className="space-y-2">
@@ -237,7 +217,7 @@ export default function ServicesPage() {
                 />
               </div>
 
-              <div className="sm:col-span-2 lg:col-span-4 flex justify-end">
+              <div className="sm:col-span-2 lg:col-span-3 flex justify-end">
                 <Button variant="ghost" size="sm" onClick={clearFilters} className="text-muted-foreground">
                   Clear all filters
                 </Button>

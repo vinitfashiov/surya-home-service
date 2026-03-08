@@ -5,6 +5,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
+import CityGate from "@/components/CityGate";
+import { useCityStore } from "@/lib/cityStore";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import HomePage from "@/pages/HomePage";
 import ServicesPage from "@/pages/ServicesPage";
@@ -46,7 +48,11 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-const App = () => (
+const App = () => {
+  const { selectedCityId } = useCityStore();
+  const showCityGate = !selectedCityId;
+
+  return (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
@@ -82,6 +88,7 @@ const App = () => (
               path="*"
               element={
                 <>
+                  {showCityGate && <CityGate />}
                   <Navbar />
                   <Routes>
                     <Route path="/" element={<HomePage />} />
@@ -117,6 +124,7 @@ const App = () => (
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
-);
+  );
+};
 
 export default App;
