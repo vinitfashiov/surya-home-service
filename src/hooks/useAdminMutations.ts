@@ -38,6 +38,20 @@ export function useDeleteCategory() {
 }
 
 // ── Providers ──
+export function useCreateProvider() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (prov: { company_name: string; owner_name: string; email: string; phone?: string; address?: string; city_id?: string; status?: string; user_id?: string }) => {
+      const payload: any = { ...prov };
+      if (!payload.user_id) payload.user_id = '00000000-0000-0000-0000-000000000000';
+      const { data, error } = await supabase.from('providers').insert(payload).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['providers'] }),
+  });
+}
+
 export function useUpdateProvider() {
   const qc = useQueryClient();
   return useMutation({
