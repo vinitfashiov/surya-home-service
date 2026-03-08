@@ -480,6 +480,50 @@ export type Database = {
         }
         Relationships: []
       }
+      provider_availability: {
+        Row: {
+          created_at: string
+          date: string
+          end_time: string
+          id: string
+          is_available: boolean
+          max_bookings_per_slot: number
+          note: string | null
+          provider_id: string
+          start_time: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          end_time?: string
+          id?: string
+          is_available?: boolean
+          max_bookings_per_slot?: number
+          note?: string | null
+          provider_id: string
+          start_time?: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          end_time?: string
+          id?: string
+          is_available?: boolean
+          max_bookings_per_slot?: number
+          note?: string | null
+          provider_id?: string
+          start_time?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "provider_availability_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       providers: {
         Row: {
           address: string | null
