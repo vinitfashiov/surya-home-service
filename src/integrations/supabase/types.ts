@@ -63,6 +63,9 @@ export type Database = {
           notes: string | null
           payment_status: Database["public"]["Enums"]["payment_status"]
           provider_id: string
+          razorpay_order_id: string | null
+          razorpay_payment_id: string | null
+          razorpay_signature: string | null
           service_id: string
           serviceman_id: string | null
           status: Database["public"]["Enums"]["booking_status"]
@@ -80,6 +83,9 @@ export type Database = {
           notes?: string | null
           payment_status?: Database["public"]["Enums"]["payment_status"]
           provider_id: string
+          razorpay_order_id?: string | null
+          razorpay_payment_id?: string | null
+          razorpay_signature?: string | null
           service_id: string
           serviceman_id?: string | null
           status?: Database["public"]["Enums"]["booking_status"]
@@ -97,6 +103,9 @@ export type Database = {
           notes?: string | null
           payment_status?: Database["public"]["Enums"]["payment_status"]
           provider_id?: string
+          razorpay_order_id?: string | null
+          razorpay_payment_id?: string | null
+          razorpay_signature?: string | null
           service_id?: string
           serviceman_id?: string | null
           status?: Database["public"]["Enums"]["booking_status"]
