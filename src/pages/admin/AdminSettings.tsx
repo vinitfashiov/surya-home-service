@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Settings, Building2, Clock, DollarSign, Save, CalendarDays } from 'lucide-react';
+import { Settings, Building2, Clock, DollarSign, Save, CalendarDays, ShieldAlert } from 'lucide-react';
 import { toast } from 'sonner';
 
 const dayOptions = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
