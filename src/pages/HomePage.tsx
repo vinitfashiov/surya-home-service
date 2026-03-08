@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { useCategories, useServices } from '@/hooks/useSupabaseData';
 import { useCities } from '@/hooks/useCities';
 import { useBanners } from '@/hooks/useBanners';
+import FavoriteButton from '@/components/FavoriteButton';
 import { useState, useEffect, useCallback } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
