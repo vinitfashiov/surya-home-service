@@ -93,6 +93,7 @@ const App = () => (
                     <Route path="/order/:bookingId" element={<OrderTrackingPage />} />
                     <Route path="/my-bookings" element={<MyBookingsPage />} />
                     <Route path="/my-addresses" element={<MyAddressesPage />} />
+                    <Route path="/wishlist" element={<WishlistPage />} />
                     <Route path="/login" element={<LoginPage />} />
                     <Route path="/signup" element={<SignupPage />} />
                     <Route path="/provider-signup" element={<ProviderSignupPage />} />
