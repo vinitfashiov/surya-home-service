@@ -252,9 +252,12 @@ export default function HomePage() {
                       ) : (
                         <span className="text-3xl opacity-20">🔧</span>
                       )}
-                      <Badge className="absolute top-2 right-2 bg-card/90 text-foreground border-0 text-xs">
+                      <Badge className="absolute top-2 left-2 bg-card/90 text-foreground border-0 text-xs">
                         <Clock className="h-3 w-3 mr-1" />{service.duration}m
                       </Badge>
+                      <div className="absolute top-2 right-2 bg-card/90 rounded-full">
+                        <FavoriteButton serviceId={service.id} size="sm" />
+                      </div>
                     </div>
                     <div className="p-4">
                       <h3 className="font-heading font-semibold text-foreground text-sm line-clamp-1">{service.name}</h3>
