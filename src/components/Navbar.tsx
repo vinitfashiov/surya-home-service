@@ -50,8 +50,8 @@ export default function Navbar() {
   const customerLinks = [
     { to: '/', label: 'Home' },
     { to: '/services', label: 'Services' },
+    { to: '/wishlist', label: 'Wishlist' },
     { to: '/my-bookings', label: 'My Bookings' },
-    { to: '/my-addresses', label: 'Addresses' },
   ];
 
   const providerLinks = [
