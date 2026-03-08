@@ -172,23 +172,7 @@ export default function ServicesPage() {
             exit={{ height: 0, opacity: 0 }}
             className="overflow-hidden"
           >
-            <div className="bg-card rounded-xl border shadow-card p-6 mt-4 grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {/* City */}
-              <div className="space-y-2">
-                <Label className="text-sm font-medium text-foreground">City</Label>
-                <Select value={selectedCity} onValueChange={setSelectedCity}>
-                  <SelectTrigger>
-                    <MapPin className="h-4 w-4 mr-2 text-muted-foreground" />
-                    <SelectValue placeholder="All Cities" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Cities</SelectItem>
-                    {cities.map((c: any) => (
-                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+            <div className="bg-card rounded-xl border shadow-card p-6 mt-4 grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
 
               {/* Price range */}
               <div className="space-y-2">
