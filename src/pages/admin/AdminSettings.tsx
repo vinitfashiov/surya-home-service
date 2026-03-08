@@ -17,12 +17,12 @@ function useSettings() {
   return useQuery({
     queryKey: ['platform-settings'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('platform_settings')
         .select('*');
       if (error) throw error;
       const map: Record<string, string> = {};
-      data.forEach((s: any) => { map[s.key] = s.value; });
+      (data || []).forEach((s: any) => { map[s.key] = s.value; });
       return map;
     },
   });
