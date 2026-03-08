@@ -34,6 +34,7 @@ export default function OrderTrackingPage() {
 
   const booking = bookings.find((b: any) => b.id === bookingId);
 
+  const [chatOpen, setChatOpen] = useState(false);
   // Real-time subscription for booking updates
   const [liveStatus, setLiveStatus] = useState<string | null>(null);
   useEffect(() => {
