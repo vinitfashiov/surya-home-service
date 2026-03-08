@@ -12,6 +12,7 @@ import ServiceDetailsPage from "@/pages/ServiceDetailsPage";
 import BookingPage from "@/pages/BookingPage";
 import CartPage from "@/pages/CartPage";
 import CheckoutPage from "@/pages/CheckoutPage";
+import OrderTrackingPage from "@/pages/OrderTrackingPage";
 import MyBookingsPage from "@/pages/MyBookingsPage";
 import MyAddressesPage from "@/pages/MyAddressesPage";
 import AdminLayout from "@/components/admin/AdminLayout";
