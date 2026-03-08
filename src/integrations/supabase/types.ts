@@ -20,6 +20,7 @@ export type Database = {
           amount: number
           booking_date: string
           booking_time: string
+          city_id: string | null
           created_at: string
           customer_id: string
           id: string
@@ -36,6 +37,7 @@ export type Database = {
           amount?: number
           booking_date: string
           booking_time: string
+          city_id?: string | null
           created_at?: string
           customer_id: string
           id?: string
@@ -52,6 +54,7 @@ export type Database = {
           amount?: number
           booking_date?: string
           booking_time?: string
+          city_id?: string | null
           created_at?: string
           customer_id?: string
           id?: string
@@ -64,6 +67,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "bookings_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "bookings_provider_id_fkey"
             columns: ["provider_id"]
@@ -83,6 +93,71 @@ export type Database = {
             columns: ["serviceman_id"]
             isOneToOne: false
             referencedRelation: "servicemen"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cities: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          state: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          state?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          state?: string
+        }
+        Relationships: []
+      }
+      customer_addresses: {
+        Row: {
+          address_line: string
+          city_id: string | null
+          created_at: string
+          id: string
+          is_default: boolean
+          label: string
+          pincode: string | null
+          user_id: string
+        }
+        Insert: {
+          address_line: string
+          city_id?: string | null
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          label?: string
+          pincode?: string | null
+          user_id: string
+        }
+        Update: {
+          address_line?: string
+          city_id?: string | null
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          label?: string
+          pincode?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_addresses_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
             referencedColumns: ["id"]
           },
         ]
@@ -122,6 +197,47 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      notifications: {
+        Row: {
+          booking_id: string | null
+          created_at: string
+          id: string
+          is_read: boolean
+          message: string
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          booking_id?: string | null
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message?: string
+          title: string
+          type?: string
+          user_id: string
+        }
+        Update: {
+          booking_id?: string | null
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message?: string
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       platform_settings: {
         Row: {
@@ -177,6 +293,7 @@ export type Database = {
       providers: {
         Row: {
           address: string | null
+          city_id: string | null
           company_name: string
           created_at: string
           email: string
@@ -189,6 +306,7 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          city_id?: string | null
           company_name: string
           created_at?: string
           email: string
@@ -201,6 +319,7 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          city_id?: string | null
           company_name?: string
           created_at?: string
           email?: string
@@ -211,10 +330,74 @@ export type Database = {
           status?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "providers_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reviews: {
+        Row: {
+          booking_id: string
+          comment: string | null
+          created_at: string
+          customer_id: string
+          id: string
+          provider_id: string
+          rating: number
+          serviceman_id: string | null
+        }
+        Insert: {
+          booking_id: string
+          comment?: string | null
+          created_at?: string
+          customer_id: string
+          id?: string
+          provider_id: string
+          rating: number
+          serviceman_id?: string | null
+        }
+        Update: {
+          booking_id?: string
+          comment?: string | null
+          created_at?: string
+          customer_id?: string
+          id?: string
+          provider_id?: string
+          rating?: number
+          serviceman_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: true
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "providers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_serviceman_id_fkey"
+            columns: ["serviceman_id"]
+            isOneToOne: false
+            referencedRelation: "servicemen"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       service_categories: {
         Row: {
+          commission_rate: number
           created_at: string
           description: string | null
           icon: string | null
@@ -224,6 +407,7 @@ export type Database = {
           name: string
         }
         Insert: {
+          commission_rate?: number
           created_at?: string
           description?: string | null
           icon?: string | null
@@ -233,6 +417,7 @@ export type Database = {
           name: string
         }
         Update: {
+          commission_rate?: number
           created_at?: string
           description?: string | null
           icon?: string | null
@@ -296,6 +481,7 @@ export type Database = {
       services: {
         Row: {
           category_id: string
+          city_id: string | null
           created_at: string
           description: string | null
           duration: number
@@ -310,6 +496,7 @@ export type Database = {
         }
         Insert: {
           category_id: string
+          city_id?: string | null
           created_at?: string
           description?: string | null
           duration?: number
@@ -324,6 +511,7 @@ export type Database = {
         }
         Update: {
           category_id?: string
+          city_id?: string | null
           created_at?: string
           description?: string | null
           duration?: number
@@ -342,6 +530,13 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "service_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "services_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
             referencedColumns: ["id"]
           },
           {

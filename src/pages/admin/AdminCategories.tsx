@@ -1,6 +1,6 @@
 import { useCategories } from '@/hooks/useSupabaseData';
 import { useCreateCategory, useUpdateCategory, useDeleteCategory } from '@/hooks/useAdminMutations';
-import { Scissors, Zap, Droplets, SprayCan, Wrench, Paintbrush, Bug, Hammer, Plus, Pencil, Trash2, FolderTree } from 'lucide-react';
+import { Scissors, Zap, Droplets, SprayCan, Wrench, Paintbrush, Bug, Hammer, Plus, Pencil, Trash2, FolderTree, Percent } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent } from '@/components/ui/card';
@@ -17,7 +17,7 @@ import { toast } from 'sonner';
 const iconOptions = ['Scissors', 'Zap', 'Droplets', 'SprayCan', 'Wrench', 'Paintbrush', 'Bug', 'Hammer'];
 const iconMap: Record<string, React.ElementType> = { Scissors, Zap, Droplets, SprayCan, Wrench, Paintbrush, Bug, Hammer };
 
-const emptyForm = { name: '', description: '', icon: 'Wrench' };
+const emptyForm = { name: '', description: '', icon: 'Wrench', commission_rate: 20 };
 
 export default function AdminCategories() {
   const { data: categories = [], isLoading } = useCategories();
@@ -31,7 +31,11 @@ export default function AdminCategories() {
   const [form, setForm] = useState(emptyForm);
 
   const openCreate = () => { setEditId(null); setForm(emptyForm); setDialogOpen(true); };
-  const openEdit = (cat: any) => { setEditId(cat.id); setForm({ name: cat.name, description: cat.description || '', icon: cat.icon || 'Wrench' }); setDialogOpen(true); };
+  const openEdit = (cat: any) => {
+    setEditId(cat.id);
+    setForm({ name: cat.name, description: cat.description || '', icon: cat.icon || 'Wrench', commission_rate: cat.commission_rate ?? 20 });
+    setDialogOpen(true);
+  };
 
   const handleSave = async () => {
     if (!form.name.trim()) { toast.error('Name is required'); return; }
@@ -63,7 +67,7 @@ export default function AdminCategories() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-heading font-bold text-foreground">Categories</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">Manage service categories</p>
+          <p className="text-sm text-muted-foreground mt-0.5">Manage service categories & commission rates</p>
         </div>
         <Button onClick={openCreate} className="gap-2">
           <Plus className="h-4 w-4" /> Add Category
@@ -98,9 +102,14 @@ export default function AdminCategories() {
                     </div>
                   </div>
                   <div className="flex items-center justify-between mt-4 pt-3 border-t">
-                    <Badge variant="outline" className="text-xs">
-                      {cat.is_active ? 'Active' : 'Inactive'}
-                    </Badge>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="text-xs">
+                        {cat.is_active ? 'Active' : 'Inactive'}
+                      </Badge>
+                      <Badge className="bg-accent/10 text-accent border-0 text-xs gap-1">
+                        <Percent className="h-2.5 w-2.5" /> {cat.commission_rate ?? 20}% commission
+                      </Badge>
+                    </div>
                     <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(cat)}>
                         <Pencil className="h-3.5 w-3.5" />
@@ -123,14 +132,26 @@ export default function AdminCategories() {
           <div className="space-y-4">
             <div className="space-y-1.5"><Label>Name</Label><Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="e.g. Plumbing" /></div>
             <div className="space-y-1.5"><Label>Description</Label><Textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} placeholder="Brief description..." rows={3} /></div>
-            <div className="space-y-1.5">
-              <Label>Icon</Label>
-              <Select value={form.icon} onValueChange={v => setForm(f => ({ ...f, icon: v }))}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {iconOptions.map(ic => { const I = iconMap[ic]; return <SelectItem key={ic} value={ic}><span className="flex items-center gap-2"><I className="h-4 w-4" />{ic}</span></SelectItem>; })}
-                </SelectContent>
-              </Select>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label>Icon</Label>
+                <Select value={form.icon} onValueChange={v => setForm(f => ({ ...f, icon: v }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {iconOptions.map(ic => { const I = iconMap[ic]; return <SelectItem key={ic} value={ic}><span className="flex items-center gap-2"><I className="h-4 w-4" />{ic}</span></SelectItem>; })}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label>Commission Rate (%)</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  max={100}
+                  value={form.commission_rate}
+                  onChange={e => setForm(f => ({ ...f, commission_rate: Number(e.target.value) }))}
+                />
+              </div>
             </div>
           </div>
           <DialogFooter><Button onClick={handleSave} disabled={isSaving}>{isSaving ? 'Saving…' : 'Save'}</Button></DialogFooter>

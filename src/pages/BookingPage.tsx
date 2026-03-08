@@ -1,5 +1,9 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { useService, useCreateBooking, useAuth } from '@/hooks/useSupabaseData';
+import { useService, useCreateBooking } from '@/hooks/useSupabaseData';
+import { useAuthContext } from '@/contexts/AuthContext';
+import { useMyAddresses } from '@/hooks/useAddresses';
+import { useCreateNotification } from '@/hooks/useNotifications';
+import AddressManager from '@/components/AddressManager';
 import { useState } from 'react';
 import { Star, Clock, ArrowLeft, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -11,18 +15,23 @@ import { toast } from 'sonner';
 export default function BookingPage() {
   const { serviceId } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user } = useAuthContext();
   const { data: service, isLoading } = useService(serviceId);
   const createBooking = useCreateBooking();
+  const createNotification = useCreateNotification();
+  const { data: addresses = [] } = useMyAddresses(user?.id);
 
   const [step, setStep] = useState(1);
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
-  const [address, setAddress] = useState('');
+  const [selectedAddress, setSelectedAddress] = useState<any>(null);
+  const [manualAddress, setManualAddress] = useState('');
   const [notes, setNotes] = useState('');
   const [confirmed, setConfirmed] = useState(false);
 
   const timeSlots = ['9:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM'];
+
+  const finalAddress = selectedAddress?.address_line || manualAddress;
 
   if (isLoading) {
     return (
@@ -43,10 +52,7 @@ export default function BookingPage() {
   }
 
   const handleConfirm = async () => {
-    if (!user) {
-      toast.error('Please log in to book a service.');
-      return;
-    }
+    if (!user) { toast.error('Please log in to book a service.'); return; }
     try {
       await createBooking.mutateAsync({
         customer_id: user.id,
@@ -54,9 +60,16 @@ export default function BookingPage() {
         provider_id: service.provider_id,
         booking_date: date,
         booking_time: time,
-        address,
+        address: finalAddress,
         notes: notes || undefined,
         amount: Number(service.price),
+      });
+      // Send notification to customer
+      await createNotification.mutateAsync({
+        user_id: user.id,
+        title: 'Booking Confirmed',
+        message: `Your booking for ${service.name} on ${date} at ${time} has been placed.`,
+        type: 'booking',
       });
       setConfirmed(true);
       toast.success('Booking placed successfully!');
@@ -79,8 +92,8 @@ export default function BookingPage() {
           <div className="mt-6 space-y-2 text-sm text-left bg-muted rounded-xl p-4">
             <p><span className="text-muted-foreground">Date:</span> <span className="font-medium text-foreground">{date}</span></p>
             <p><span className="text-muted-foreground">Time:</span> <span className="font-medium text-foreground">{time}</span></p>
-            <p><span className="text-muted-foreground">Address:</span> <span className="font-medium text-foreground">{address}</span></p>
-            <p><span className="text-muted-foreground">Amount:</span> <span className="font-medium text-primary">${service.price}</span></p>
+            <p><span className="text-muted-foreground">Address:</span> <span className="font-medium text-foreground">{finalAddress}</span></p>
+            <p><span className="text-muted-foreground">Amount:</span> <span className="font-medium text-primary">₹{service.price}</span></p>
           </div>
           <div className="mt-6 flex gap-3">
             <Button variant="outline" className="flex-1" onClick={() => navigate('/my-bookings')}>View Bookings</Button>
@@ -103,7 +116,7 @@ export default function BookingPage() {
         <div className="flex items-center gap-4 mt-3 text-sm">
           <span className="flex items-center gap-1"><Star className="h-4 w-4 text-warning fill-warning" /> {service.rating}</span>
           <span className="flex items-center gap-1 text-muted-foreground"><Clock className="h-4 w-4" /> {service.duration} min</span>
-          <span className="font-heading font-bold text-primary text-lg">${service.price}</span>
+          <span className="font-heading font-bold text-primary text-lg">₹{service.price}</span>
         </div>
       </div>
 
@@ -113,6 +126,7 @@ export default function BookingPage() {
         </div>
       )}
 
+      {/* Step indicators */}
       <div className="flex items-center gap-2 mb-6">
         {[1, 2, 3].map((s) => (
           <div key={s} className="flex items-center gap-2">
@@ -148,12 +162,38 @@ export default function BookingPage() {
 
         {step === 2 && (
           <div>
-            <h3 className="font-heading font-semibold text-lg text-foreground mb-4">Your Address</h3>
+            <h3 className="font-heading font-semibold text-lg text-foreground mb-4">Select Address</h3>
             <div className="space-y-4">
+              {user && addresses.length > 0 ? (
+                <AddressManager
+                  userId={user.id}
+                  selectable
+                  selectedAddressId={selectedAddress?.id}
+                  onSelect={(a) => { setSelectedAddress(a); setManualAddress(''); }}
+                />
+              ) : (
+                <>
+                  {user && (
+                    <AddressManager userId={user.id} selectable selectedAddressId={selectedAddress?.id} onSelect={(a) => { setSelectedAddress(a); setManualAddress(''); }} />
+                  )}
+                </>
+              )}
+
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center"><div className="w-full border-t" /></div>
+                <div className="relative flex justify-center text-xs uppercase"><span className="bg-card px-2 text-muted-foreground">or enter manually</span></div>
+              </div>
+
               <div>
                 <label className="text-sm font-medium text-foreground mb-1 block">Full Address</label>
-                <Textarea placeholder="Enter your complete address..." value={address} onChange={(e) => setAddress(e.target.value)} rows={3} />
+                <Textarea
+                  placeholder="Enter your complete address..."
+                  value={manualAddress}
+                  onChange={(e) => { setManualAddress(e.target.value); setSelectedAddress(null); }}
+                  rows={3}
+                />
               </div>
+
               <div>
                 <label className="text-sm font-medium text-foreground mb-1 block">Special Instructions (Optional)</label>
                 <Textarea placeholder="Any special instructions..." value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} />
@@ -161,7 +201,7 @@ export default function BookingPage() {
             </div>
             <div className="flex gap-3 mt-6">
               <Button variant="outline" onClick={() => setStep(1)}>Back</Button>
-              <Button className="flex-1" disabled={!address} onClick={() => setStep(3)}>Continue</Button>
+              <Button className="flex-1" disabled={!finalAddress} onClick={() => setStep(3)}>Continue</Button>
             </div>
           </div>
         )}
@@ -174,9 +214,9 @@ export default function BookingPage() {
               <div className="flex justify-between"><span className="text-muted-foreground">Provider</span><span className="font-medium text-foreground">{providerName}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">Date</span><span className="font-medium text-foreground">{date}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">Time</span><span className="font-medium text-foreground">{time}</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Address</span><span className="font-medium text-foreground text-right max-w-[200px]">{address}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Address</span><span className="font-medium text-foreground text-right max-w-[200px]">{finalAddress}</span></div>
               <hr className="border-border" />
-              <div className="flex justify-between text-base"><span className="font-semibold text-foreground">Total</span><span className="font-heading font-bold text-primary">${service.price}</span></div>
+              <div className="flex justify-between text-base"><span className="font-semibold text-foreground">Total</span><span className="font-heading font-bold text-primary">₹{service.price}</span></div>
             </div>
             <div className="flex gap-3 mt-6">
               <Button variant="outline" onClick={() => setStep(2)}>Back</Button>
