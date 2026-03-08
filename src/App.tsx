@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
+import ProtectedRoute from "@/components/ProtectedRoute";
 import HomePage from "@/pages/HomePage";
 import ServicesPage from "@/pages/ServicesPage";
 import BookingPage from "@/pages/BookingPage";
@@ -16,6 +17,7 @@ import AdminCategories from "@/pages/admin/AdminCategories";
 import AdminProviders from "@/pages/admin/AdminProviders";
 import AdminEmployees from "@/pages/admin/AdminEmployees";
 import AdminServices from "@/pages/admin/AdminServices";
+import AdminSettings from "@/pages/admin/AdminSettings";
 import ProviderDashboard from "@/pages/provider/ProviderDashboard";
 import ProviderBookings from "@/pages/provider/ProviderBookings";
 import ProviderServicemen from "@/pages/provider/ProviderServicemen";
@@ -36,14 +38,22 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <Routes>
-            {/* Admin routes — no Navbar, uses sidebar layout */}
-            <Route path="/admin" element={<AdminLayout />}>
+            {/* Admin routes — protected, sidebar layout, no Navbar */}
+            <Route
+              path="/admin"
+              element={
+                <ProtectedRoute requiredRole="admin">
+                  <AdminLayout />
+                </ProtectedRoute>
+              }
+            >
               <Route index element={<AdminDashboard />} />
               <Route path="bookings" element={<AdminBookings />} />
               <Route path="categories" element={<AdminCategories />} />
               <Route path="providers" element={<AdminProviders />} />
               <Route path="employees" element={<AdminEmployees />} />
               <Route path="services" element={<AdminServices />} />
+              <Route path="settings" element={<AdminSettings />} />
             </Route>
 
             {/* Public / customer routes — use Navbar */}
