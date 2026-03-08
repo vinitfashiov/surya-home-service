@@ -12,11 +12,50 @@ interface UseAvailableTimeSlotsParams {
   duration?: number; // in minutes
 }
 
+// Convert slot string to index for range comparison
+function slotIndex(slot: string): number {
+  return ALL_SLOTS.indexOf(slot);
+}
+
 export function useAvailableTimeSlots({ date, providerIds, duration = 60 }: UseAvailableTimeSlotsParams) {
   return useQuery({
     queryKey: ['available-time-slots', date, providerIds, duration],
     queryFn: async () => {
       if (!date || !providerIds?.length) return ALL_SLOTS;
+
+      // Fetch provider availability settings for this date
+      const { data: availSettings } = await supabase
+        .from('provider_availability' as any)
+        .select('*')
+        .in('provider_id', providerIds)
+        .eq('date', date);
+
+      const availMap: Record<string, any> = {};
+      (availSettings || []).forEach((a: any) => { availMap[a.provider_id] = a; });
+
+      // Check if any provider has blocked this date
+      for (const pid of providerIds) {
+        const setting = availMap[pid];
+        if (setting && !setting.is_available) {
+          return []; // Provider blocked this date
+        }
+      }
+
+      // Determine allowed slots based on provider working hours
+      let allowedSlots = [...ALL_SLOTS];
+      for (const pid of providerIds) {
+        const setting = availMap[pid];
+        if (setting && setting.is_available) {
+          const startIdx = slotIndex(setting.start_time);
+          const endIdx = slotIndex(setting.end_time);
+          if (startIdx >= 0 && endIdx >= 0) {
+            allowedSlots = allowedSlots.filter(slot => {
+              const idx = slotIndex(slot);
+              return idx >= startIdx && idx <= endIdx;
+            });
+          }
+        }
+      }
 
       // Fetch all bookings for this date and these providers
       const { data: bookings, error } = await supabase
@@ -41,10 +80,16 @@ export function useAvailableTimeSlots({ date, providerIds, duration = 60 }: UseA
         servicemenPerProvider[sm.provider_id] = (servicemenPerProvider[sm.provider_id] || 0) + 1;
       });
 
-      // For each time slot, check if ALL providers have capacity
-      const availableSlots = ALL_SLOTS.filter(slot => {
+      // For each allowed time slot, check if ALL providers have capacity
+      const availableSlots = allowedSlots.filter(slot => {
         return providerIds.every(providerId => {
-          const maxCapacity = Math.max(servicemenPerProvider[providerId] || 1, 1);
+          const setting = availMap[providerId];
+          // Use custom max_bookings_per_slot if set (> 0), otherwise use servicemen count
+          const customMax = setting?.max_bookings_per_slot;
+          const maxCapacity = (customMax && customMax > 0)
+            ? customMax
+            : Math.max(servicemenPerProvider[providerId] || 1, 1);
+
           const bookingsAtSlot = (bookings || []).filter(
             (b: any) => b.booking_time === slot && b.provider_id === providerId
           ).length;
@@ -55,7 +100,7 @@ export function useAvailableTimeSlots({ date, providerIds, duration = 60 }: UseA
       return availableSlots;
     },
     enabled: !!date && !!providerIds?.length,
-    staleTime: 30_000, // refresh every 30s
+    staleTime: 30_000,
     refetchInterval: 30_000,
   });
 }

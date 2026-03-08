@@ -95,6 +95,7 @@ const App = () => (
                     <Route path="/provider/bookings" element={<ProviderBookings />} />
                     <Route path="/provider/servicemen" element={<ProviderServicemen />} />
                     <Route path="/provider/profile" element={<ProviderProfile />} />
+                    <Route path="/provider/availability" element={<ProviderAvailability />} />
                     <Route path="/serviceman" element={<ServicemanDashboard />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
