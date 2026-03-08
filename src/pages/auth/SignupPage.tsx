@@ -50,8 +50,8 @@ export default function SignupPage() {
     if (error) {
       toast.error(error.message || 'Signup failed');
     } else {
-      toast.success('Account created! Check your email to confirm.');
-      navigate('/login');
+      toast.success('Account created successfully!');
+      navigate('/');
     }
   };
 
