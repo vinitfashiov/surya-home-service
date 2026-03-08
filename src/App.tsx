@@ -30,6 +30,7 @@ import ProviderDashboard from "@/pages/provider/ProviderDashboard";
 import ProviderBookings from "@/pages/provider/ProviderBookings";
 import ProviderServicemen from "@/pages/provider/ProviderServicemen";
 import ProviderProfile from "@/pages/provider/ProviderProfile";
+import ProviderAvailability from "@/pages/provider/ProviderAvailability";
 import ServicemanDashboard from "@/pages/serviceman/ServicemanDashboard";
 import LoginPage from "@/pages/auth/LoginPage";
 import SignupPage from "@/pages/auth/SignupPage";
@@ -94,6 +95,7 @@ const App = () => (
                     <Route path="/provider/bookings" element={<ProviderBookings />} />
                     <Route path="/provider/servicemen" element={<ProviderServicemen />} />
                     <Route path="/provider/profile" element={<ProviderProfile />} />
+                    <Route path="/provider/availability" element={<ProviderAvailability />} />
                     <Route path="/serviceman" element={<ServicemanDashboard />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
