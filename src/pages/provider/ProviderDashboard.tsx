@@ -1,4 +1,5 @@
 import { useAuth, useProviderBookings, useMyProvider, useServicemen, useCategories, useServices } from '@/hooks/useSupabaseData';
+import ProviderOnboarding from '@/components/provider/ProviderOnboarding';
 import { useReviewsForProvider } from '@/hooks/useReviews';
 import StatCard from '@/components/StatCard';
 import StatusBadge from '@/components/StatusBadge';
@@ -17,6 +18,11 @@ export default function ProviderDashboard() {
 
   if (!user) {
     return <div className="container mx-auto px-4 py-20 text-center text-muted-foreground">Please log in as a provider.</div>;
+  }
+
+  // Show onboarding for pending/rejected providers
+  if (provider && provider.status !== 'active') {
+    return <ProviderOnboarding provider={provider} />;
   }
 
   const totalEarnings = bookings.filter((b: any) => b.payment_status === 'paid').reduce((s: number, b: any) => s + Number(b.amount), 0);
