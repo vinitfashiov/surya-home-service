@@ -217,7 +217,7 @@ export default function ServicesPage() {
                 />
               </div>
 
-              <div className="sm:col-span-2 lg:col-span-4 flex justify-end">
+              <div className="sm:col-span-2 lg:col-span-3 flex justify-end">
                 <Button variant="ghost" size="sm" onClick={clearFilters} className="text-muted-foreground">
                   Clear all filters
                 </Button>
