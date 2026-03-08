@@ -70,6 +70,7 @@ const App = () => (
               <Route path="cities" element={<AdminCities />} />
               <Route path="checkout-fields" element={<AdminCheckoutFields />} />
               <Route path="coupons" element={<AdminCoupons />} />
+              <Route path="banners" element={<AdminBanners />} />
               <Route path="settings" element={<AdminSettings />} />
             </Route>
 
