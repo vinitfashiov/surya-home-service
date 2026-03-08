@@ -9,10 +9,11 @@ import { useAvailableTimeSlots, ALL_SLOTS } from '@/hooks/useAvailableTimeSlots'
 import { useValidateCoupon, CouponResult } from '@/hooks/useCoupons';
 import { useCategoryCheckoutFields, useSaveBookingCustomFields } from '@/hooks/useCheckoutFields';
 import { usePricingRulesForServices, calculateDynamicPrice } from '@/hooks/usePricingRules';
+import { loadRazorpayScript, createRazorpayOrder, verifyRazorpayPayment, openRazorpayCheckout } from '@/lib/razorpay';
 import AddressManager from '@/components/AddressManager';
 import DynamicCheckoutFields from '@/components/DynamicCheckoutFields';
 import { useState, useEffect, useMemo } from 'react';
-import { ArrowLeft, CheckCircle, Clock, CreditCard, Tag, Loader2, AlertCircle, TrendingUp } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Clock, CreditCard, Tag, Loader2, AlertCircle, TrendingUp, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
