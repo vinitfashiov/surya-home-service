@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth, useMyProvider } from '@/hooks/useSupabaseData';
 import { useCities } from '@/hooks/useCities';
 import { supabase } from '@/integrations/supabase/client';
+import ImageUpload from '@/components/ImageUpload';
 import { useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
