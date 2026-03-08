@@ -7,7 +7,9 @@ import { useMyAddresses } from '@/hooks/useAddresses';
 import { useCreateNotification } from '@/hooks/useNotifications';
 import { useAvailableTimeSlots, ALL_SLOTS } from '@/hooks/useAvailableTimeSlots';
 import { useValidateCoupon, CouponResult } from '@/hooks/useCoupons';
+import { useCategoryCheckoutFields, useSaveBookingCustomFields } from '@/hooks/useCheckoutFields';
 import AddressManager from '@/components/AddressManager';
+import DynamicCheckoutFields from '@/components/DynamicCheckoutFields';
 import { useState, useEffect, useMemo } from 'react';
 import { ArrowLeft, CheckCircle, Clock, CreditCard, Tag, Loader2, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -29,6 +31,7 @@ export default function CheckoutPage() {
   const createNotification = useCreateNotification();
   const clearCart = useClearCart();
   const validateCoupon = useValidateCoupon();
+  const saveCustomFields = useSaveBookingCustomFields();
 
   // Quick book data
   const quickBookData = useMemo(() => {
@@ -49,6 +52,7 @@ export default function CheckoutPage() {
   const [couponResult, setCouponResult] = useState<CouponResult | null>(null);
   const [confirmed, setConfirmed] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
+  const [customFieldValues, setCustomFieldValues] = useState<Record<string, string>>({});
 
   const finalAddress = selectedAddress?.address_line || manualAddress;
 
@@ -71,6 +75,7 @@ export default function CheckoutPage() {
         name: quickService.name,
         providerId: quickService.provider_id,
         providerName: quickService.provider?.company_name || 'Provider',
+        categoryId: quickService.category_id,
         price: Number(quickService.price),
         duration: quickService.duration,
         quantity: 1,
@@ -85,6 +90,7 @@ export default function CheckoutPage() {
         name: item.service?.name,
         providerId: item.service?.provider?.id,
         providerName: item.service?.provider?.company_name || 'Provider',
+        categoryId: item.service?.category_id,
         price: Number(item.service?.price || 0),
         duration: item.service?.duration || 0,
         quantity: item.quantity || 1,
@@ -93,6 +99,14 @@ export default function CheckoutPage() {
       };
     });
   }, [isQuickBook, quickService, quickAddons, quickBookData, cartItems]);
+
+  // Get unique category IDs for dynamic checkout fields
+  const categoryIds = useMemo(() =>
+    [...new Set(lineItems.map(i => i.categoryId).filter(Boolean))],
+    [lineItems]
+  );
+
+  const { data: checkoutFields = [] } = useCategoryCheckoutFields(categoryIds);
 
   // Dynamic pricing
   const subtotal = lineItems.reduce((sum, item) => sum + (item.price + item.addonsTotal) * item.quantity, 0);
@@ -144,14 +158,20 @@ export default function CheckoutPage() {
     setCouponCode('');
   };
 
-  const canCheckout = finalAddress && date && time && lineItems.length > 0;
+  // Validate custom fields
+  const requiredFieldsMissing = checkoutFields
+    .filter(f => f.is_required)
+    .some(f => !customFieldValues[f.id]?.trim());
+
+  const canCheckout = finalAddress && date && time && lineItems.length > 0 && !requiredFieldsMissing;
 
   const handlePlaceOrder = async () => {
     if (!user || !canCheckout) return;
     try {
+      const bookingIds: string[] = [];
       for (const item of lineItems) {
         for (let q = 0; q < item.quantity; q++) {
-          await createBooking.mutateAsync({
+          const booking = await createBooking.mutateAsync({
             customer_id: user.id,
             service_id: item.serviceId,
             provider_id: item.providerId,
@@ -161,8 +181,26 @@ export default function CheckoutPage() {
             notes: notes || undefined,
             amount: item.price + item.addonsTotal,
           });
+          bookingIds.push(booking.id);
         }
       }
+
+      // Save custom field values for each booking
+      if (checkoutFields.length > 0 && bookingIds.length > 0) {
+        const customFieldRows = bookingIds.flatMap(bookingId =>
+          checkoutFields
+            .filter(f => customFieldValues[f.id]?.trim())
+            .map(f => ({
+              booking_id: bookingId,
+              field_id: f.id,
+              field_value: customFieldValues[f.id],
+            }))
+        );
+        if (customFieldRows.length > 0) {
+          await saveCustomFields.mutateAsync(customFieldRows);
+        }
+      }
+
       await createNotification.mutateAsync({
         user_id: user.id,
         title: 'Booking Confirmed',
@@ -250,6 +288,17 @@ export default function CheckoutPage() {
               <div><span className="text-muted-foreground">Date:</span> <span className="text-foreground">{date}</span></div>
               <div><span className="text-muted-foreground">Time:</span> <span className="text-foreground">{time}</span></div>
               <div><span className="text-muted-foreground">Address:</span> <span className="text-foreground">{finalAddress}</span></div>
+              {checkoutFields.filter(f => customFieldValues[f.id]?.trim()).length > 0 && (
+                <>
+                  <Separator />
+                  {checkoutFields.filter(f => customFieldValues[f.id]?.trim()).map(f => (
+                    <div key={f.id}>
+                      <span className="text-muted-foreground">{f.field_label}:</span>{' '}
+                      <span className="text-foreground">{customFieldValues[f.id]}</span>
+                    </div>
+                  ))}
+                </>
+              )}
             </div>
             <div className="flex gap-3 mt-6">
               <Button variant="outline" className="flex-1" onClick={() => setShowSummary(false)}>Edit</Button>
@@ -282,6 +331,15 @@ export default function CheckoutPage() {
               ))}
             </div>
           </div>
+
+          {/* Dynamic checkout fields */}
+          {checkoutFields.length > 0 && (
+            <DynamicCheckoutFields
+              fields={checkoutFields}
+              values={customFieldValues}
+              onChange={(fieldId, value) => setCustomFieldValues(prev => ({ ...prev, [fieldId]: value }))}
+            />
+          )}
 
           {/* Address */}
           <div className="bg-card rounded-xl shadow-card border p-6">
@@ -456,6 +514,10 @@ export default function CheckoutPage() {
                 <span className="text-sm text-foreground">Pay after service</span>
               </div>
             </div>
+
+            {requiredFieldsMissing && (
+              <p className="text-xs text-destructive mb-3">Please fill all required fields marked with *</p>
+            )}
 
             <Button className="w-full" size="lg" disabled={!canCheckout} onClick={() => setShowSummary(true)}>
               Review & Confirm

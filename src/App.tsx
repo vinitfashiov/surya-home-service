@@ -63,6 +63,7 @@ const App = () => (
               <Route path="employees" element={<AdminEmployees />} />
               <Route path="services" element={<AdminServices />} />
               <Route path="cities" element={<AdminCities />} />
+              <Route path="checkout-fields" element={<AdminCheckoutFields />} />
               <Route path="settings" element={<AdminSettings />} />
             </Route>
 
