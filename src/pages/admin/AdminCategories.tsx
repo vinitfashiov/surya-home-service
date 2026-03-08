@@ -17,7 +17,15 @@ import { toast } from 'sonner';
 const iconOptions = ['Scissors', 'Zap', 'Droplets', 'SprayCan', 'Wrench', 'Paintbrush', 'Bug', 'Hammer'];
 const iconMap: Record<string, React.ElementType> = { Scissors, Zap, Droplets, SprayCan, Wrench, Paintbrush, Bug, Hammer };
 
-const emptyForm = { name: '', description: '', icon: 'Wrench', commission_rate: 20 };
+const categoryTypes = [
+  { value: 'standard', label: 'Standard (Date + Time + Address)' },
+  { value: 'event', label: 'Event (Date + Time + Venue + Guests)' },
+  { value: 'transport', label: 'Transport (Pickup + Drop + Date)' },
+  { value: 'accommodation', label: 'Accommodation (Check-in/out + Rooms)' },
+  { value: 'virtual', label: 'Virtual (Date + Time, No Address)' },
+];
+
+const emptyForm = { name: '', description: '', icon: 'Wrench', commission_rate: 20, category_type: 'standard' };
 
 export default function AdminCategories() {
   const { data: categories = [], isLoading } = useCategories();
@@ -33,7 +41,7 @@ export default function AdminCategories() {
   const openCreate = () => { setEditId(null); setForm(emptyForm); setDialogOpen(true); };
   const openEdit = (cat: any) => {
     setEditId(cat.id);
-    setForm({ name: cat.name, description: cat.description || '', icon: cat.icon || 'Wrench', commission_rate: cat.commission_rate ?? 20 });
+    setForm({ name: cat.name, description: cat.description || '', icon: cat.icon || 'Wrench', commission_rate: cat.commission_rate ?? 20, category_type: cat.category_type || 'standard' });
     setDialogOpen(true);
   };
 
@@ -106,9 +114,12 @@ export default function AdminCategories() {
                       <Badge variant="outline" className="text-xs">
                         {cat.is_active ? 'Active' : 'Inactive'}
                       </Badge>
-                      <Badge className="bg-accent/10 text-accent border-0 text-xs gap-1">
-                        <Percent className="h-2.5 w-2.5" /> {cat.commission_rate ?? 20}% commission
-                      </Badge>
+                       <Badge className="bg-accent/10 text-accent border-0 text-xs gap-1">
+                         <Percent className="h-2.5 w-2.5" /> {cat.commission_rate ?? 20}%
+                       </Badge>
+                       <Badge variant="secondary" className="text-xs capitalize">
+                         {cat.category_type || 'standard'}
+                       </Badge>
                     </div>
                     <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(cat)}>
@@ -152,6 +163,18 @@ export default function AdminCategories() {
                   onChange={e => setForm(f => ({ ...f, commission_rate: Number(e.target.value) }))}
                 />
               </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Category Type</Label>
+              <Select value={form.category_type} onValueChange={v => setForm(f => ({ ...f, category_type: v }))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {categoryTypes.map(ct => (
+                    <SelectItem key={ct.value} value={ct.value}>{ct.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">Controls which checkout sections appear for this category's services</p>
             </div>
           </div>
           <DialogFooter><Button onClick={handleSave} disabled={isSaving}>{isSaving ? 'Saving…' : 'Save'}</Button></DialogFooter>

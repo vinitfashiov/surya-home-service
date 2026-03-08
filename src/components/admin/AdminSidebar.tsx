@@ -8,6 +8,7 @@ import {
   Settings,
   LogOut,
   MapPin,
+  ListChecks,
 } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useAuthContext } from '@/contexts/AuthContext';
@@ -34,6 +35,7 @@ const mainNav = [
   { title: 'Bookings', url: '/admin/bookings', icon: CalendarDays },
   { title: 'Services', url: '/admin/services', icon: Wrench },
   { title: 'Categories', url: '/admin/categories', icon: FolderTree },
+  { title: 'Checkout Fields', url: '/admin/checkout-fields', icon: ListChecks },
   { title: 'Cities', url: '/admin/cities', icon: MapPin },
 ];
 
