@@ -184,7 +184,7 @@ export default function HomePage() {
                 return (
                   <motion.div key={cat.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04, duration: 0.4 }}>
                     <Link
-                      to={`/services?category=${cat.id}${selectedCity ? `&city=${selectedCity}` : ''}`}
+                      to={`/services?category=${cat.id}`}
                       className="block bg-card rounded-xl p-5 shadow-card border hover:shadow-card-hover transition-all group hover:-translate-y-0.5"
                     >
                       <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-3 group-hover:bg-primary/20 transition-colors">
