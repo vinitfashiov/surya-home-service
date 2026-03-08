@@ -1,7 +1,7 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { useCartCount } from '@/hooks/useCart';
-import { Menu, X, User, ChevronDown, LogOut, LogIn, MapPin, ShoppingCart } from 'lucide-react';
+import { Menu, X, User, ChevronDown, LogOut, LogIn, MapPin, ShoppingCart, Heart } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
@@ -50,8 +50,8 @@ export default function Navbar() {
   const customerLinks = [
     { to: '/', label: 'Home' },
     { to: '/services', label: 'Services' },
+    { to: '/wishlist', label: 'Wishlist' },
     { to: '/my-bookings', label: 'My Bookings' },
-    { to: '/my-addresses', label: 'Addresses' },
   ];
 
   const providerLinks = [

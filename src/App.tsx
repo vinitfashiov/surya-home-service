@@ -15,6 +15,7 @@ import CheckoutPage from "@/pages/CheckoutPage";
 import OrderTrackingPage from "@/pages/OrderTrackingPage";
 import MyBookingsPage from "@/pages/MyBookingsPage";
 import MyAddressesPage from "@/pages/MyAddressesPage";
+import WishlistPage from "@/pages/WishlistPage";
 import AdminLayout from "@/components/admin/AdminLayout";
 import AdminDashboard from "@/pages/admin/AdminDashboard";
 import AdminBookings from "@/pages/admin/AdminBookings";
@@ -92,6 +93,7 @@ const App = () => (
                     <Route path="/order/:bookingId" element={<OrderTrackingPage />} />
                     <Route path="/my-bookings" element={<MyBookingsPage />} />
                     <Route path="/my-addresses" element={<MyAddressesPage />} />
+                    <Route path="/wishlist" element={<WishlistPage />} />
                     <Route path="/login" element={<LoginPage />} />
                     <Route path="/signup" element={<SignupPage />} />
                     <Route path="/provider-signup" element={<ProviderSignupPage />} />
