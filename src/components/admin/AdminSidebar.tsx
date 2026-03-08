@@ -43,6 +43,7 @@ const mainNav = [
 const managementNav = [
   { title: 'Providers', url: '/admin/providers', icon: Building2 },
   { title: 'Employees', url: '/admin/employees', icon: Users },
+  { title: 'Coupons', url: '/admin/coupons', icon: Ticket },
   { title: 'Settings', url: '/admin/settings', icon: Settings },
 ];
 
