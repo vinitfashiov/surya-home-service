@@ -505,16 +505,24 @@ export default function CheckoutPage() {
           <div className="bg-card rounded-xl shadow-card border p-6 sticky top-24">
             <h3 className="font-heading font-semibold text-foreground mb-4">Price Breakdown</h3>
             <div className="space-y-2 text-sm">
-              {lineItems.map((item, i) => (
-                <div key={i} className="flex justify-between">
-                  <span className="text-muted-foreground">{item.name} x{item.quantity}</span>
-                  <span className="text-foreground">₹{item.price * item.quantity}</span>
+              {pricedItems.map((item, i) => (
+                <div key={i}>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">{item.name} x{item.quantity}</span>
+                    <span className="text-foreground">₹{Math.round(item.dynamicPrice * item.quantity)}</span>
+                  </div>
+                  {item.hasDynamicPricing && item.priceBreakdown.map((b, j) => (
+                    <div key={j} className="flex justify-between text-xs pl-3">
+                      <span className="text-muted-foreground/70">{b.label}</span>
+                      <span className="text-muted-foreground">₹{Math.round(b.amount)}</span>
+                    </div>
+                  ))}
                 </div>
               ))}
-              {lineItems.some(i => i.addonsTotal > 0) && (
+              {pricedItems.some(i => i.addonsTotal > 0) && (
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Add-ons</span>
-                  <span className="text-foreground">₹{lineItems.reduce((s, i) => s + i.addonsTotal * i.quantity, 0)}</span>
+                  <span className="text-foreground">₹{pricedItems.reduce((s, i) => s + i.addonsTotal * i.quantity, 0)}</span>
                 </div>
               )}
               <div className="flex justify-between">
