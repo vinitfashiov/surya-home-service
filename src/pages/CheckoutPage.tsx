@@ -647,8 +647,8 @@ export default function CheckoutPage() {
               <p className="text-xs text-destructive mb-3">Please fill all required fields marked with *</p>
             )}
 
-            <Button className="w-full" size="lg" disabled={!canCheckout} onClick={() => setShowSummary(true)}>
-              Review & Confirm
+            <Button className="w-full" size="lg" disabled={!canCheckout || processingPayment} onClick={() => setShowSummary(true)}>
+              {paymentMethod === 'online' ? 'Review & Pay Online' : 'Review & Confirm'}
             </Button>
           </div>
         </div>
