@@ -87,6 +87,8 @@ export default function Navbar() {
             <span className="font-heading font-bold text-xl text-foreground">ServisGo</span>
           </Link>
 
+          <CitySelector />
+
           <div className="hidden md:flex items-center gap-1">
             {links.map((link) => (
               <Link
