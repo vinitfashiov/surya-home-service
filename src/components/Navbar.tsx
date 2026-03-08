@@ -15,6 +15,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import NotificationBell from '@/components/NotificationBell';
 import CitySelector from '@/components/CitySelector';
+import ThemeToggle from '@/components/ThemeToggle';
 import { toast } from 'sonner';
 
 const roleLabels: Record<string, string> = {
