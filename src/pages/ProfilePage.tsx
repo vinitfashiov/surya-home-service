@@ -105,9 +105,16 @@ export default function ProfilePage() {
             <Skeleton className="h-32 rounded-xl" />
           ) : (
             <div className="flex items-start gap-5">
-              <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0">
-                <User className="h-7 w-7 text-primary" />
-              </div>
+              <ImageUpload
+                bucket="avatars"
+                path={`${user.id}/avatar`}
+                currentUrl={profile?.avatar_url}
+                variant="avatar"
+                onUpload={async (url) => {
+                  await supabase.from('profiles').update({ avatar_url: url }).eq('id', user.id);
+                  setProfile({ ...profile, avatar_url: url });
+                }}
+              />
               <div className="flex-1">
                 {editing ? (
                   <div className="space-y-3">
