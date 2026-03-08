@@ -147,34 +147,13 @@ export default function HomePage() {
         </section>
       )}
 
-      {/* City-based Browsing */}
-      {cities.length > 0 && (
-        <section className="py-8">
+      {/* City indicator */}
+      {selectedCityName && (
+        <section className="py-6">
           <div className="container mx-auto px-4">
-            <div className="flex items-center gap-2 mb-4">
+            <div className="flex items-center gap-2 bg-primary/5 rounded-xl px-4 py-3 border border-primary/10">
               <MapPin className="h-4 w-4 text-primary" />
-              <span className="text-sm font-medium text-foreground">Browse by city</span>
-            </div>
-            <div className="flex gap-2 flex-wrap">
-              <Button
-                variant={selectedCity === null ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setSelectedCity(null)}
-                className="rounded-full"
-              >
-                All Cities
-              </Button>
-              {cities.map((city: any) => (
-                <Button
-                  key={city.id}
-                  variant={selectedCity === city.id ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setSelectedCity(selectedCity === city.id ? null : city.id)}
-                  className="rounded-full"
-                >
-                  {city.name}
-                </Button>
-              ))}
+              <span className="text-sm text-foreground">Showing services in <span className="font-semibold text-primary">{selectedCityName}</span></span>
             </div>
           </div>
         </section>
