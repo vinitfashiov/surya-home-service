@@ -107,6 +107,7 @@ export default function Navbar() {
           </div>
 
           <div className="flex items-center gap-2">
+            <ThemeToggle />
             {!loading && user && !roles.includes('admin') && !roles.includes('provider') && !roles.includes('serviceman') && (
               <Link to="/cart" className="relative p-2 rounded-lg hover:bg-muted transition-colors">
                 <ShoppingCart className="h-5 w-5 text-muted-foreground" />
