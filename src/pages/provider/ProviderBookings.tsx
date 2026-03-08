@@ -1,17 +1,23 @@
-import { useAppStore } from '@/lib/store';
+import { useAuth, useProviderBookings, useUpdateBookingStatus } from '@/hooks/useSupabaseData';
 import StatusBadge from '@/components/StatusBadge';
 import { Button } from '@/components/ui/button';
-import { BookingStatus } from '@/lib/types';
+import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 
 export default function ProviderBookings() {
-  const { bookings, updateBookingStatus } = useAppStore();
-  const providerBookings = bookings.filter((b) => b.providerId === '1');
+  const { user } = useAuth();
+  const { data: bookings = [], isLoading } = useProviderBookings(user?.id);
+  const updateStatus = useUpdateBookingStatus();
 
-  const handleStatus = (id: string, status: BookingStatus) => {
-    updateBookingStatus(id, status);
-    toast.success(`Booking updated to ${status}`);
+  const handleStatus = (id: string, status: string) => {
+    updateStatus.mutate({ bookingId: id, status }, {
+      onSuccess: () => toast.success(`Booking updated to ${status}`),
+      onError: (err) => toast.error(err.message),
+    });
   };
+
+  if (!user) return <div className="container mx-auto px-4 py-20 text-center text-muted-foreground">Please log in as a provider.</div>;
+  if (isLoading) return <div className="container mx-auto px-4 py-8"><Skeleton className="h-96 rounded-xl" /></div>;
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -19,12 +25,12 @@ export default function ProviderBookings() {
       <p className="text-muted-foreground mt-1">Manage incoming booking requests</p>
 
       <div className="mt-8 space-y-4">
-        {providerBookings.map((b) => (
+        {bookings.map((b: any) => (
           <div key={b.id} className="bg-card rounded-xl p-5 shadow-card border">
             <div className="flex items-start justify-between">
               <div>
-                <h3 className="font-heading font-semibold text-foreground">{b.serviceName}</h3>
-                <p className="text-sm text-muted-foreground">{b.customerName} · {b.date} {b.time}</p>
+                <h3 className="font-heading font-semibold text-foreground">{b.service?.name}</h3>
+                <p className="text-sm text-muted-foreground">{b.customer?.full_name} · {b.booking_date} {b.booking_time}</p>
                 <p className="text-sm text-muted-foreground mt-1">{b.address}</p>
               </div>
               <div className="text-right">
@@ -45,6 +51,7 @@ export default function ProviderBookings() {
             )}
           </div>
         ))}
+        {bookings.length === 0 && <p className="text-center py-10 text-muted-foreground">No booking requests.</p>}
       </div>
     </div>
   );
