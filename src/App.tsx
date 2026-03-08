@@ -23,6 +23,7 @@ import AdminCities from "@/pages/admin/AdminCities";
 import ProviderDashboard from "@/pages/provider/ProviderDashboard";
 import ProviderBookings from "@/pages/provider/ProviderBookings";
 import ProviderServicemen from "@/pages/provider/ProviderServicemen";
+import ProviderProfile from "@/pages/provider/ProviderProfile";
 import ServicemanDashboard from "@/pages/serviceman/ServicemanDashboard";
 import LoginPage from "@/pages/auth/LoginPage";
 import SignupPage from "@/pages/auth/SignupPage";
@@ -80,6 +81,7 @@ const App = () => (
                     <Route path="/provider" element={<ProviderDashboard />} />
                     <Route path="/provider/bookings" element={<ProviderBookings />} />
                     <Route path="/provider/servicemen" element={<ProviderServicemen />} />
+                    <Route path="/provider/profile" element={<ProviderProfile />} />
                     <Route path="/serviceman" element={<ServicemanDashboard />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
