@@ -1,5 +1,6 @@
 import { useCategories } from '@/hooks/useSupabaseData';
 import { useCreateCategory, useUpdateCategory, useDeleteCategory } from '@/hooks/useAdminMutations';
+import ImageUpload from '@/components/ImageUpload';
 import { Scissors, Zap, Droplets, SprayCan, Wrench, Paintbrush, Bug, Hammer, Plus, Pencil, Trash2, FolderTree, Percent } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
