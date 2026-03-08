@@ -194,6 +194,8 @@ export default function CheckoutPage() {
       const bookingIds: string[] = [];
       for (const item of lineItems) {
         for (let q = 0; q < item.quantity; q++) {
+          const pricedItem = pricedItems.find(p => p.serviceId === item.serviceId);
+          const bookingAmount = (pricedItem?.dynamicPrice ?? item.price) + item.addonsTotal;
           const booking = await createBooking.mutateAsync({
             customer_id: user.id,
             service_id: item.serviceId,
@@ -202,7 +204,7 @@ export default function CheckoutPage() {
             booking_time: time,
             address: finalAddress,
             notes: notes || undefined,
-            amount: item.price + item.addonsTotal,
+            amount: bookingAmount,
           });
           bookingIds.push(booking.id);
         }
