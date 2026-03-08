@@ -3,7 +3,8 @@ import { useAuthContext } from '@/contexts/AuthContext';
 import { useMyBookings, useUpdateBookingStatus } from '@/hooks/useSupabaseData';
 import { useCancellationRules } from '@/hooks/useCancellationRules';
 import StatusBadge from '@/components/StatusBadge';
-import { ArrowLeft, CalendarDays, Clock, MapPin, Phone, User, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, CalendarDays, Clock, MapPin, Phone, User, CheckCircle, XCircle, AlertTriangle, MessageCircle } from 'lucide-react';
+import ChatDialog from '@/components/ChatDialog';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
@@ -33,6 +34,7 @@ export default function OrderTrackingPage() {
 
   const booking = bookings.find((b: any) => b.id === bookingId);
 
+  const [chatOpen, setChatOpen] = useState(false);
   // Real-time subscription for booking updates
   const [liveStatus, setLiveStatus] = useState<string | null>(null);
   useEffect(() => {
@@ -198,6 +200,15 @@ export default function OrderTrackingPage() {
         )}
       </motion.div>
 
+      {/* Chat button */}
+      {!isCancelled && currentStatus !== 'completed' && (
+        <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="mb-6">
+          <Button variant="outline" className="w-full gap-2" onClick={() => setChatOpen(true)}>
+            <MessageCircle className="h-4 w-4" /> Chat with Provider
+          </Button>
+        </motion.div>
+      )}
+
       {/* Actions */}
       {!isCancelled && currentStatus !== 'completed' && canCancel(currentStatus) && (
         <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="bg-card rounded-2xl shadow-card border p-6">
@@ -215,6 +226,13 @@ export default function OrderTrackingPage() {
           </div>
         </motion.div>
       )}
+      <ChatDialog
+        open={chatOpen}
+        onOpenChange={setChatOpen}
+        bookingId={booking.id}
+        userId={user.id}
+        otherPartyName={booking.provider?.company_name || 'Provider'}
+      />
     </div>
   );
 }

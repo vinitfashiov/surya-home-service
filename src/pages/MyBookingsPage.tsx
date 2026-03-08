@@ -5,7 +5,7 @@ import { useCancellationRules } from '@/hooks/useCancellationRules';
 import { useUpdateBookingStatus } from '@/hooks/useSupabaseData';
 import StatusBadge from '@/components/StatusBadge';
 import ReviewDialog from '@/components/ReviewDialog';
-import { CalendarDays, Clock, MapPin, Star, RotateCcw, Eye, XCircle } from 'lucide-react';
+import { CalendarDays, Clock, MapPin, Star, RotateCcw, Eye, XCircle, MessageCircle } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -13,9 +13,11 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
+import ChatDialog from '@/components/ChatDialog';
 
 function BookingCard({ booking, userId }: { booking: any; userId: string }) {
   const [reviewOpen, setReviewOpen] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
   const { data: existingReview } = useReviewForBooking(booking.id);
   const { canCancel, cancellationFee, freeMinutes } = useCancellationRules();
   const updateStatus = useUpdateBookingStatus();
@@ -80,9 +82,14 @@ function BookingCard({ booking, userId }: { booking: any; userId: string }) {
         {/* Action buttons */}
         <div className="mt-4 flex flex-wrap gap-2">
           {!isCancelled && !isCompleted && (
-            <Button size="sm" variant="outline" className="gap-1.5" onClick={handleTrack}>
-              <Eye className="h-3.5 w-3.5" /> Track Order
-            </Button>
+            <>
+              <Button size="sm" variant="outline" className="gap-1.5" onClick={handleTrack}>
+                <Eye className="h-3.5 w-3.5" /> Track Order
+              </Button>
+              <Button size="sm" variant="outline" className="gap-1.5" onClick={() => setChatOpen(true)}>
+                <MessageCircle className="h-3.5 w-3.5" /> Chat
+              </Button>
+            </>
           )}
           {canReview && (
             <Button size="sm" variant="outline" className="gap-1.5" onClick={() => setReviewOpen(true)}>
@@ -109,6 +116,7 @@ function BookingCard({ booking, userId }: { booking: any; userId: string }) {
         </div>
       </motion.div>
       <ReviewDialog open={reviewOpen} onOpenChange={setReviewOpen} booking={booking} userId={userId} />
+      <ChatDialog open={chatOpen} onOpenChange={setChatOpen} bookingId={booking.id} userId={userId} otherPartyName={booking.provider?.company_name || 'Provider'} />
     </>
   );
 }
