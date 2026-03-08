@@ -114,9 +114,12 @@ export default function AdminCategories() {
                       <Badge variant="outline" className="text-xs">
                         {cat.is_active ? 'Active' : 'Inactive'}
                       </Badge>
-                      <Badge className="bg-accent/10 text-accent border-0 text-xs gap-1">
-                        <Percent className="h-2.5 w-2.5" /> {cat.commission_rate ?? 20}% commission
-                      </Badge>
+                       <Badge className="bg-accent/10 text-accent border-0 text-xs gap-1">
+                         <Percent className="h-2.5 w-2.5" /> {cat.commission_rate ?? 20}%
+                       </Badge>
+                       <Badge variant="secondary" className="text-xs capitalize">
+                         {cat.category_type || 'standard'}
+                       </Badge>
                     </div>
                     <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(cat)}>
