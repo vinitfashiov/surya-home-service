@@ -25,6 +25,7 @@ import AdminServices from "@/pages/admin/AdminServices";
 import AdminSettings from "@/pages/admin/AdminSettings";
 import AdminCities from "@/pages/admin/AdminCities";
 import AdminCheckoutFields from "@/pages/admin/AdminCheckoutFields";
+import AdminCoupons from "@/pages/admin/AdminCoupons";
 import ProviderDashboard from "@/pages/provider/ProviderDashboard";
 import ProviderBookings from "@/pages/provider/ProviderBookings";
 import ProviderServicemen from "@/pages/provider/ProviderServicemen";
