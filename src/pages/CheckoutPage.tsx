@@ -342,7 +342,7 @@ export default function CheckoutPage() {
           <div className="bg-card rounded-xl shadow-card border p-6">
             <h3 className="font-heading font-semibold text-foreground mb-4">Services</h3>
             <div className="space-y-3">
-              {lineItems.map((item, i) => (
+              {pricedItems.map((item, i) => (
                 <div key={i} className="flex justify-between items-center text-sm">
                   <div>
                     <p className="font-medium text-foreground">{item.name} {item.quantity > 1 && `x${item.quantity}`}</p>
@@ -350,8 +350,17 @@ export default function CheckoutPage() {
                     {item.addons.length > 0 && (
                       <p className="text-xs text-primary">+ {item.addons.map((a: any) => a.name).join(', ')}</p>
                     )}
+                    {item.hasDynamicPricing && (
+                      <div className="mt-1 space-y-0.5">
+                        {item.priceBreakdown.map((b, j) => (
+                          <p key={j} className="text-xs text-accent flex items-center gap-1">
+                            <TrendingUp className="h-3 w-3" /> {b.label}: ₹{Math.round(b.amount)}
+                          </p>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                  <span className="font-heading font-semibold text-foreground">₹{(item.price + item.addonsTotal) * item.quantity}</span>
+                  <span className="font-heading font-semibold text-foreground">₹{Math.round((item.dynamicPrice + item.addonsTotal) * item.quantity)}</span>
                 </div>
               ))}
             </div>
