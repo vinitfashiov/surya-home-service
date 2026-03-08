@@ -5,7 +5,7 @@ import { useCancellationRules } from '@/hooks/useCancellationRules';
 import { useUpdateBookingStatus } from '@/hooks/useSupabaseData';
 import StatusBadge from '@/components/StatusBadge';
 import ReviewDialog from '@/components/ReviewDialog';
-import { CalendarDays, Clock, MapPin, Star, RotateCcw, Eye, XCircle } from 'lucide-react';
+import { CalendarDays, Clock, MapPin, Star, RotateCcw, Eye, XCircle, MessageCircle } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
