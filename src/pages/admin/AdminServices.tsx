@@ -1,4 +1,5 @@
 import { useServices, useCategories, useProviders } from '@/hooks/useSupabaseData';
+import { useCities } from '@/hooks/useCities';
 import { useCreateService, useUpdateService, useDeleteService } from '@/hooks/useAdminMutations';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -14,12 +15,13 @@ import { Plus, Pencil, Trash2, Star, Clock, DollarSign, Wrench, Search } from 'l
 import { useState } from 'react';
 import { toast } from 'sonner';
 
-const emptyForm = { name: '', description: '', price: 0, duration: 60, category_id: '', provider_id: '', image_url: '' };
+const emptyForm = { name: '', description: '', price: 0, duration: 60, category_id: '', provider_id: '', image_url: '', city_id: '' };
 
 export default function AdminServices() {
   const { data: services = [], isLoading } = useServices();
   const { data: categories = [] } = useCategories();
   const { data: providers = [] } = useProviders();
+  const { data: cities = [] } = useCities();
   const createMut = useCreateService();
   const updateMut = useUpdateService();
   const deleteMut = useDeleteService();
@@ -37,18 +39,19 @@ export default function AdminServices() {
   const openCreate = () => { setEditId(null); setForm(emptyForm); setDialogOpen(true); };
   const openEdit = (s: any) => {
     setEditId(s.id);
-    setForm({ name: s.name, description: s.description || '', price: s.price, duration: s.duration, category_id: s.category_id, provider_id: s.provider_id, image_url: s.image_url || '' });
+    setForm({ name: s.name, description: s.description || '', price: s.price, duration: s.duration, category_id: s.category_id, provider_id: s.provider_id, image_url: s.image_url || '', city_id: s.city_id || '' });
     setDialogOpen(true);
   };
 
   const handleSave = async () => {
     if (!form.name.trim() || !form.category_id || !form.provider_id) { toast.error('Name, category, and provider are required'); return; }
+    const payload = { ...form, city_id: form.city_id || undefined };
     try {
       if (editId) {
-        await updateMut.mutateAsync({ id: editId, ...form });
+        await updateMut.mutateAsync({ id: editId, ...payload });
         toast.success('Service updated');
       } else {
-        await createMut.mutateAsync(form);
+        await createMut.mutateAsync(payload);
         toast.success('Service created');
       }
       setDialogOpen(false);
@@ -80,12 +83,7 @@ export default function AdminServices() {
 
       <div className="relative max-w-sm">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Search services..."
-          className="pl-9"
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-        />
+        <Input placeholder="Search services..." className="pl-9" value={search} onChange={e => setSearch(e.target.value)} />
       </div>
 
       {isLoading ? (
@@ -124,7 +122,7 @@ export default function AdminServices() {
                         <td className="px-6 py-3.5"><Badge variant="outline" className="text-xs">{s.category?.name || '—'}</Badge></td>
                         <td className="px-6 py-3.5 text-foreground">{s.provider?.company_name || '—'}</td>
                         <td className="px-6 py-3.5">
-                          <span className="flex items-center gap-1 font-semibold text-foreground"><DollarSign className="h-3.5 w-3.5 text-muted-foreground" />{s.price}</span>
+                          <span className="flex items-center gap-1 font-semibold text-foreground">₹{s.price}</span>
                         </td>
                         <td className="px-6 py-3.5">
                           <span className="flex items-center gap-1 text-muted-foreground"><Clock className="h-3.5 w-3.5" />{s.duration}m</span>
@@ -155,17 +153,28 @@ export default function AdminServices() {
             <div className="space-y-1.5"><Label>Name</Label><Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Service name" /></div>
             <div className="space-y-1.5"><Label>Description</Label><Textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} placeholder="Brief description..." rows={3} /></div>
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1.5"><Label>Price ($)</Label><Input type="number" value={form.price} onChange={e => setForm(f => ({ ...f, price: Number(e.target.value) }))} /></div>
+              <div className="space-y-1.5"><Label>Price (₹)</Label><Input type="number" value={form.price} onChange={e => setForm(f => ({ ...f, price: Number(e.target.value) }))} /></div>
               <div className="space-y-1.5"><Label>Duration (min)</Label><Input type="number" value={form.duration} onChange={e => setForm(f => ({ ...f, duration: Number(e.target.value) }))} /></div>
             </div>
-            <div className="space-y-1.5">
-              <Label>Category</Label>
-              <Select value={form.category_id} onValueChange={v => setForm(f => ({ ...f, category_id: v }))}>
-                <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
-                <SelectContent>
-                  {categories.map((c: any) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-                </SelectContent>
-              </Select>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label>Category</Label>
+                <Select value={form.category_id} onValueChange={v => setForm(f => ({ ...f, category_id: v }))}>
+                  <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
+                  <SelectContent>
+                    {categories.map((c: any) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label>City</Label>
+                <Select value={form.city_id} onValueChange={v => setForm(f => ({ ...f, city_id: v }))}>
+                  <SelectTrigger><SelectValue placeholder="All cities" /></SelectTrigger>
+                  <SelectContent>
+                    {cities.map((c: any) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             <div className="space-y-1.5">
               <Label>Provider</Label>
@@ -184,7 +193,7 @@ export default function AdminServices() {
 
       <AlertDialog open={!!deleteId} onOpenChange={o => !o && setDeleteId(null)}>
         <AlertDialogContent>
-          <AlertDialogHeader><AlertDialogTitle>Delete service?</AlertDialogTitle><AlertDialogDescription>This will permanently delete this service. Existing bookings will remain.</AlertDialogDescription></AlertDialogHeader>
+          <AlertDialogHeader><AlertDialogTitle>Delete service?</AlertDialogTitle><AlertDialogDescription>This will permanently delete this service.</AlertDialogDescription></AlertDialogHeader>
           <AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Delete</AlertDialogAction></AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
