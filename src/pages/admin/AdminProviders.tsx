@@ -68,7 +68,7 @@ export default function AdminProviders() {
 
   const handleReject = async (provider: any) => {
     try {
-      await updateMut.mutateAsync({ id: provider.id, status: 'suspended' });
+      await updateMut.mutateAsync({ id: provider.id, status: 'inactive' });
       await createNotification.mutateAsync({
         user_id: provider.user_id,
         title: 'Provider Application Rejected',
