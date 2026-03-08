@@ -113,7 +113,6 @@ export default function ServicesPage() {
     setPriceRange([0, maxPrice]);
     setMinRating(0);
     setMaxDuration(480);
-    setSelectedCity('all');
     setSearchQuery('');
     setSelectedSubcategory('all');
   };
