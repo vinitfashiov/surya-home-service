@@ -46,6 +46,11 @@ import ProviderSignupPage from "@/pages/auth/ProviderSignupPage";
 import ForgotPasswordPage from "@/pages/auth/ForgotPasswordPage";
 import ResetPasswordPage from "@/pages/auth/ResetPasswordPage";
 import NotFound from "./pages/NotFound";
+import Footer from "@/components/Footer";
+import TermsPage from "@/pages/TermsPage";
+import PrivacyPage from "@/pages/PrivacyPage";
+import AboutPage from "@/pages/AboutPage";
+import ContactPage from "@/pages/ContactPage";
 
 const queryClient = new QueryClient();
 
@@ -92,32 +97,39 @@ const App = () => {
                 <>
                   {showCityGate && <CityGate />}
                   <Navbar />
-                  <Routes>
-                    <Route path="/" element={<HomePage />} />
-                    <Route path="/services" element={<ServicesPage />} />
-                    <Route path="/service/:serviceId" element={<ServiceDetailsPage />} />
-                    <Route path="/book/:serviceId" element={<BookingPage />} />
-                    <Route path="/cart" element={<CartPage />} />
-                    <Route path="/checkout" element={<CheckoutPage />} />
-                    <Route path="/order/:bookingId" element={<OrderTrackingPage />} />
-                    <Route path="/my-bookings" element={<MyBookingsPage />} />
-                    <Route path="/my-addresses" element={<MyAddressesPage />} />
-                    <Route path="/wishlist" element={<WishlistPage />} />
-                    <Route path="/login" element={<LoginPage />} />
-                    <Route path="/signup" element={<SignupPage />} />
-                    <Route path="/provider-signup" element={<ProviderSignupPage />} />
-                    <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-                    <Route path="/reset-password" element={<ResetPasswordPage />} />
-                    <Route path="/profile" element={<ProfilePage />} />
-                    <Route path="/provider" element={<ProviderDashboard />} />
-                    <Route path="/provider/analytics" element={<ProviderAnalytics />} />
-                    <Route path="/provider/bookings" element={<ProviderBookings />} />
-                    <Route path="/provider/servicemen" element={<ProviderServicemen />} />
-                    <Route path="/provider/profile" element={<ProviderProfile />} />
-                    <Route path="/provider/availability" element={<ProviderAvailability />} />
-                    <Route path="/serviceman" element={<ServicemanDashboard />} />
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
+                  <div className="min-h-[calc(100vh-4rem)]">
+                    <Routes>
+                      <Route path="/" element={<HomePage />} />
+                      <Route path="/services" element={<ServicesPage />} />
+                      <Route path="/service/:serviceId" element={<ServiceDetailsPage />} />
+                      <Route path="/book/:serviceId" element={<BookingPage />} />
+                      <Route path="/cart" element={<CartPage />} />
+                      <Route path="/checkout" element={<CheckoutPage />} />
+                      <Route path="/order/:bookingId" element={<OrderTrackingPage />} />
+                      <Route path="/my-bookings" element={<MyBookingsPage />} />
+                      <Route path="/my-addresses" element={<MyAddressesPage />} />
+                      <Route path="/wishlist" element={<WishlistPage />} />
+                      <Route path="/login" element={<LoginPage />} />
+                      <Route path="/signup" element={<SignupPage />} />
+                      <Route path="/provider-signup" element={<ProviderSignupPage />} />
+                      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                      <Route path="/reset-password" element={<ResetPasswordPage />} />
+                      <Route path="/profile" element={<ProfilePage />} />
+                      <Route path="/terms" element={<TermsPage />} />
+                      <Route path="/privacy" element={<PrivacyPage />} />
+                      <Route path="/about" element={<AboutPage />} />
+                      <Route path="/contact" element={<ContactPage />} />
+                      <Route path="/provider" element={<ProviderDashboard />} />
+                      <Route path="/provider/analytics" element={<ProviderAnalytics />} />
+                      <Route path="/provider/bookings" element={<ProviderBookings />} />
+                      <Route path="/provider/servicemen" element={<ProviderServicemen />} />
+                      <Route path="/provider/profile" element={<ProviderProfile />} />
+                      <Route path="/provider/availability" element={<ProviderAvailability />} />
+                      <Route path="/serviceman" element={<ServicemanDashboard />} />
+                      <Route path="*" element={<NotFound />} />
+                    </Routes>
+                  </div>
+                  <Footer />
                 </>
               }
             />
