@@ -384,8 +384,8 @@ export default function CheckoutPage() {
             </div>
             <div className="flex gap-3 mt-6">
               <Button variant="outline" className="flex-1" onClick={() => setShowSummary(false)}>Edit</Button>
-              <Button className="flex-1" onClick={handlePlaceOrder} disabled={createBooking.isPending}>
-                {createBooking.isPending ? 'Placing...' : 'Confirm & Pay'}
+              <Button className="flex-1" onClick={handlePlaceOrder} disabled={createBooking.isPending || processingPayment}>
+                {processingPayment ? <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Processing...</> : paymentMethod === 'online' ? 'Pay Now' : 'Confirm & Book'}
               </Button>
             </div>
           </motion.div>
