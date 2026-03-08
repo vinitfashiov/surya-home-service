@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Settings, Building2, Clock, DollarSign, Save, CalendarDays } from 'lucide-react';
+import { Settings, Building2, Clock, DollarSign, Save, CalendarDays, ShieldAlert } from 'lucide-react';
 import { toast } from 'sonner';
 
 const dayOptions = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -231,6 +231,48 @@ export default function AdminSettings() {
                   <SelectItem value="AUD">AUD (A$)</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Cancellation Rules */}
+        <Card className="border shadow-sm">
+          <CardHeader className="pb-4">
+            <div className="flex items-center gap-2">
+              <div className="h-9 w-9 rounded-lg bg-destructive/10 flex items-center justify-center">
+                <ShieldAlert className="h-4.5 w-4.5 text-destructive" />
+              </div>
+              <div>
+                <CardTitle className="text-base">Cancellation Policy</CardTitle>
+                <CardDescription className="text-xs">Configure cancellation rules</CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center gap-3">
+              <Checkbox
+                checked={form.cancellation_enabled !== 'false'}
+                onCheckedChange={(checked) => set('cancellation_enabled', checked ? 'true' : 'false')}
+              />
+              <Label>Allow customers to cancel bookings</Label>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Free Cancellation Window (minutes)</Label>
+              <Input
+                type="number"
+                value={form.cancellation_free_minutes || '30'}
+                onChange={e => set('cancellation_free_minutes', e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">Cancellations within this period are free</p>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Cancellation Fee (%)</Label>
+              <Input
+                type="number"
+                value={form.cancellation_fee_percent || '10'}
+                onChange={e => set('cancellation_fee_percent', e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">Fee charged after free period (% of booking amount)</p>
             </div>
           </CardContent>
         </Card>

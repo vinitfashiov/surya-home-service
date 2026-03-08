@@ -12,6 +12,7 @@ import ServiceDetailsPage from "@/pages/ServiceDetailsPage";
 import BookingPage from "@/pages/BookingPage";
 import CartPage from "@/pages/CartPage";
 import CheckoutPage from "@/pages/CheckoutPage";
+import OrderTrackingPage from "@/pages/OrderTrackingPage";
 import MyBookingsPage from "@/pages/MyBookingsPage";
 import MyAddressesPage from "@/pages/MyAddressesPage";
 import AdminLayout from "@/components/admin/AdminLayout";
@@ -77,6 +78,7 @@ const App = () => (
                     <Route path="/book/:serviceId" element={<BookingPage />} />
                     <Route path="/cart" element={<CartPage />} />
                     <Route path="/checkout" element={<CheckoutPage />} />
+                    <Route path="/order/:bookingId" element={<OrderTrackingPage />} />
                     <Route path="/my-bookings" element={<MyBookingsPage />} />
                     <Route path="/my-addresses" element={<MyAddressesPage />} />
                     <Route path="/login" element={<LoginPage />} />
