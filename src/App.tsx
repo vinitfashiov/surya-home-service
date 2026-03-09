@@ -100,7 +100,7 @@ const App = () => {
                 <>
                   {showCityGate && <CityGate />}
                   <Navbar />
-                  <div className="min-h-[calc(100vh-4rem)]">
+                  <div className="min-h-[calc(100vh-4rem)] pb-16 md:pb-0">
                     <Routes>
                       <Route path="/" element={<HomePage />} />
                       <Route path="/services" element={<ServicesPage />} />
@@ -133,6 +133,7 @@ const App = () => {
                     </Routes>
                   </div>
                   <Footer />
+                  <BottomNav />
                 </>
               }
             />
