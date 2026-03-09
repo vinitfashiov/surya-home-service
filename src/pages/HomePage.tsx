@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, Star, ArrowRight, Scissors, Zap, Droplets, SprayCan, Wrench, Paintbrush, Bug, Hammer, Clock, Shield, ChevronRight, ChevronLeft, MapPin, TrendingUp } from 'lucide-react';
+import { Search, Star, ArrowRight, Scissors, Zap, Droplets, SprayCan, Wrench, Paintbrush, Bug, Hammer, Clock, Shield, ChevronRight, ChevronLeft, MapPin, TrendingUp, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useCategories, useServices } from '@/hooks/useSupabaseData';
