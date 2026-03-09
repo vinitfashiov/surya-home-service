@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useServices } from '@/hooks/useSupabaseData';
 import { useAllPricingRulesForService, useCreatePricingRule, useUpdatePricingRule, useDeletePricingRule, RULE_TYPES, PricingRule } from '@/hooks/usePricingRules';
 import { useCategoryCheckoutFields } from '@/hooks/useCheckoutFields';
