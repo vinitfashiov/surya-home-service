@@ -178,6 +178,17 @@ export default function ProviderProfile() {
           </Button>
         </CardContent>
       </Card>
+
+      {/* Verification Documents */}
+      <div className="mt-6">
+        {(provider as any).is_verified && (
+          <div className="flex items-center gap-2 mb-4 p-3 rounded-lg bg-success/5 border border-success/20">
+            <ShieldCheck className="h-5 w-5 text-success" />
+            <span className="text-sm font-medium text-success">Your account is verified</span>
+          </div>
+        )}
+        <ProviderDocuments providerId={provider.id} />
+      </div>
     </div>
   );
 }
