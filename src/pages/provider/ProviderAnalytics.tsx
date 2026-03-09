@@ -6,6 +6,8 @@ import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, Tool
 import { format, parseISO, subMonths, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
 import { DollarSign, TrendingUp, CalendarDays, Star } from 'lucide-react';
 import StatCard from '@/components/StatCard';
+import { useEffect } from 'react';
+import { toast } from 'sonner';
 
 const COLORS = [
   'hsl(168, 80%, 36%)', 'hsl(30, 95%, 55%)', 'hsl(217, 91%, 60%)',
@@ -14,11 +16,17 @@ const COLORS = [
 
 export default function ProviderAnalytics() {
   const { user } = useAuth();
-  const { data: provider } = useMyProvider(user?.id);
-  const { data: bookings = [], isLoading } = useProviderBookings(user?.id);
-  const { data: reviews = [] } = useReviewsForProvider(provider?.id);
+  const { data: provider, error: providerError } = useMyProvider(user?.id);
+  const { data: bookings = [], isLoading, error: bookingsError } = useProviderBookings(user?.id);
+  const { data: reviews = [], error: reviewsError } = useReviewsForProvider(provider?.id);
   const { data: services = [] } = useServices();
   const { data: categories = [] } = useCategories();
+
+  useEffect(() => {
+    if (providerError) toast.error(`Failed to load provider: ${providerError.message}`);
+    if (bookingsError) toast.error(`Failed to load bookings: ${bookingsError.message}`);
+    if (reviewsError) toast.error(`Failed to load reviews: ${reviewsError.message}`);
+  }, [providerError, bookingsError, reviewsError]);
 
   if (!user) return <div className="container mx-auto px-4 py-20 text-center text-muted-foreground">Please log in.</div>;
   if (isLoading) return <div className="container mx-auto px-4 py-8"><Skeleton className="h-96 rounded-xl" /></div>;
