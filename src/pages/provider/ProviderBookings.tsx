@@ -3,14 +3,18 @@ import StatusBadge from '@/components/StatusBadge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { MessageCircle } from 'lucide-react';
 import ChatDialog from '@/components/ChatDialog';
 
 export default function ProviderBookings() {
   const { user } = useAuth();
-  const { data: bookings = [], isLoading } = useProviderBookings(user?.id);
+  const { data: bookings = [], isLoading, error: bookingsError } = useProviderBookings(user?.id);
   const updateStatus = useUpdateBookingStatus();
+
+  useEffect(() => {
+    if (bookingsError) toast.error(`Failed to load bookings: ${bookingsError.message}`);
+  }, [bookingsError]);
 
   const handleStatus = (id: string, status: string) => {
     updateStatus.mutate({ bookingId: id, status }, {

@@ -16,8 +16,13 @@ import { toast } from 'sonner';
 
 export default function ProviderProfile() {
   const { user } = useAuth();
-  const { data: provider, isLoading } = useMyProvider(user?.id);
-  const { data: cities = [] } = useCities();
+  const { data: provider, isLoading, error: providerError } = useMyProvider(user?.id);
+  const { data: cities = [], error: citiesError } = useCities();
+
+  useEffect(() => {
+    if (providerError) toast.error(`Failed to load provider: ${providerError.message}`);
+    if (citiesError) toast.error(`Failed to load cities: ${citiesError.message}`);
+  }, [providerError, citiesError]);
   const queryClient = useQueryClient();
   const [saving, setSaving] = useState(false);
 

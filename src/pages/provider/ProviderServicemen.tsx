@@ -3,11 +3,18 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Star, Plus } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useEffect } from 'react';
+import { toast } from 'sonner';
 
 export default function ProviderServicemen() {
   const { user } = useAuth();
-  const { data: provider } = useMyProvider(user?.id);
-  const { data: myServicemen = [], isLoading } = useServicemen(provider?.id);
+  const { data: provider, error: providerError } = useMyProvider(user?.id);
+  const { data: myServicemen = [], isLoading, error: servicemenError } = useServicemen(provider?.id);
+
+  useEffect(() => {
+    if (providerError) toast.error(`Failed to load provider: ${providerError.message}`);
+    if (servicemenError) toast.error(`Failed to load servicemen: ${servicemenError.message}`);
+  }, [providerError, servicemenError]);
 
   if (!user) return <div className="container mx-auto px-4 py-20 text-center text-muted-foreground">Please log in as a provider.</div>;
 
