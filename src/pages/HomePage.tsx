@@ -290,9 +290,9 @@ export default function HomePage() {
       {/* CTA */}
       <section className="py-20">
         <div className="container mx-auto px-4">
-          <div className="bg-primary rounded-2xl p-10 md:p-16 text-center relative overflow-hidden">
+          <div className="bg-primary rounded-2xl p-8 md:p-10 lg:p-16 text-center relative overflow-hidden">
             <div className="absolute top-0 right-0 w-64 h-64 rounded-full bg-primary-foreground/5 -translate-y-1/2 translate-x-1/2" />
-            <h2 className="text-3xl md:text-4xl font-heading font-bold text-primary-foreground relative">Are you a service provider?</h2>
+            <h2 className="text-2xl md:text-3xl lg:text-4xl font-heading font-bold text-primary-foreground relative">Are you a service provider?</h2>
             <p className="text-primary-foreground/80 mt-3 max-w-md mx-auto relative">Join thousands of professionals and grow your business with ServisGo.</p>
             <div className="mt-8 flex gap-3 justify-center relative">
               <Link to="/provider-signup">
