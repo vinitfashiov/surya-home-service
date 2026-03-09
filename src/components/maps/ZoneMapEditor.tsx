@@ -75,9 +75,11 @@ export default function ZoneMapEditor({
           </>
         )}
         {isDrawing && (
-          <span className="text-xs text-primary font-medium">
-            Click on the map to draw zone boundaries
-          </span>
+          <div className="flex items-center gap-2 p-2 bg-primary/10 rounded-md border border-primary/20">
+            <span className="text-xs text-primary font-medium">
+              ✏️ Drawing mode active — click on the map to place points, then close the shape by clicking the first point
+            </span>
+          </div>
         )}
       </div>
 
