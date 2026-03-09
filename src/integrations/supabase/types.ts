@@ -1124,6 +1124,8 @@ export type Database = {
           rating: number | null
           review_count: number | null
           subcategory_id: string | null
+          tax_rate: number | null
+          tax_type: string | null
           zone_id: string | null
         }
         Insert: {
@@ -1141,6 +1143,8 @@ export type Database = {
           rating?: number | null
           review_count?: number | null
           subcategory_id?: string | null
+          tax_rate?: number | null
+          tax_type?: string | null
           zone_id?: string | null
         }
         Update: {
@@ -1158,6 +1162,8 @@ export type Database = {
           rating?: number | null
           review_count?: number | null
           subcategory_id?: string | null
+          tax_rate?: number | null
+          tax_type?: string | null
           zone_id?: string | null
         }
         Relationships: [
