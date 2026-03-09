@@ -695,6 +695,53 @@ export type Database = {
           },
         ]
       }
+      provider_documents: {
+        Row: {
+          admin_notes: string | null
+          document_name: string
+          document_type: string
+          file_url: string
+          id: string
+          provider_id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          uploaded_at: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          document_name?: string
+          document_type?: string
+          file_url?: string
+          id?: string
+          provider_id: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          uploaded_at?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          document_name?: string
+          document_type?: string
+          file_url?: string
+          id?: string
+          provider_id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          uploaded_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "provider_documents_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       providers: {
         Row: {
           address: string | null
@@ -703,11 +750,13 @@ export type Database = {
           created_at: string
           email: string
           id: string
+          is_verified: boolean
           owner_name: string
           phone: string | null
           rating: number | null
           status: string
           user_id: string
+          verified_at: string | null
           zone_id: string | null
         }
         Insert: {
@@ -717,11 +766,13 @@ export type Database = {
           created_at?: string
           email: string
           id?: string
+          is_verified?: boolean
           owner_name: string
           phone?: string | null
           rating?: number | null
           status?: string
           user_id: string
+          verified_at?: string | null
           zone_id?: string | null
         }
         Update: {
@@ -731,11 +782,13 @@ export type Database = {
           created_at?: string
           email?: string
           id?: string
+          is_verified?: boolean
           owner_name?: string
           phone?: string | null
           rating?: number | null
           status?: string
           user_id?: string
+          verified_at?: string | null
           zone_id?: string | null
         }
         Relationships: [
