@@ -26,6 +26,18 @@ export default function ZoneMapEditor({
   const [isDrawing, setIsDrawing] = useState(!initialPolygon || initialPolygon.length === 0);
   const [drawingPoints, setDrawingPoints] = useState<{ lat: number; lng: number }[]>([]);
   const polygonRef = useRef<google.maps.Polygon | null>(null);
+  const mapRef = useRef<google.maps.Map | null>(null);
+  const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
+
+  const handlePlaceSelect = useCallback(() => {
+    const place = autocompleteRef.current?.getPlace();
+    if (place?.geometry?.location) {
+      const lat = place.geometry.location.lat();
+      const lng = place.geometry.location.lng();
+      mapRef.current?.panTo({ lat, lng });
+      mapRef.current?.setZoom(13);
+    }
+  }, []);
 
   const handleMapClick = useCallback(
     (e: google.maps.MapMouseEvent) => {
