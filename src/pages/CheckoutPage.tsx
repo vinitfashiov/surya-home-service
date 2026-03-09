@@ -12,6 +12,9 @@ import { usePricingRulesForServices, calculateDynamicPrice } from '@/hooks/usePr
 import { loadRazorpayScript, createRazorpayOrder, verifyRazorpayPayment, openRazorpayCheckout } from '@/lib/razorpay';
 import AddressManager from '@/components/AddressManager';
 import DynamicCheckoutFields from '@/components/DynamicCheckoutFields';
+import GoogleMapsProvider from '@/components/maps/GoogleMapsProvider';
+import LocationPicker from '@/components/maps/LocationPicker';
+import { useCheckServiceability } from '@/hooks/useZones';
 import { useState, useEffect, useMemo } from 'react';
 import { ArrowLeft, CheckCircle, Clock, CreditCard, Tag, Loader2, AlertCircle, TrendingUp, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
