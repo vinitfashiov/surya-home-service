@@ -1,7 +1,8 @@
 import { useState, useCallback, useRef } from 'react';
-import { GoogleMap, Polygon, Marker, Polyline } from '@react-google-maps/api';
+import { GoogleMap, Polygon, Marker, Polyline, Autocomplete } from '@react-google-maps/api';
 import { Button } from '@/components/ui/button';
-import { Trash2, MousePointer, Pencil } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Trash2, MousePointer, Pencil, Search } from 'lucide-react';
 
 const mapContainerStyle = {
   width: '100%',
@@ -25,6 +26,18 @@ export default function ZoneMapEditor({
   const [isDrawing, setIsDrawing] = useState(!initialPolygon || initialPolygon.length === 0);
   const [drawingPoints, setDrawingPoints] = useState<{ lat: number; lng: number }[]>([]);
   const polygonRef = useRef<google.maps.Polygon | null>(null);
+  const mapRef = useRef<google.maps.Map | null>(null);
+  const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
+
+  const handlePlaceSelect = useCallback(() => {
+    const place = autocompleteRef.current?.getPlace();
+    if (place?.geometry?.location) {
+      const lat = place.geometry.location.lat();
+      const lng = place.geometry.location.lng();
+      mapRef.current?.panTo({ lat, lng });
+      mapRef.current?.setZoom(13);
+    }
+  }, []);
 
   const handleMapClick = useCallback(
     (e: google.maps.MapMouseEvent) => {
@@ -109,6 +122,24 @@ export default function ZoneMapEditor({
         )}
       </div>
 
+      {/* Search box */}
+      <div className="relative">
+        <Autocomplete
+          onLoad={(ac) => { autocompleteRef.current = ac; }}
+          onPlaceChanged={handlePlaceSelect}
+          options={{ componentRestrictions: { country: 'in' } }}
+        >
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder="Search city or area to navigate map..."
+              className="pl-10"
+            />
+          </div>
+        </Autocomplete>
+      </div>
+
       {/* Map */}
       <div className="rounded-lg overflow-hidden border">
         <GoogleMap
@@ -116,6 +147,7 @@ export default function ZoneMapEditor({
           center={polygon.length > 0 ? polygon[0] : center}
           zoom={5}
           onClick={handleMapClick}
+          onLoad={(map) => { mapRef.current = map; }}
           options={{
             mapTypeControl: true,
             streetViewControl: false,
