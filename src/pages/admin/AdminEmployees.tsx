@@ -19,7 +19,11 @@ const allPermissions = ['bookings', 'categories', 'providers', 'employees', 'ser
 const emptyForm = { name: '', email: '', department: 'general', phone: '', permissions: [] as string[], status: 'active' };
 
 export default function AdminEmployees() {
-  const { data: employees = [], isLoading } = useEmployees();
+  const { data: employees = [], isLoading, error: employeesError } = useEmployees();
+
+  useEffect(() => {
+    if (employeesError) toast.error(`Failed to load employees: ${employeesError.message}`);
+  }, [employeesError]);
   const { user } = useAuthContext();
   const createMut = useCreateEmployee();
   const updateMut = useUpdateEmployee();

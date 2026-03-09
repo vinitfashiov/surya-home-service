@@ -11,7 +11,11 @@ import { toast } from 'sonner';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function AdminBanners() {
-  const { data: banners = [], isLoading } = useAdminBanners();
+  const { data: banners = [], isLoading, error: bannersError } = useAdminBanners();
+
+  useEffect(() => {
+    if (bannersError) toast.error(`Failed to load banners: ${bannersError.message}`);
+  }, [bannersError]);
   const createBanner = useCreateBanner();
   const updateBanner = useUpdateBanner();
   const deleteBanner = useDeleteBanner();

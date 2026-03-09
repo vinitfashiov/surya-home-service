@@ -15,10 +15,15 @@ import { toast } from 'sonner';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function AdminPricingRules() {
-  const { data: services = [], isLoading: svcLoading } = useServices();
+  const { data: services = [], isLoading: svcLoading, error: svcError } = useServices();
   const [selectedServiceId, setSelectedServiceId] = useState<string>('');
   const selectedService = services.find((s: any) => s.id === selectedServiceId);
-  const { data: rules = [], isLoading: rulesLoading } = useAllPricingRulesForService(selectedServiceId || undefined);
+  const { data: rules = [], isLoading: rulesLoading, error: rulesError } = useAllPricingRulesForService(selectedServiceId || undefined);
+
+  useEffect(() => {
+    if (svcError) toast.error(`Failed to load services: ${svcError.message}`);
+    if (rulesError) toast.error(`Failed to load pricing rules: ${rulesError.message}`);
+  }, [svcError, rulesError]);
   const categoryIds = selectedService ? [selectedService.category_id] : [];
   const { data: checkoutFields = [] } = useCategoryCheckoutFields(categoryIds);
 

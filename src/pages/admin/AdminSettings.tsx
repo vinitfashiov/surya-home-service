@@ -44,8 +44,12 @@ function useUpdateSettings() {
 }
 
 export default function AdminSettings() {
-  const { data: settings, isLoading } = useSettings();
+  const { data: settings, isLoading, error: settingsError } = useSettings();
   const updateMut = useUpdateSettings();
+
+  useEffect(() => {
+    if (settingsError) toast.error(`Failed to load settings: ${(settingsError as any).message}`);
+  }, [settingsError]);
   const [form, setForm] = useState<Record<string, string>>({});
 
   useEffect(() => {

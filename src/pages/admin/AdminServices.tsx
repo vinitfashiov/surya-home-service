@@ -19,10 +19,17 @@ import { toast } from 'sonner';
 const emptyForm = { name: '', description: '', price: 0, duration: 60, category_id: '', provider_id: '', image_url: '', city_id: '' };
 
 export default function AdminServices() {
-  const { data: services = [], isLoading } = useServices();
-  const { data: categories = [] } = useCategories();
-  const { data: providers = [] } = useProviders();
-  const { data: cities = [] } = useCities();
+  const { data: services = [], isLoading, error: servicesError } = useServices();
+  const { data: categories = [], error: categoriesError } = useCategories();
+  const { data: providers = [], error: providersError } = useProviders();
+  const { data: cities = [], error: citiesError } = useCities();
+
+  useEffect(() => {
+    if (servicesError) toast.error(`Failed to load services: ${servicesError.message}`);
+    if (categoriesError) toast.error(`Failed to load categories: ${categoriesError.message}`);
+    if (providersError) toast.error(`Failed to load providers: ${providersError.message}`);
+    if (citiesError) toast.error(`Failed to load cities: ${citiesError.message}`);
+  }, [servicesError, categoriesError, providersError, citiesError]);
   const createMut = useCreateService();
   const updateMut = useUpdateService();
   const deleteMut = useDeleteService();

@@ -15,7 +15,11 @@ import { toast } from 'sonner';
 const emptyForm = { name: '', state: '' };
 
 export default function AdminCities() {
-  const { data: cities = [], isLoading } = useAllCities();
+  const { data: cities = [], isLoading, error: citiesError } = useAllCities();
+
+  useEffect(() => {
+    if (citiesError) toast.error(`Failed to load cities: ${citiesError.message}`);
+  }, [citiesError]);
   const createMut = useCreateCity();
   const updateMut = useUpdateCity();
   const deleteMut = useDeleteCity();

@@ -76,7 +76,11 @@ const emptyForm = {
 };
 
 export default function AdminCoupons() {
-  const { data: coupons = [], isLoading } = useCoupons();
+  const { data: coupons = [], isLoading, error: couponsError } = useCoupons();
+
+  useEffect(() => {
+    if (couponsError) toast.error(`Failed to load coupons: ${couponsError.message}`);
+  }, [couponsError]);
   const createMut = useCreateCoupon();
   const updateMut = useUpdateCoupon();
   const deleteMut = useDeleteCoupon();
