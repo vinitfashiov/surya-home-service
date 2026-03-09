@@ -1,14 +1,14 @@
 import { useState, useCallback, useRef } from 'react';
-import { GoogleMap, Polygon, DrawingManager } from '@react-google-maps/api';
+import { GoogleMap, Polygon, Marker, Polyline } from '@react-google-maps/api';
 import { Button } from '@/components/ui/button';
-import { Trash2, Undo } from 'lucide-react';
+import { Trash2, MousePointer, Pencil } from 'lucide-react';
 
 const mapContainerStyle = {
   width: '100%',
   height: '500px',
 };
 
-const defaultCenter = { lat: 20.5937, lng: 78.9629 }; // Center of India
+const defaultCenter = { lat: 20.5937, lng: 78.9629 };
 
 interface ZoneMapEditorProps {
   initialPolygon?: { lat: number; lng: number }[];
@@ -22,109 +22,166 @@ export default function ZoneMapEditor({
   center = defaultCenter,
 }: ZoneMapEditorProps) {
   const [polygon, setPolygon] = useState<{ lat: number; lng: number }[]>(initialPolygon || []);
-  const [isDrawing, setIsDrawing] = useState(!initialPolygon);
+  const [isDrawing, setIsDrawing] = useState(!initialPolygon || initialPolygon.length === 0);
+  const [drawingPoints, setDrawingPoints] = useState<{ lat: number; lng: number }[]>([]);
   const polygonRef = useRef<google.maps.Polygon | null>(null);
 
-  const handlePolygonComplete = useCallback((poly: google.maps.Polygon) => {
-    const path = poly.getPath();
-    const coords: { lat: number; lng: number }[] = [];
-    
-    for (let i = 0; i < path.getLength(); i++) {
-      const point = path.getAt(i);
-      coords.push({ lat: point.lat(), lng: point.lng() });
-    }
-    
-    setPolygon(coords);
-    onPolygonChange(coords);
+  const handleMapClick = useCallback(
+    (e: google.maps.MapMouseEvent) => {
+      if (!isDrawing || !e.latLng) return;
+
+      const newPoint = { lat: e.latLng.lat(), lng: e.latLng.lng() };
+      const updated = [...drawingPoints, newPoint];
+      setDrawingPoints(updated);
+    },
+    [isDrawing, drawingPoints]
+  );
+
+  const finishDrawing = useCallback(() => {
+    if (drawingPoints.length < 3) return;
+    setPolygon(drawingPoints);
+    onPolygonChange(drawingPoints);
+    setDrawingPoints([]);
     setIsDrawing(false);
-    poly.setMap(null); // Remove drawing polygon, we'll render our own
-  }, [onPolygonChange]);
+  }, [drawingPoints, onPolygonChange]);
 
   const handlePolygonEdit = useCallback(() => {
     if (!polygonRef.current) return;
-    
     const path = polygonRef.current.getPath();
     const coords: { lat: number; lng: number }[] = [];
-    
     for (let i = 0; i < path.getLength(); i++) {
       const point = path.getAt(i);
       coords.push({ lat: point.lat(), lng: point.lng() });
     }
-    
     setPolygon(coords);
     onPolygonChange(coords);
   }, [onPolygonChange]);
 
   const clearPolygon = () => {
     setPolygon([]);
+    setDrawingPoints([]);
     onPolygonChange([]);
     setIsDrawing(true);
   };
 
+  const undoLastPoint = () => {
+    const updated = drawingPoints.slice(0, -1);
+    setDrawingPoints(updated);
+  };
+
   return (
     <div className="space-y-3">
-      <div className="flex items-center gap-2">
-        {polygon.length > 0 && (
+      {/* Toolbar */}
+      <div className="flex items-center gap-2 flex-wrap">
+        {!isDrawing && polygon.length > 0 && (
           <>
-            <Button variant="outline" size="sm" onClick={clearPolygon} className="gap-1.5">
+            <Button variant="outline" size="sm" onClick={() => { clearPolygon(); }} className="gap-1.5">
+              <Pencil className="h-3.5 w-3.5" /> Redraw
+            </Button>
+            <Button variant="outline" size="sm" onClick={clearPolygon} className="gap-1.5 text-destructive">
               <Trash2 className="h-3.5 w-3.5" /> Clear Zone
             </Button>
             <span className="text-xs text-muted-foreground">
-              {polygon.length} points · Drag points to adjust
+              {polygon.length} points · Drag points on map to adjust
             </span>
           </>
         )}
         {isDrawing && (
-          <div className="flex items-center gap-2 p-2 bg-primary/10 rounded-md border border-primary/20">
-            <span className="text-xs text-primary font-medium">
-              ✏️ Drawing mode active — click on the map to place points, then close the shape by clicking the first point
-            </span>
+          <div className="flex items-center gap-2 w-full">
+            <div className="flex-1 flex items-center gap-2 p-2 bg-primary/10 rounded-md border border-primary/20">
+              <MousePointer className="h-4 w-4 text-primary shrink-0" />
+              <span className="text-xs text-primary font-medium">
+                Click on the map to place boundary points ({drawingPoints.length} placed)
+                {drawingPoints.length >= 3 && ' — click "Finish" to close the shape'}
+              </span>
+            </div>
+            {drawingPoints.length > 0 && (
+              <Button variant="outline" size="sm" onClick={undoLastPoint}>
+                Undo
+              </Button>
+            )}
+            {drawingPoints.length >= 3 && (
+              <Button size="sm" onClick={finishDrawing} className="gap-1.5">
+                ✓ Finish
+              </Button>
+            )}
           </div>
         )}
       </div>
 
+      {/* Map */}
       <div className="rounded-lg overflow-hidden border">
         <GoogleMap
           mapContainerStyle={mapContainerStyle}
-          center={center}
+          center={polygon.length > 0 ? polygon[0] : center}
           zoom={5}
+          onClick={handleMapClick}
           options={{
             mapTypeControl: true,
             streetViewControl: false,
             fullscreenControl: true,
+            draggableCursor: isDrawing ? 'crosshair' : undefined,
           }}
         >
-          {isDrawing && (
-            <DrawingManager
-              drawingMode={google.maps.drawing.OverlayType.POLYGON}
-              onPolygonComplete={handlePolygonComplete}
-              options={{
-                drawingControl: true,
-                drawingControlOptions: {
-                  position: google.maps.ControlPosition.TOP_CENTER,
-                  drawingModes: [google.maps.drawing.OverlayType.POLYGON],
-                },
-                polygonOptions: {
-                  fillColor: '#7c3aed',
-                  fillOpacity: 0.3,
-                  strokeWeight: 2,
+          {/* Drawing mode: show placed points and connecting lines */}
+          {isDrawing && drawingPoints.length > 0 && (
+            <>
+              <Polyline
+                path={drawingPoints}
+                options={{
                   strokeColor: '#7c3aed',
-                  editable: true,
-                  draggable: true,
-                  clickable: true,
-                },
-              }}
-            />
+                  strokeWeight: 2,
+                  strokeOpacity: 0.8,
+                }}
+              />
+              {/* Dashed line from last point back to first to preview closure */}
+              {drawingPoints.length >= 3 && (
+                <Polyline
+                  path={[drawingPoints[drawingPoints.length - 1], drawingPoints[0]]}
+                  options={{
+                    strokeColor: '#7c3aed',
+                    strokeWeight: 2,
+                    strokeOpacity: 0.4,
+                    icons: [{
+                      icon: { path: 'M 0,-1 0,1', strokeOpacity: 1, scale: 3 },
+                      offset: '0',
+                      repeat: '15px',
+                    }],
+                  }}
+                />
+              )}
+              {drawingPoints.map((point, idx) => (
+                <Marker
+                  key={idx}
+                  position={point}
+                  label={{
+                    text: String(idx + 1),
+                    color: 'white',
+                    fontSize: '11px',
+                    fontWeight: 'bold',
+                  }}
+                  icon={{
+                    path: google.maps.SymbolPath.CIRCLE,
+                    scale: 12,
+                    fillColor: '#7c3aed',
+                    fillOpacity: 1,
+                    strokeColor: 'white',
+                    strokeWeight: 2,
+                  }}
+                />
+              ))}
+            </>
           )}
 
+          {/* Completed polygon */}
           {polygon.length > 0 && !isDrawing && (
             <Polygon
               paths={polygon}
               options={{
-                fillColor: 'hsl(var(--primary))',
-                fillOpacity: 0.3,
+                fillColor: '#7c3aed',
+                fillOpacity: 0.25,
                 strokeWeight: 2,
-                strokeColor: 'hsl(var(--primary))',
+                strokeColor: '#7c3aed',
                 editable: true,
                 draggable: true,
               }}
