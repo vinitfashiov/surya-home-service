@@ -60,8 +60,10 @@ export default function CheckoutPage() {
   const [customFieldValues, setCustomFieldValues] = useState<Record<string, string>>({});
   const [paymentMethod, setPaymentMethod] = useState<'online' | 'cod'>('online');
   const [processingPayment, setProcessingPayment] = useState(false);
+  const [mapLocation, setMapLocation] = useState<{lat: number, lng: number, address: string, pincode?: string, state?: string} | null>(null);
 
-  const finalAddress = selectedAddress?.address_line || manualAddress;
+  const checkServiceability = useCheckServiceability();
+  const finalAddress = mapLocation?.address || selectedAddress?.address_line || manualAddress;
 
   // Redirect unauthenticated users
   useEffect(() => {
