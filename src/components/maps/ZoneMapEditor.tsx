@@ -1,7 +1,8 @@
 import { useState, useCallback, useRef } from 'react';
-import { GoogleMap, Polygon, Marker, Polyline } from '@react-google-maps/api';
+import { GoogleMap, Polygon, Marker, Polyline, Autocomplete } from '@react-google-maps/api';
 import { Button } from '@/components/ui/button';
-import { Trash2, MousePointer, Pencil } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Trash2, MousePointer, Pencil, Search } from 'lucide-react';
 
 const mapContainerStyle = {
   width: '100%',
