@@ -2,7 +2,7 @@ import { useMyProvider } from '@/hooks/useSupabaseData';
 import { useAuth } from '@/hooks/useSupabaseData';
 import { useProviderAvailability, useUpsertAvailability } from '@/hooks/useProviderAvailability';
 import { ALL_SLOTS } from '@/hooks/useAvailableTimeSlots';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { toast } from 'sonner';
 import { ChevronLeft, ChevronRight, Calendar, Clock, Ban, Check, Save, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
