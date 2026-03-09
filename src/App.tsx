@@ -28,6 +28,7 @@ import AdminEmployees from "@/pages/admin/AdminEmployees";
 import AdminServices from "@/pages/admin/AdminServices";
 import AdminSettings from "@/pages/admin/AdminSettings";
 import AdminCities from "@/pages/admin/AdminCities";
+import AdminZones from "@/pages/admin/AdminZones";
 import AdminCheckoutFields from "@/pages/admin/AdminCheckoutFields";
 import AdminCoupons from "@/pages/admin/AdminCoupons";
 import AdminBanners from "@/pages/admin/AdminBanners";
