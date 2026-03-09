@@ -122,6 +122,24 @@ export default function ZoneMapEditor({
         )}
       </div>
 
+      {/* Search box */}
+      <div className="relative">
+        <Autocomplete
+          onLoad={(ac) => { autocompleteRef.current = ac; }}
+          onPlaceChanged={handlePlaceSelect}
+          options={{ componentRestrictions: { country: 'in' } }}
+        >
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder="Search city or area to navigate map..."
+              className="pl-10"
+            />
+          </div>
+        </Autocomplete>
+      </div>
+
       {/* Map */}
       <div className="rounded-lg overflow-hidden border">
         <GoogleMap
@@ -129,6 +147,7 @@ export default function ZoneMapEditor({
           center={polygon.length > 0 ? polygon[0] : center}
           zoom={5}
           onClick={handleMapClick}
+          onLoad={(map) => { mapRef.current = map; }}
           options={{
             mapTypeControl: true,
             streetViewControl: false,
