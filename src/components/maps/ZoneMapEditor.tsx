@@ -94,6 +94,7 @@ export default function ZoneMapEditor({
         >
           {isDrawing && (
             <DrawingManager
+              drawingMode={google.maps.drawing.OverlayType.POLYGON}
               onPolygonComplete={handlePolygonComplete}
               options={{
                 drawingControl: true,
@@ -102,12 +103,13 @@ export default function ZoneMapEditor({
                   drawingModes: [google.maps.drawing.OverlayType.POLYGON],
                 },
                 polygonOptions: {
-                  fillColor: 'hsl(var(--primary))',
+                  fillColor: '#7c3aed',
                   fillOpacity: 0.3,
                   strokeWeight: 2,
-                  strokeColor: 'hsl(var(--primary))',
+                  strokeColor: '#7c3aed',
                   editable: true,
                   draggable: true,
+                  clickable: true,
                 },
               }}
             />
