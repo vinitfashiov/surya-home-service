@@ -3,6 +3,7 @@ import { useAuth, useMyProvider } from '@/hooks/useSupabaseData';
 import { useCities } from '@/hooks/useCities';
 import { supabase } from '@/integrations/supabase/client';
 import ImageUpload from '@/components/ImageUpload';
+import ProviderDocuments from '@/components/provider/ProviderDocuments';
 import { useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -11,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Building2, Save, Loader2 } from 'lucide-react';
+import { Building2, Save, Loader2, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function ProviderProfile() {
