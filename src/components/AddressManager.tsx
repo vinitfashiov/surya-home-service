@@ -11,8 +11,10 @@ import { Plus, Pencil, Trash2, MapPin, Star } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import GoogleMapsProvider from '@/components/maps/GoogleMapsProvider';
+import LocationPicker from '@/components/maps/LocationPicker';
 
-const emptyForm = { label: 'Home', address_line: '', city_id: '', pincode: '', is_default: false };
+const emptyForm = { label: 'Home', address_line: '', city_id: '', pincode: '', is_default: false, latitude: null as number | null, longitude: null as number | null };
 
 interface AddressManagerProps {
   userId: string;
@@ -35,18 +37,36 @@ export default function AddressManager({ userId, selectable, selectedAddressId, 
   const openCreate = () => { setEditAddr(null); setForm(emptyForm); setDialogOpen(true); };
   const openEdit = (a: any) => {
     setEditAddr(a);
-    setForm({ label: a.label, address_line: a.address_line, city_id: a.city_id || '', pincode: a.pincode || '', is_default: a.is_default });
+    setForm({
+      label: a.label,
+      address_line: a.address_line,
+      city_id: a.city_id || '',
+      pincode: a.pincode || '',
+      is_default: a.is_default,
+      latitude: a.latitude ? Number(a.latitude) : null,
+      longitude: a.longitude ? Number(a.longitude) : null,
+    });
     setDialogOpen(true);
   };
 
   const handleSave = async () => {
     if (!form.address_line.trim()) { toast.error('Address is required'); return; }
     try {
+      const payload = {
+        user_id: userId,
+        label: form.label,
+        address_line: form.address_line,
+        city_id: form.city_id || undefined,
+        pincode: form.pincode || undefined,
+        is_default: form.is_default,
+        latitude: form.latitude,
+        longitude: form.longitude,
+      };
       if (editAddr) {
-        await updateMut.mutateAsync({ id: editAddr.id, user_id: userId, ...form, city_id: form.city_id || undefined });
+        await updateMut.mutateAsync({ id: editAddr.id, ...payload });
         toast.success('Address updated');
       } else {
-        await createMut.mutateAsync({ user_id: userId, ...form, city_id: form.city_id || undefined });
+        await createMut.mutateAsync(payload);
         toast.success('Address added');
       }
       setDialogOpen(false);
@@ -95,6 +115,11 @@ export default function AddressManager({ userId, selectable, selectedAddressId, 
                         <Star className="h-2.5 w-2.5 fill-current" /> Default
                       </Badge>
                     )}
+                    {a.latitude && a.longitude && (
+                      <Badge variant="secondary" className="text-xs gap-1">
+                        <MapPin className="h-2.5 w-2.5" /> GPS
+                      </Badge>
+                    )}
                   </div>
                   <p className="text-sm text-foreground mt-1.5">{a.address_line}</p>
                   <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
@@ -115,9 +140,29 @@ export default function AddressManager({ userId, selectable, selectedAddressId, 
       )}
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle>{editAddr ? 'Edit Address' : 'New Address'}</DialogTitle></DialogHeader>
           <div className="space-y-4">
+            {/* Map picker for location */}
+            <div className="space-y-1.5">
+              <Label>📍 Pick Location on Map</Label>
+              <p className="text-xs text-muted-foreground">Search or click on map to set your exact location. This helps verify serviceability.</p>
+              <GoogleMapsProvider>
+                <LocationPicker
+                  initialLocation={form.latitude && form.longitude ? { lat: form.latitude, lng: form.longitude } : undefined}
+                  onLocationSelect={(loc) => {
+                    setForm(f => ({
+                      ...f,
+                      address_line: loc.address,
+                      pincode: loc.pincode || f.pincode,
+                      latitude: loc.lat,
+                      longitude: loc.lng,
+                    }));
+                  }}
+                />
+              </GoogleMapsProvider>
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label>Label</Label>
