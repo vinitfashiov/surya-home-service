@@ -143,6 +143,11 @@ export default function ProviderOnboarding({ provider }: ProviderOnboardingProps
           )}
         </CardContent>
       </Card>
+
+      {/* Document upload section for pending providers */}
+      {isPending && provider?.id && (
+        <ProviderDocuments providerId={provider.id} />
+      )}
     </div>
   );
 }
