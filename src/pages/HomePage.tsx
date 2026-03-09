@@ -59,7 +59,7 @@ export default function HomePage() {
             <Badge variant="secondary" className="mb-4 text-xs font-medium px-3 py-1">
               <TrendingUp className="h-3 w-3 mr-1" /> Trusted by 10,000+ customers
             </Badge>
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-heading font-extrabold text-foreground leading-tight">
+            <h1 className="text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-heading font-extrabold text-foreground leading-tight">
               Home services,{' '}
               <span className="text-primary relative">
                 delivered.
