@@ -6,7 +6,7 @@ import {
   useDeleteCheckoutField,
   CheckoutField,
 } from '@/hooks/useCheckoutFields';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Plus, Pencil, Trash2, ListChecks, GripVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
