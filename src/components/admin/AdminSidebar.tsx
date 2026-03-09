@@ -40,6 +40,7 @@ const mainNav = [
   { title: 'Categories', url: '/admin/categories', icon: FolderTree },
   { title: 'Checkout Fields', url: '/admin/checkout-fields', icon: ListChecks },
   { title: 'Pricing Rules', url: '/admin/pricing-rules', icon: DollarSign },
+  { title: 'Zones', url: '/admin/zones', icon: MapPin },
   { title: 'Cities', url: '/admin/cities', icon: MapPin },
 ];
 
