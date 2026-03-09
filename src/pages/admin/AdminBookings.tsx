@@ -6,14 +6,18 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { CalendarDays, Filter } from 'lucide-react';
 import { toast } from 'sonner';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 const statusFilters = ['all', 'pending', 'accepted', 'assigned', 'on_the_way', 'started', 'completed', 'cancelled'] as const;
 
 export default function AdminBookings() {
-  const { data: bookings = [], isLoading } = useAllBookings();
+  const { data: bookings = [], isLoading, error: bookingsError } = useAllBookings();
   const updateStatus = useUpdateBookingStatus();
   const [filter, setFilter] = useState('all');
+
+  useEffect(() => {
+    if (bookingsError) toast.error(`Failed to load bookings: ${bookingsError.message}`);
+  }, [bookingsError]);
 
   const filteredBookings = filter === 'all' ? bookings : bookings.filter((b: any) => b.status === filter);
 

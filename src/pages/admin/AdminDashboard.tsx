@@ -5,12 +5,21 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
+import { useEffect } from 'react';
+import { toast } from 'sonner';
 
 export default function AdminDashboard() {
-  const { data: bookings = [], isLoading } = useAllBookings();
-  const { data: providers = [] } = useProviders();
-  const { data: categories = [] } = useCategories();
-  const { data: services = [] } = useServices();
+  const { data: bookings = [], isLoading, error: bookingsError } = useAllBookings();
+  const { data: providers = [], error: providersError } = useProviders();
+  const { data: categories = [], error: categoriesError } = useCategories();
+  const { data: services = [], error: servicesError } = useServices();
+
+  useEffect(() => {
+    if (bookingsError) toast.error(`Failed to load bookings: ${bookingsError.message}`);
+    if (providersError) toast.error(`Failed to load providers: ${providersError.message}`);
+    if (categoriesError) toast.error(`Failed to load categories: ${categoriesError.message}`);
+    if (servicesError) toast.error(`Failed to load services: ${servicesError.message}`);
+  }, [bookingsError, providersError, categoriesError, servicesError]);
 
   const totalRevenue = bookings.filter((b: any) => b.payment_status === 'paid').reduce((s: number, b: any) => s + Number(b.amount), 0);
   const pendingBookings = bookings.filter((b: any) => b.status === 'pending').length;
