@@ -3,7 +3,7 @@ import { useCategories, useServices } from '@/hooks/useSupabaseData';
 import { useCities } from '@/hooks/useCities';
 import { useSubcategories } from '@/hooks/useSubcategoriesVariants';
 import { useCityStore } from '@/lib/cityStore';
-import { Star, Clock, MapPin, Search, SlidersHorizontal, X } from 'lucide-react';
+import { Star, Clock, MapPin, Search, SlidersHorizontal, X, ShieldCheck } from 'lucide-react';
 import FavoriteButton from '@/components/FavoriteButton';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
