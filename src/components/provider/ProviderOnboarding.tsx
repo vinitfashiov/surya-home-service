@@ -23,7 +23,7 @@ export default function ProviderOnboarding({ provider }: ProviderOnboardingProps
   const isPending = status === 'pending';
   const isRejected = status === 'inactive';
 
-  const currentStep = isRejected ? 2 : isPending ? 2 : 4;
+  const currentStep = isRejected ? 3 : isPending ? 3 : 5;
   const progress = isRejected ? 50 : isPending ? 50 : 100;
 
   return (
