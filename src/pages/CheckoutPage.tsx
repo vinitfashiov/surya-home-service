@@ -543,7 +543,7 @@ export default function CheckoutPage() {
                     <AlertCircle className="h-4 w-4" /> No slots available on this date. Please try another date.
                   </div>
                 ) : (
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     {ALL_SLOTS.map((slot) => {
                       const isAvailable = availableSlots.includes(slot);
                       return (

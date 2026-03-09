@@ -214,13 +214,13 @@ export default function HomePage() {
             </Link>
           </div>
           {svcLoading ? (
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
               {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-64 rounded-xl" />)}
             </div>
           ) : topServices.length === 0 ? (
             <p className="text-muted-foreground text-center py-10">No services available yet.</p>
           ) : (
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
               {topServices.map((service: any, i: number) => (
                 <motion.div key={service.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05, duration: 0.4 }}>
                   <Link to={`/service/${service.id}`} className="block bg-card rounded-xl shadow-card border overflow-hidden hover:shadow-card-hover transition-all hover:-translate-y-0.5 group">
