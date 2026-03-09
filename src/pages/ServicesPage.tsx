@@ -123,8 +123,8 @@ export default function ServicesPage() {
       <p className="text-muted-foreground mt-1">Browse and book professional services near you</p>
 
       {/* Search bar */}
-      <div className="mt-6 flex gap-3">
-        <div className="relative flex-1">
+      <div className="mt-6 space-y-3">
+        <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search services, providers, categories..."
@@ -138,29 +138,31 @@ export default function ServicesPage() {
             </button>
           )}
         </div>
-        <Select value={sortBy} onValueChange={setSortBy}>
-          <SelectTrigger className="w-48">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {SORT_OPTIONS.map(opt => (
-              <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Button
-          variant={showFilters ? 'default' : 'outline'}
-          onClick={() => setShowFilters(!showFilters)}
-          className="gap-2"
-        >
-          <SlidersHorizontal className="h-4 w-4" />
-          Filters
-          {activeFilterCount > 0 && (
-            <Badge className="h-5 w-5 p-0 flex items-center justify-center text-xs rounded-full">
-              {activeFilterCount}
-            </Badge>
-          )}
-        </Button>
+        <div className="flex gap-2">
+          <Select value={sortBy} onValueChange={setSortBy}>
+            <SelectTrigger className="flex-1 sm:w-48 sm:flex-none">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {SORT_OPTIONS.map(opt => (
+                <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button
+            variant={showFilters ? 'default' : 'outline'}
+            onClick={() => setShowFilters(!showFilters)}
+            className="gap-2 shrink-0"
+          >
+            <SlidersHorizontal className="h-4 w-4" />
+            <span className="hidden sm:inline">Filters</span>
+            {activeFilterCount > 0 && (
+              <Badge className="h-5 w-5 p-0 flex items-center justify-center text-xs rounded-full">
+                {activeFilterCount}
+              </Badge>
+            )}
+          </Button>
+        </div>
       </div>
 
       {/* Advanced filters panel */}
