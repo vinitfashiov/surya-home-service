@@ -48,6 +48,7 @@ import ForgotPasswordPage from "@/pages/auth/ForgotPasswordPage";
 import ResetPasswordPage from "@/pages/auth/ResetPasswordPage";
 import NotFound from "./pages/NotFound";
 import Footer from "@/components/Footer";
+import BottomNav from "@/components/BottomNav";
 import TermsPage from "@/pages/TermsPage";
 import PrivacyPage from "@/pages/PrivacyPage";
 import AboutPage from "@/pages/AboutPage";
