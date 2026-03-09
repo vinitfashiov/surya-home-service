@@ -211,7 +211,7 @@ export default function CheckoutPage() {
     .filter(f => f.is_required)
     .some(f => !customFieldValues[f.id]?.trim());
 
-  const canCheckout = finalAddress && date && time && lineItems.length > 0 && !requiredFieldsMissing;
+  const canCheckout = finalAddress && date && time && lineItems.length > 0 && !requiredFieldsMissing && isLocationServiceable !== false;
 
   const handlePlaceOrder = async () => {
     if (!user || !canCheckout) return;
