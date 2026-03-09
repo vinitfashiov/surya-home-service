@@ -45,7 +45,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen">
       {/* Hero */}
-      <section className="relative overflow-hidden py-20 md:py-28">
+      <section className="relative overflow-hidden py-12 md:py-20 lg:py-28">
         <div className="absolute inset-0 gradient-hero" />
         <div className="absolute top-20 right-10 w-72 h-72 rounded-full bg-primary/5 blur-3xl" />
         <div className="absolute bottom-10 left-10 w-96 h-96 rounded-full bg-accent/5 blur-3xl" />
@@ -59,7 +59,7 @@ export default function HomePage() {
             <Badge variant="secondary" className="mb-4 text-xs font-medium px-3 py-1">
               <TrendingUp className="h-3 w-3 mr-1" /> Trusted by 10,000+ customers
             </Badge>
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-heading font-extrabold text-foreground leading-tight">
+            <h1 className="text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-heading font-extrabold text-foreground leading-tight">
               Home services,{' '}
               <span className="text-primary relative">
                 delivered.
@@ -84,10 +84,10 @@ export default function HomePage() {
               </div>
               <Button size="lg" className="h-12 px-6" onClick={handleSearch}>Search</Button>
             </div>
-            <div className="mt-6 flex items-center justify-center gap-6 text-sm text-muted-foreground">
-              <span className="flex items-center gap-1.5"><Shield className="h-4 w-4 text-primary" /> Verified Pros</span>
-              <span className="flex items-center gap-1.5"><Clock className="h-4 w-4 text-primary" /> On-time</span>
-              <span className="flex items-center gap-1.5"><Star className="h-4 w-4 text-primary" /> 4.8★ Avg</span>
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-4 md:gap-6 text-xs md:text-sm text-muted-foreground">
+              <span className="flex items-center gap-1.5"><Shield className="h-3.5 w-3.5 md:h-4 md:w-4 text-primary" /> Verified Pros</span>
+              <span className="flex items-center gap-1.5"><Clock className="h-3.5 w-3.5 md:h-4 md:w-4 text-primary" /> On-time</span>
+              <span className="flex items-center gap-1.5"><Star className="h-3.5 w-3.5 md:h-4 md:w-4 text-primary" /> 4.8★ Avg</span>
             </div>
           </motion.div>
         </div>
@@ -214,13 +214,13 @@ export default function HomePage() {
             </Link>
           </div>
           {svcLoading ? (
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
               {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-64 rounded-xl" />)}
             </div>
           ) : topServices.length === 0 ? (
             <p className="text-muted-foreground text-center py-10">No services available yet.</p>
           ) : (
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
               {topServices.map((service: any, i: number) => (
                 <motion.div key={service.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05, duration: 0.4 }}>
                   <Link to={`/service/${service.id}`} className="block bg-card rounded-xl shadow-card border overflow-hidden hover:shadow-card-hover transition-all hover:-translate-y-0.5 group">
@@ -290,9 +290,9 @@ export default function HomePage() {
       {/* CTA */}
       <section className="py-20">
         <div className="container mx-auto px-4">
-          <div className="bg-primary rounded-2xl p-10 md:p-16 text-center relative overflow-hidden">
+          <div className="bg-primary rounded-2xl p-8 md:p-10 lg:p-16 text-center relative overflow-hidden">
             <div className="absolute top-0 right-0 w-64 h-64 rounded-full bg-primary-foreground/5 -translate-y-1/2 translate-x-1/2" />
-            <h2 className="text-3xl md:text-4xl font-heading font-bold text-primary-foreground relative">Are you a service provider?</h2>
+            <h2 className="text-2xl md:text-3xl lg:text-4xl font-heading font-bold text-primary-foreground relative">Are you a service provider?</h2>
             <p className="text-primary-foreground/80 mt-3 max-w-md mx-auto relative">Join thousands of professionals and grow your business with ServisGo.</p>
             <div className="mt-8 flex gap-3 justify-center relative">
               <Link to="/provider-signup">
