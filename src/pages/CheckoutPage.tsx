@@ -460,25 +460,33 @@ export default function CheckoutPage() {
             
             {/* Map-based location picker */}
             <div className="mb-4">
-              <p className="text-sm text-muted-foreground mb-3">📍 Pick your exact location on the map for accurate serviceability check</p>
+              <p className="text-sm text-muted-foreground mb-3">📍 Pick your exact location on the map to check serviceability</p>
               <GoogleMapsProvider>
                 <LocationPicker
                   initialLocation={mapLocation ? { lat: mapLocation.lat, lng: mapLocation.lng } : undefined}
                   onLocationSelect={(loc) => {
                     const isServiceable = checkServiceability(loc.lat, loc.lng, loc.pincode, loc.state);
-                    if (!isServiceable) {
-                      toast.error('Sorry, this location is not serviceable yet. Please try a different address.');
-                    }
                     setMapLocation({ lat: loc.lat, lng: loc.lng, address: loc.address, pincode: loc.pincode, state: loc.state });
                     setSelectedAddress(null);
                     setManualAddress('');
+                    if (!isServiceable) {
+                      toast.error('Sorry, this location is not in our service area. Please try a different address.');
+                    } else {
+                      toast.success('Great! This location is serviceable.');
+                    }
                   }}
                 />
               </GoogleMapsProvider>
-              {mapLocation && !checkServiceability(mapLocation.lat, mapLocation.lng, mapLocation.pincode, mapLocation.state) && (
+              {mapLocation && isLocationServiceable === true && (
+                <div className="flex items-center gap-2 mt-2 p-2 rounded-lg bg-success/10 border border-success/20 text-sm text-success">
+                  <CheckCircle className="h-4 w-4" />
+                  ✓ This location is in our service area
+                </div>
+              )}
+              {mapLocation && isLocationServiceable === false && (
                 <div className="flex items-center gap-2 mt-2 p-2 rounded-lg bg-destructive/5 border border-destructive/20 text-sm text-destructive">
                   <AlertCircle className="h-4 w-4" />
-                  This location is outside our service area.
+                  This location is outside our service area. Please select a different location.
                 </div>
               )}
             </div>
@@ -492,18 +500,26 @@ export default function CheckoutPage() {
               userId={user.id}
               selectable
               selectedAddressId={selectedAddress?.id}
-              onSelect={(a) => { setSelectedAddress(a); setManualAddress(''); setMapLocation(null); }}
+              onSelect={(a) => {
+                setSelectedAddress(a);
+                setManualAddress('');
+                setMapLocation(null);
+                // Validate saved address if it has coordinates
+                if (a.latitude && a.longitude) {
+                  const serviceable = checkServiceability(Number(a.latitude), Number(a.longitude), a.pincode, a.city?.state);
+                  if (!serviceable) {
+                    toast.error('This saved address is outside our service area.');
+                  }
+                }
+              }}
             />
-            <div className="relative my-4">
-              <div className="absolute inset-0 flex items-center"><div className="w-full border-t" /></div>
-              <div className="relative flex justify-center text-xs uppercase"><span className="bg-card px-2 text-muted-foreground">or enter manually</span></div>
-            </div>
-            <Textarea
-              placeholder="Enter your complete address..."
-              value={manualAddress}
-              onChange={(e) => { setManualAddress(e.target.value); setSelectedAddress(null); setMapLocation(null); }}
-              rows={2}
-            />
+
+            {selectedAddress && isLocationServiceable === false && (
+              <div className="flex items-center gap-2 mt-2 p-2 rounded-lg bg-destructive/5 border border-destructive/20 text-sm text-destructive">
+                <AlertCircle className="h-4 w-4" />
+                This saved address is outside our service area. Please use the map to pick a serviceable location.
+              </div>
+            )}
           </div>
 
           {/* Date & Time */}
