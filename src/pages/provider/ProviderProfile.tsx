@@ -3,6 +3,7 @@ import { useAuth, useMyProvider } from '@/hooks/useSupabaseData';
 import { useCities } from '@/hooks/useCities';
 import { supabase } from '@/integrations/supabase/client';
 import ImageUpload from '@/components/ImageUpload';
+import ProviderDocuments from '@/components/provider/ProviderDocuments';
 import { useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -11,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Building2, Save, Loader2 } from 'lucide-react';
+import { Building2, Save, Loader2, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function ProviderProfile() {
@@ -177,6 +178,17 @@ export default function ProviderProfile() {
           </Button>
         </CardContent>
       </Card>
+
+      {/* Verification Documents */}
+      <div className="mt-6">
+        {(provider as any).is_verified && (
+          <div className="flex items-center gap-2 mb-4 p-3 rounded-lg bg-success/5 border border-success/20">
+            <ShieldCheck className="h-5 w-5 text-success" />
+            <span className="text-sm font-medium text-success">Your account is verified</span>
+          </div>
+        )}
+        <ProviderDocuments providerId={provider.id} />
+      </div>
     </div>
   );
 }

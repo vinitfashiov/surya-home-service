@@ -3,7 +3,7 @@ import { useCategories, useServices } from '@/hooks/useSupabaseData';
 import { useCities } from '@/hooks/useCities';
 import { useSubcategories } from '@/hooks/useSubcategoriesVariants';
 import { useCityStore } from '@/lib/cityStore';
-import { Star, Clock, MapPin, Search, SlidersHorizontal, X } from 'lucide-react';
+import { Star, Clock, MapPin, Search, SlidersHorizontal, X, ShieldCheck } from 'lucide-react';
 import FavoriteButton from '@/components/FavoriteButton';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -280,7 +280,10 @@ export default function ServicesPage() {
                 <div className="p-5">
                   <div className="flex justify-between items-start">
                     <div className="min-w-0 flex-1">
-                      <h3 className="font-heading font-semibold text-foreground truncate group-hover:text-primary transition-colors">{service.name}</h3>
+                      <h3 className="font-heading font-semibold text-foreground truncate group-hover:text-primary transition-colors flex items-center gap-1">
+                        {service.name}
+                        {service.provider?.is_verified && <ShieldCheck className="h-3.5 w-3.5 text-primary fill-primary/20 shrink-0" />}
+                      </h3>
                       <p className="text-sm text-muted-foreground truncate">{service.provider?.company_name}</p>
                     </div>
                     <span className="font-heading font-bold text-primary ml-2 shrink-0">₹{service.price}</span>

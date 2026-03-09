@@ -440,11 +440,42 @@ export default function CheckoutPage() {
           {/* Address */}
           <div className="bg-card rounded-xl shadow-card border p-6">
             <h3 className="font-heading font-semibold text-foreground mb-4">Service Address</h3>
+            
+            {/* Map-based location picker */}
+            <div className="mb-4">
+              <p className="text-sm text-muted-foreground mb-3">📍 Pick your exact location on the map for accurate serviceability check</p>
+              <GoogleMapsProvider>
+                <LocationPicker
+                  initialLocation={mapLocation ? { lat: mapLocation.lat, lng: mapLocation.lng } : undefined}
+                  onLocationSelect={(loc) => {
+                    const isServiceable = checkServiceability(loc.lat, loc.lng, loc.pincode, loc.state);
+                    if (!isServiceable) {
+                      toast.error('Sorry, this location is not serviceable yet. Please try a different address.');
+                    }
+                    setMapLocation({ lat: loc.lat, lng: loc.lng, address: loc.address, pincode: loc.pincode, state: loc.state });
+                    setSelectedAddress(null);
+                    setManualAddress('');
+                  }}
+                />
+              </GoogleMapsProvider>
+              {mapLocation && !checkServiceability(mapLocation.lat, mapLocation.lng, mapLocation.pincode, mapLocation.state) && (
+                <div className="flex items-center gap-2 mt-2 p-2 rounded-lg bg-destructive/5 border border-destructive/20 text-sm text-destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  This location is outside our service area.
+                </div>
+              )}
+            </div>
+
+            <div className="relative my-4">
+              <div className="absolute inset-0 flex items-center"><div className="w-full border-t" /></div>
+              <div className="relative flex justify-center text-xs uppercase"><span className="bg-card px-2 text-muted-foreground">or select saved address</span></div>
+            </div>
+
             <AddressManager
               userId={user.id}
               selectable
               selectedAddressId={selectedAddress?.id}
-              onSelect={(a) => { setSelectedAddress(a); setManualAddress(''); }}
+              onSelect={(a) => { setSelectedAddress(a); setManualAddress(''); setMapLocation(null); }}
             />
             <div className="relative my-4">
               <div className="absolute inset-0 flex items-center"><div className="w-full border-t" /></div>
@@ -453,7 +484,7 @@ export default function CheckoutPage() {
             <Textarea
               placeholder="Enter your complete address..."
               value={manualAddress}
-              onChange={(e) => { setManualAddress(e.target.value); setSelectedAddress(null); }}
+              onChange={(e) => { setManualAddress(e.target.value); setSelectedAddress(null); setMapLocation(null); }}
               rows={2}
             />
           </div>

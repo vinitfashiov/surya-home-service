@@ -2,10 +2,13 @@ import { useProviders } from '@/hooks/useSupabaseData';
 import { useUpdateProvider, useDeleteProvider, useCreateProvider } from '@/hooks/useAdminMutations';
 import { useCreateNotification } from '@/hooks/useNotifications';
 import { useCities } from '@/hooks/useCities';
+import { useVerifyProvider } from '@/hooks/useProviderDocuments';
+import AdminDocumentReview from '@/components/admin/AdminDocumentReview';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Star, Pencil, Trash2, Building2, Search, CheckCircle, XCircle, Shield, Plus } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Star, Pencil, Trash2, Building2, Search, CheckCircle, XCircle, Shield, Plus, ShieldCheck, FileText } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -143,7 +146,7 @@ export default function AdminProviders() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-heading font-bold text-foreground">Providers</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">Manage & approve service providers</p>
+          <p className="text-sm text-muted-foreground mt-0.5">Manage, approve & verify service providers</p>
         </div>
         <div className="flex items-center gap-2">
           {pendingCount > 0 && (
@@ -160,91 +163,113 @@ export default function AdminProviders() {
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="relative max-w-sm flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Search providers..." className="pl-9" value={search} onChange={e => setSearch(e.target.value)} />
-        </div>
-        <div className="flex gap-2">
-          {['all', 'pending', 'active', 'inactive'].map((s) => (
-            <button
-              key={s}
-              onClick={() => setStatusFilter(s)}
-              className={`px-3 py-1.5 rounded-full text-xs font-medium capitalize transition-colors ${
-                statusFilter === s ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-muted/80'
-              }`}
-            >
-              {s}
-            </button>
-          ))}
-        </div>
-      </div>
+      <Tabs defaultValue="providers">
+        <TabsList>
+          <TabsTrigger value="providers" className="gap-1.5">
+            <Building2 className="h-3.5 w-3.5" /> Providers
+          </TabsTrigger>
+          <TabsTrigger value="documents" className="gap-1.5">
+            <FileText className="h-3.5 w-3.5" /> Document Review
+          </TabsTrigger>
+        </TabsList>
 
-      {isLoading ? (
-        <Skeleton className="h-64 rounded-xl" />
-      ) : (
-        <Card className="border shadow-sm">
-          <CardContent className="p-0">
-            {filtered.length === 0 ? (
-              <div className="text-center py-16 text-muted-foreground">
-                <Building2 className="h-10 w-10 mx-auto mb-3 opacity-40" />
-                <p className="text-sm">No providers found</p>
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b bg-muted/30">
-                      <th className="text-left px-6 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wider">Company</th>
-                      <th className="text-left px-6 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wider">Owner</th>
-                      <th className="text-left px-6 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wider">Contact</th>
-                      <th className="text-left px-6 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wider">City</th>
-                      <th className="text-left px-6 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wider">Rating</th>
-                      <th className="text-left px-6 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wider">Status</th>
-                      <th className="text-left px-6 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wider">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y">
-                    {filtered.map((p: any) => (
-                      <tr key={p.id} className="hover:bg-muted/20 transition-colors">
-                        <td className="px-6 py-3.5 font-medium text-foreground">{p.company_name}</td>
-                        <td className="px-6 py-3.5 text-foreground">{p.owner_name}</td>
-                        <td className="px-6 py-3.5">
-                          <div className="text-muted-foreground">{p.email}</div>
-                          {p.phone && <div className="text-xs text-muted-foreground/70">{p.phone}</div>}
-                        </td>
-                        <td className="px-6 py-3.5 text-muted-foreground">{cityName(p.city_id)}</td>
-                        <td className="px-6 py-3.5">
-                          <span className="flex items-center gap-1"><Star className="h-3.5 w-3.5 text-warning fill-warning" />{p.rating}</span>
-                        </td>
-                        <td className="px-6 py-3.5">
-                          <Badge className={`${statusColor(p.status)} border-0 font-medium capitalize`}>{p.status}</Badge>
-                        </td>
-                        <td className="px-6 py-3.5">
-                          <div className="flex gap-1">
-                            {p.status === 'pending' && (
-                              <>
-                                <Button size="sm" variant="outline" className="h-7 text-xs gap-1 text-success border-success/30 hover:bg-success/10" onClick={() => handleApprove(p)}>
-                                  <CheckCircle className="h-3 w-3" /> Approve
-                                </Button>
-                                <Button size="sm" variant="outline" className="h-7 text-xs gap-1 text-destructive border-destructive/30 hover:bg-destructive/10" onClick={() => handleReject(p)}>
-                                  <XCircle className="h-3 w-3" /> Reject
-                                </Button>
-                              </>
-                            )}
-                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(p)}><Pencil className="h-3.5 w-3.5" /></Button>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => setDeleteId(p.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
+        <TabsContent value="providers" className="space-y-4 mt-4">
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="relative max-w-sm flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input placeholder="Search providers..." className="pl-9" value={search} onChange={e => setSearch(e.target.value)} />
+            </div>
+            <div className="flex gap-2">
+              {['all', 'pending', 'active', 'inactive'].map((s) => (
+                <button
+                  key={s}
+                  onClick={() => setStatusFilter(s)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium capitalize transition-colors ${
+                    statusFilter === s ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                  }`}
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {isLoading ? (
+            <Skeleton className="h-64 rounded-xl" />
+          ) : (
+            <Card className="border shadow-sm">
+              <CardContent className="p-0">
+                {filtered.length === 0 ? (
+                  <div className="text-center py-16 text-muted-foreground">
+                    <Building2 className="h-10 w-10 mx-auto mb-3 opacity-40" />
+                    <p className="text-sm">No providers found</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b bg-muted/30">
+                          <th className="text-left px-6 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wider">Company</th>
+                          <th className="text-left px-6 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wider">Owner</th>
+                          <th className="text-left px-6 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wider">Contact</th>
+                          <th className="text-left px-6 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wider">City</th>
+                          <th className="text-left px-6 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wider">Rating</th>
+                          <th className="text-left px-6 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wider">Status</th>
+                          <th className="text-left px-6 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wider">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y">
+                        {filtered.map((p: any) => (
+                          <tr key={p.id} className="hover:bg-muted/20 transition-colors">
+                            <td className="px-6 py-3.5 font-medium text-foreground">
+                              <span className="flex items-center gap-1.5">
+                                {p.company_name}
+                                {p.is_verified && <ShieldCheck className="h-4 w-4 text-primary fill-primary/20" />}
+                              </span>
+                            </td>
+                            <td className="px-6 py-3.5 text-foreground">{p.owner_name}</td>
+                            <td className="px-6 py-3.5">
+                              <div className="text-muted-foreground">{p.email}</div>
+                              {p.phone && <div className="text-xs text-muted-foreground/70">{p.phone}</div>}
+                            </td>
+                            <td className="px-6 py-3.5 text-muted-foreground">{cityName(p.city_id)}</td>
+                            <td className="px-6 py-3.5">
+                              <span className="flex items-center gap-1"><Star className="h-3.5 w-3.5 text-warning fill-warning" />{p.rating}</span>
+                            </td>
+                            <td className="px-6 py-3.5">
+                              <Badge className={`${statusColor(p.status)} border-0 font-medium capitalize`}>{p.status}</Badge>
+                            </td>
+                            <td className="px-6 py-3.5">
+                              <div className="flex gap-1">
+                                {p.status === 'pending' && (
+                                  <>
+                                    <Button size="sm" variant="outline" className="h-7 text-xs gap-1 text-success border-success/30 hover:bg-success/10" onClick={() => handleApprove(p)}>
+                                      <CheckCircle className="h-3 w-3" /> Approve
+                                    </Button>
+                                    <Button size="sm" variant="outline" className="h-7 text-xs gap-1 text-destructive border-destructive/30 hover:bg-destructive/10" onClick={() => handleReject(p)}>
+                                      <XCircle className="h-3 w-3" /> Reject
+                                    </Button>
+                                  </>
+                                )}
+                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(p)}><Pencil className="h-3.5 w-3.5" /></Button>
+                                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => setDeleteId(p.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+        <TabsContent value="documents" className="mt-4">
+          <AdminDocumentReview />
+        </TabsContent>
+      </Tabs>
 
       <Dialog open={dialogOpen} onOpenChange={o => !o && closeDialog()}>
         <DialogContent>

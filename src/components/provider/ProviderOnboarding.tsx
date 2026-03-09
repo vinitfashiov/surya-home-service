@@ -1,9 +1,10 @@
-import { CheckCircle2, Clock, XCircle, Building2, FileText, ShieldCheck, Rocket } from 'lucide-react';
+import { CheckCircle2, Clock, XCircle, Building2, FileText, ShieldCheck, Rocket, Upload } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
+import ProviderDocuments from './ProviderDocuments';
 
 interface ProviderOnboardingProps {
   provider: any;
@@ -11,8 +12,9 @@ interface ProviderOnboardingProps {
 
 const steps = [
   { key: 'register', label: 'Register Account', description: 'Create your provider account with company details', icon: Building2 },
+  { key: 'documents', label: 'Upload Documents', description: 'Upload ID proof, business license & certifications', icon: Upload },
   { key: 'submit', label: 'Submit for Review', description: 'Your application has been submitted to the platform', icon: FileText },
-  { key: 'approval', label: 'Admin Approval', description: 'Our team reviews your application', icon: ShieldCheck },
+  { key: 'approval', label: 'Admin Approval', description: 'Our team reviews your application & documents', icon: ShieldCheck },
   { key: 'active', label: 'Start Operating', description: 'Add services and servicemen, start receiving bookings', icon: Rocket },
 ];
 
@@ -21,7 +23,7 @@ export default function ProviderOnboarding({ provider }: ProviderOnboardingProps
   const isPending = status === 'pending';
   const isRejected = status === 'inactive';
 
-  const currentStep = isRejected ? 2 : isPending ? 2 : 4;
+  const currentStep = isRejected ? 3 : isPending ? 3 : 5;
   const progress = isRejected ? 50 : isPending ? 50 : 100;
 
   return (
@@ -112,7 +114,7 @@ export default function ProviderOnboarding({ provider }: ProviderOnboardingProps
         <CardContent className="space-y-3">
           {isPending && (
             <>
-              <p className="text-sm text-muted-foreground">✅ Your registration is complete</p>
+              <p className="text-sm text-muted-foreground">📄 Upload your verification documents below</p>
               <p className="text-sm text-muted-foreground">⏳ Admin approval typically takes 1-2 business days</p>
               <p className="text-sm text-muted-foreground">🔔 You'll receive a notification once your account is approved</p>
               <p className="text-sm text-muted-foreground">📋 Meanwhile, plan your services and team — you can add them once approved</p>
@@ -141,6 +143,11 @@ export default function ProviderOnboarding({ provider }: ProviderOnboardingProps
           )}
         </CardContent>
       </Card>
+
+      {/* Document upload section for pending providers */}
+      {isPending && provider?.id && (
+        <ProviderDocuments providerId={provider.id} />
+      )}
     </div>
   );
 }

@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, Star, ArrowRight, Scissors, Zap, Droplets, SprayCan, Wrench, Paintbrush, Bug, Hammer, Clock, Shield, ChevronRight, ChevronLeft, MapPin, TrendingUp } from 'lucide-react';
+import { Search, Star, ArrowRight, Scissors, Zap, Droplets, SprayCan, Wrench, Paintbrush, Bug, Hammer, Clock, Shield, ChevronRight, ChevronLeft, MapPin, TrendingUp, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useCategories, useServices } from '@/hooks/useSupabaseData';
@@ -238,7 +238,10 @@ export default function HomePage() {
                       </div>
                     </div>
                     <div className="p-4">
-                      <h3 className="font-heading font-semibold text-foreground text-sm line-clamp-1">{service.name}</h3>
+                      <h3 className="font-heading font-semibold text-foreground text-sm line-clamp-1 flex items-center gap-1">
+                        {service.name}
+                        {service.provider?.is_verified && <ShieldCheck className="h-3.5 w-3.5 text-primary fill-primary/20 shrink-0" />}
+                      </h3>
                       <p className="text-xs text-muted-foreground mt-0.5">{service.provider?.company_name}</p>
                       <div className="flex items-center justify-between mt-3">
                         <p className="font-heading font-bold text-primary">₹{service.price}</p>

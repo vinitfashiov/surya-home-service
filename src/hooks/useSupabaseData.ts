@@ -55,16 +55,16 @@ export function useCategories() {
   });
 }
 
-// Services with provider info
-export function useServices(categoryId?: string, cityId?: string | null) {
+// Services with provider info (supports zone filtering)
+export function useServices(categoryId?: string, cityId?: string | null, zoneId?: string | null) {
   return useQuery({
-    queryKey: ['services', categoryId, cityId],
+    queryKey: ['services', categoryId, cityId, zoneId],
     queryFn: async () => {
       let query = supabase
         .from('services')
         .select(`
           *,
-          provider:providers(id, company_name),
+          provider:providers(id, company_name, is_verified),
           category:service_categories(id, name, icon)
         `)
         .eq('is_active', true)
@@ -73,7 +73,9 @@ export function useServices(categoryId?: string, cityId?: string | null) {
       if (categoryId && categoryId !== 'all') {
         query = query.eq('category_id', categoryId);
       }
-      if (cityId) {
+      if (zoneId) {
+        query = query.eq('zone_id', zoneId);
+      } else if (cityId) {
         query = query.eq('city_id', cityId);
       }
       const { data, error } = await query;
