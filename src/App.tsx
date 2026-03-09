@@ -48,6 +48,7 @@ import ForgotPasswordPage from "@/pages/auth/ForgotPasswordPage";
 import ResetPasswordPage from "@/pages/auth/ResetPasswordPage";
 import NotFound from "./pages/NotFound";
 import Footer from "@/components/Footer";
+import BottomNav from "@/components/BottomNav";
 import TermsPage from "@/pages/TermsPage";
 import PrivacyPage from "@/pages/PrivacyPage";
 import AboutPage from "@/pages/AboutPage";
@@ -99,7 +100,7 @@ const App = () => {
                 <>
                   {showCityGate && <CityGate />}
                   <Navbar />
-                  <div className="min-h-[calc(100vh-4rem)]">
+                  <div className="min-h-[calc(100vh-4rem)] pb-16 md:pb-0">
                     <Routes>
                       <Route path="/" element={<HomePage />} />
                       <Route path="/services" element={<ServicesPage />} />
@@ -132,6 +133,7 @@ const App = () => {
                     </Routes>
                   </div>
                   <Footer />
+                  <BottomNav />
                 </>
               }
             />
