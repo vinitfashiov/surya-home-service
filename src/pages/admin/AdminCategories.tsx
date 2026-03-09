@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 
 const iconOptions = ['Scissors', 'Zap', 'Droplets', 'SprayCan', 'Wrench', 'Paintbrush', 'Bug', 'Hammer'];
@@ -29,7 +29,11 @@ const categoryTypes = [
 const emptyForm = { name: '', description: '', icon: 'Wrench', commission_rate: 20, category_type: 'standard', image_url: '' };
 
 export default function AdminCategories() {
-  const { data: categories = [], isLoading } = useCategories();
+  const { data: categories = [], isLoading, error: categoriesError } = useCategories();
+
+  useEffect(() => {
+    if (categoriesError) toast.error(`Failed to load categories: ${categoriesError.message}`);
+  }, [categoriesError]);
   const createMut = useCreateCategory();
   const updateMut = useUpdateCategory();
   const deleteMut = useDeleteCategory();

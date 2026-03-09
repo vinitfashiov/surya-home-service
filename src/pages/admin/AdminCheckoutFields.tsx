@@ -6,7 +6,7 @@ import {
   useDeleteCheckoutField,
   CheckoutField,
 } from '@/hooks/useCheckoutFields';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Plus, Pencil, Trash2, ListChecks, GripVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -42,8 +42,13 @@ const emptyForm = {
 };
 
 export default function AdminCheckoutFields() {
-  const { data: categories = [], isLoading: catLoading } = useCategories();
-  const { data: fields = [], isLoading: fieldsLoading } = useAllCheckoutFields();
+  const { data: categories = [], isLoading: catLoading, error: catError } = useCategories();
+  const { data: fields = [], isLoading: fieldsLoading, error: fieldsError } = useAllCheckoutFields();
+
+  useEffect(() => {
+    if (catError) toast.error(`Failed to load categories: ${catError.message}`);
+    if (fieldsError) toast.error(`Failed to load checkout fields: ${fieldsError.message}`);
+  }, [catError, fieldsError]);
   const createMut = useCreateCheckoutField();
   const updateMut = useUpdateCheckoutField();
   const deleteMut = useDeleteCheckoutField();

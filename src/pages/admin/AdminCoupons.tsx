@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Plus, Pencil, Trash2, Ticket, Calendar, Percent, Hash, DollarSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -76,7 +76,11 @@ const emptyForm = {
 };
 
 export default function AdminCoupons() {
-  const { data: coupons = [], isLoading } = useCoupons();
+  const { data: coupons = [], isLoading, error: couponsError } = useCoupons();
+
+  useEffect(() => {
+    if (couponsError) toast.error(`Failed to load coupons: ${couponsError.message}`);
+  }, [couponsError]);
   const createMut = useCreateCoupon();
   const updateMut = useUpdateCoupon();
   const deleteMut = useDeleteCoupon();

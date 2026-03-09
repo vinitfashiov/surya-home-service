@@ -12,14 +12,19 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 
 const emptyForm = { company_name: '', owner_name: '', email: '', phone: '', address: '', status: 'pending', city_id: '' };
 
 export default function AdminProviders() {
-  const { data: providers = [], isLoading } = useProviders();
-  const { data: cities = [] } = useCities();
+  const { data: providers = [], isLoading, error: providersError } = useProviders();
+  const { data: cities = [], error: citiesError } = useCities();
+
+  useEffect(() => {
+    if (providersError) toast.error(`Failed to load providers: ${providersError.message}`);
+    if (citiesError) toast.error(`Failed to load cities: ${citiesError.message}`);
+  }, [providersError, citiesError]);
   const updateMut = useUpdateProvider();
   const deleteMut = useDeleteProvider();
   const createMut = useCreateProvider();

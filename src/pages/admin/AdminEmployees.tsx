@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { useAuthContext } from '@/contexts/AuthContext';
 
@@ -19,7 +19,11 @@ const allPermissions = ['bookings', 'categories', 'providers', 'employees', 'ser
 const emptyForm = { name: '', email: '', department: 'general', phone: '', permissions: [] as string[], status: 'active' };
 
 export default function AdminEmployees() {
-  const { data: employees = [], isLoading } = useEmployees();
+  const { data: employees = [], isLoading, error: employeesError } = useEmployees();
+
+  useEffect(() => {
+    if (employeesError) toast.error(`Failed to load employees: ${employeesError.message}`);
+  }, [employeesError]);
   const { user } = useAuthContext();
   const createMut = useCreateEmployee();
   const updateMut = useUpdateEmployee();
