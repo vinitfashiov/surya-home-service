@@ -114,7 +114,7 @@ export default function ProviderOnboarding({ provider }: ProviderOnboardingProps
         <CardContent className="space-y-3">
           {isPending && (
             <>
-              <p className="text-sm text-muted-foreground">✅ Your registration is complete</p>
+              <p className="text-sm text-muted-foreground">📄 Upload your verification documents below</p>
               <p className="text-sm text-muted-foreground">⏳ Admin approval typically takes 1-2 business days</p>
               <p className="text-sm text-muted-foreground">🔔 You'll receive a notification once your account is approved</p>
               <p className="text-sm text-muted-foreground">📋 Meanwhile, plan your services and team — you can add them once approved</p>
