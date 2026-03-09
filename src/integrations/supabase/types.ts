@@ -60,6 +60,9 @@ export type Database = {
           created_at: string
           customer_id: string
           id: string
+          is_emergency: boolean
+          latitude: number | null
+          longitude: number | null
           notes: string | null
           payment_status: Database["public"]["Enums"]["payment_status"]
           provider_id: string
@@ -80,6 +83,9 @@ export type Database = {
           created_at?: string
           customer_id: string
           id?: string
+          is_emergency?: boolean
+          latitude?: number | null
+          longitude?: number | null
           notes?: string | null
           payment_status?: Database["public"]["Enums"]["payment_status"]
           provider_id: string
@@ -100,6 +106,9 @@ export type Database = {
           created_at?: string
           customer_id?: string
           id?: string
+          is_emergency?: boolean
+          latitude?: number | null
+          longitude?: number | null
           notes?: string | null
           payment_status?: Database["public"]["Enums"]["payment_status"]
           provider_id?: string
@@ -363,6 +372,8 @@ export type Database = {
           id: string
           is_default: boolean
           label: string
+          latitude: number | null
+          longitude: number | null
           pincode: string | null
           user_id: string
         }
@@ -373,6 +384,8 @@ export type Database = {
           id?: string
           is_default?: boolean
           label?: string
+          latitude?: number | null
+          longitude?: number | null
           pincode?: string | null
           user_id: string
         }
@@ -383,6 +396,8 @@ export type Database = {
           id?: string
           is_default?: boolean
           label?: string
+          latitude?: number | null
+          longitude?: number | null
           pincode?: string | null
           user_id?: string
         }
@@ -693,6 +708,7 @@ export type Database = {
           rating: number | null
           status: string
           user_id: string
+          zone_id: string | null
         }
         Insert: {
           address?: string | null
@@ -706,6 +722,7 @@ export type Database = {
           rating?: number | null
           status?: string
           user_id: string
+          zone_id?: string | null
         }
         Update: {
           address?: string | null
@@ -719,6 +736,7 @@ export type Database = {
           rating?: number | null
           status?: string
           user_id?: string
+          zone_id?: string | null
         }
         Relationships: [
           {
@@ -726,6 +744,13 @@ export type Database = {
             columns: ["city_id"]
             isOneToOne: false
             referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "providers_zone_id_fkey"
+            columns: ["zone_id"]
+            isOneToOne: false
+            referencedRelation: "service_zones"
             referencedColumns: ["id"]
           },
         ]
@@ -938,6 +963,48 @@ export type Database = {
           },
         ]
       }
+      service_zones: {
+        Row: {
+          center_lat: number | null
+          center_lng: number | null
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          pincodes: string[] | null
+          polygon_coordinates: Json | null
+          state_names: string[] | null
+          updated_at: string
+          zone_type: Database["public"]["Enums"]["zone_type"]
+        }
+        Insert: {
+          center_lat?: number | null
+          center_lng?: number | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          pincodes?: string[] | null
+          polygon_coordinates?: Json | null
+          state_names?: string[] | null
+          updated_at?: string
+          zone_type?: Database["public"]["Enums"]["zone_type"]
+        }
+        Update: {
+          center_lat?: number | null
+          center_lng?: number | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          pincodes?: string[] | null
+          polygon_coordinates?: Json | null
+          state_names?: string[] | null
+          updated_at?: string
+          zone_type?: Database["public"]["Enums"]["zone_type"]
+        }
+        Relationships: []
+      }
       servicemen: {
         Row: {
           completed_jobs: number | null
@@ -1004,6 +1071,7 @@ export type Database = {
           rating: number | null
           review_count: number | null
           subcategory_id: string | null
+          zone_id: string | null
         }
         Insert: {
           category_id: string
@@ -1020,6 +1088,7 @@ export type Database = {
           rating?: number | null
           review_count?: number | null
           subcategory_id?: string | null
+          zone_id?: string | null
         }
         Update: {
           category_id?: string
@@ -1036,6 +1105,7 @@ export type Database = {
           rating?: number | null
           review_count?: number | null
           subcategory_id?: string | null
+          zone_id?: string | null
         }
         Relationships: [
           {
@@ -1064,6 +1134,13 @@ export type Database = {
             columns: ["subcategory_id"]
             isOneToOne: false
             referencedRelation: "service_subcategories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "services_zone_id_fkey"
+            columns: ["zone_id"]
+            isOneToOne: false
+            referencedRelation: "service_zones"
             referencedColumns: ["id"]
           },
         ]
@@ -1110,6 +1187,7 @@ export type Database = {
         | "completed"
         | "cancelled"
       payment_status: "pending" | "paid" | "refunded"
+      zone_type: "all_india" | "state" | "pincode" | "polygon"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1248,6 +1326,7 @@ export const Constants = {
         "cancelled",
       ],
       payment_status: ["pending", "paid", "refunded"],
+      zone_type: ["all_india", "state", "pincode", "polygon"],
     },
   },
 } as const
