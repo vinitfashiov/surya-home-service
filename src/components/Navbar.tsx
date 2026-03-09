@@ -80,17 +80,20 @@ export default function Navbar() {
   return (
     <nav className="sticky top-0 z-50 bg-card/80 backdrop-blur-lg border-b">
       <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
-          <Link to="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center">
-              <span className="text-primary-foreground font-heading font-bold text-sm">SG</span>
+        <div className="flex items-center justify-between h-14 md:h-16 gap-1">
+          {/* Logo - always visible but compact on mobile */}
+          <Link to="/" className="flex items-center gap-1.5 shrink-0">
+            <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg gradient-primary flex items-center justify-center">
+              <span className="text-primary-foreground font-heading font-bold text-xs md:text-sm">SG</span>
             </div>
-            <span className="font-heading font-bold text-xl text-foreground">ServisGo</span>
+            <span className="font-heading font-bold text-lg md:text-xl text-foreground hidden sm:inline">ServisGo</span>
           </Link>
 
+          {/* City selector - compact on mobile */}
           <CitySelector />
 
-          <div className="hidden md:flex items-center gap-1">
+          {/* Desktop nav links */}
+          <div className="hidden lg:flex items-center gap-1">
             {links.map((link) => (
               <Link
                 key={link.to}
@@ -106,11 +109,12 @@ export default function Navbar() {
             ))}
           </div>
 
-          <div className="flex items-center gap-2">
+          {/* Right actions */}
+          <div className="flex items-center gap-1 md:gap-2 shrink-0">
             <ThemeToggle />
             {!loading && user && !roles.includes('admin') && !roles.includes('provider') && !roles.includes('serviceman') && (
-              <Link to="/cart" className="relative p-2 rounded-lg hover:bg-muted transition-colors">
-                <ShoppingCart className="h-5 w-5 text-muted-foreground" />
+              <Link to="/cart" className="relative p-1.5 md:p-2 rounded-lg hover:bg-muted transition-colors">
+                <ShoppingCart className="h-4 w-4 md:h-5 md:w-5 text-muted-foreground" />
                 {cartCount > 0 && (
                   <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">
                     {cartCount}
@@ -122,9 +126,10 @@ export default function Navbar() {
               <>
                 <NotificationBell userId={user.id} />
 
+                {/* Desktop user menu */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm" className="gap-2">
+                    <Button variant="outline" size="sm" className="gap-1 md:gap-2 hidden md:flex">
                       <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center">
                         <User className="h-3.5 w-3.5 text-primary" />
                       </div>
@@ -164,34 +169,45 @@ export default function Navbar() {
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
+
+                {/* Mobile user icon */}
+                <button
+                  className="md:hidden p-1.5 rounded-lg hover:bg-muted transition-colors"
+                  onClick={() => navigate('/profile')}
+                >
+                  <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center">
+                    <User className="h-3.5 w-3.5 text-primary" />
+                  </div>
+                </button>
               </>
             ) : !loading ? (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 md:gap-2">
                 <Link to="/login">
-                  <Button variant="ghost" size="sm" className="gap-1.5">
-                    <LogIn className="h-4 w-4" /> Sign in
+                  <Button variant="ghost" size="sm" className="gap-1 text-xs md:text-sm px-2 md:px-3">
+                    <LogIn className="h-3.5 w-3.5 md:h-4 md:w-4" /> <span className="hidden sm:inline">Sign in</span>
                   </Button>
                 </Link>
                 <Link to="/signup">
-                  <Button size="sm">Sign up</Button>
+                  <Button size="sm" className="text-xs md:text-sm px-2 md:px-3">Sign up</Button>
                 </Link>
               </div>
             ) : null}
 
-            <button className="md:hidden" onClick={() => setMobileOpen(!mobileOpen)}>
+            <button className="lg:hidden p-1" onClick={() => setMobileOpen(!mobileOpen)}>
               {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
           </div>
         </div>
 
+        {/* Mobile menu */}
         {mobileOpen && (
-          <div className="md:hidden pb-4 space-y-1">
+          <div className="lg:hidden pb-4 space-y-1 border-t pt-2">
             {links.map((link) => (
               <Link
                 key={link.to}
                 to={link.to}
                 onClick={() => setMobileOpen(false)}
-                className={`block px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                className={`block px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                   location.pathname === link.to
                     ? 'bg-primary/10 text-primary'
                     : 'text-muted-foreground hover:text-foreground hover:bg-muted'
@@ -200,13 +216,26 @@ export default function Navbar() {
                 {link.label}
               </Link>
             ))}
-            {!user && (
-              <div className="pt-2 flex gap-2 px-3">
-                <Link to="/login" onClick={() => setMobileOpen(false)}>
-                  <Button variant="outline" size="sm">Sign in</Button>
+            {user && (
+              <div className="border-t pt-2 mt-2 space-y-1">
+                <Link to="/profile" onClick={() => setMobileOpen(false)} className="block px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted">
+                  <User className="h-4 w-4 inline mr-2" /> My Profile
                 </Link>
-                <Link to="/signup" onClick={() => setMobileOpen(false)}>
-                  <Button size="sm">Sign up</Button>
+                <Link to="/my-addresses" onClick={() => setMobileOpen(false)} className="block px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted">
+                  <MapPin className="h-4 w-4 inline mr-2" /> My Addresses
+                </Link>
+                <button onClick={() => { handleSignOut(); setMobileOpen(false); }} className="w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium text-destructive hover:bg-destructive/5">
+                  <LogOut className="h-4 w-4 inline mr-2" /> Sign out
+                </button>
+              </div>
+            )}
+            {!user && (
+              <div className="pt-2 flex gap-2 px-3 border-t mt-2">
+                <Link to="/login" onClick={() => setMobileOpen(false)} className="flex-1">
+                  <Button variant="outline" size="sm" className="w-full">Sign in</Button>
+                </Link>
+                <Link to="/signup" onClick={() => setMobileOpen(false)} className="flex-1">
+                  <Button size="sm" className="w-full">Sign up</Button>
                 </Link>
               </div>
             )}
