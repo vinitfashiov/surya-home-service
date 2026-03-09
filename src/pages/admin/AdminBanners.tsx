@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAdminBanners, useCreateBanner, useUpdateBanner, useDeleteBanner } from '@/hooks/useBanners';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
