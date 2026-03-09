@@ -84,10 +84,10 @@ export default function HomePage() {
               </div>
               <Button size="lg" className="h-12 px-6" onClick={handleSearch}>Search</Button>
             </div>
-            <div className="mt-6 flex items-center justify-center gap-6 text-sm text-muted-foreground">
-              <span className="flex items-center gap-1.5"><Shield className="h-4 w-4 text-primary" /> Verified Pros</span>
-              <span className="flex items-center gap-1.5"><Clock className="h-4 w-4 text-primary" /> On-time</span>
-              <span className="flex items-center gap-1.5"><Star className="h-4 w-4 text-primary" /> 4.8★ Avg</span>
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-4 md:gap-6 text-xs md:text-sm text-muted-foreground">
+              <span className="flex items-center gap-1.5"><Shield className="h-3.5 w-3.5 md:h-4 md:w-4 text-primary" /> Verified Pros</span>
+              <span className="flex items-center gap-1.5"><Clock className="h-3.5 w-3.5 md:h-4 md:w-4 text-primary" /> On-time</span>
+              <span className="flex items-center gap-1.5"><Star className="h-3.5 w-3.5 md:h-4 md:w-4 text-primary" /> 4.8★ Avg</span>
             </div>
           </motion.div>
         </div>
