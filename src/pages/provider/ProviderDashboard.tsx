@@ -6,15 +6,24 @@ import StatusBadge from '@/components/StatusBadge';
 import { CalendarDays, Users, DollarSign, Star, TrendingUp, Percent } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useEffect } from 'react';
+import { toast } from 'sonner';
 
 export default function ProviderDashboard() {
   const { user } = useAuth();
-  const { data: provider } = useMyProvider(user?.id);
-  const { data: bookings = [], isLoading } = useProviderBookings(user?.id);
-  const { data: myServicemen = [] } = useServicemen(provider?.id);
-  const { data: reviews = [] } = useReviewsForProvider(provider?.id);
+  const { data: provider, error: providerError } = useMyProvider(user?.id);
+  const { data: bookings = [], isLoading, error: bookingsError } = useProviderBookings(user?.id);
+  const { data: myServicemen = [], error: servicemenError } = useServicemen(provider?.id);
+  const { data: reviews = [], error: reviewsError } = useReviewsForProvider(provider?.id);
   const { data: categories = [] } = useCategories();
   const { data: services = [] } = useServices();
+
+  useEffect(() => {
+    if (providerError) toast.error(`Failed to load provider: ${providerError.message}`);
+    if (bookingsError) toast.error(`Failed to load bookings: ${bookingsError.message}`);
+    if (servicemenError) toast.error(`Failed to load servicemen: ${servicemenError.message}`);
+    if (reviewsError) toast.error(`Failed to load reviews: ${reviewsError.message}`);
+  }, [providerError, bookingsError, servicemenError, reviewsError]);
 
   if (!user) {
     return <div className="container mx-auto px-4 py-20 text-center text-muted-foreground">Please log in as a provider.</div>;

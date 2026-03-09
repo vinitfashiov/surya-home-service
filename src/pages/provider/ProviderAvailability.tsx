@@ -33,7 +33,11 @@ function formatDate(year: number, month: number, day: number) {
 
 export default function ProviderAvailabilityPage() {
   const { user } = useAuth();
-  const { data: provider } = useMyProvider(user?.id);
+  const { data: provider, error: providerError } = useMyProvider(user?.id);
+
+  useEffect(() => {
+    if (providerError) toast.error(`Failed to load provider: ${providerError.message}`);
+  }, [providerError]);
 
   const today = new Date();
   const [viewYear, setViewYear] = useState(today.getFullYear());
