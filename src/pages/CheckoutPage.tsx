@@ -65,6 +65,23 @@ export default function CheckoutPage() {
   const checkServiceability = useCheckServiceability();
   const finalAddress = mapLocation?.address || selectedAddress?.address_line || manualAddress;
 
+  // Determine if current location is serviceable
+  const isLocationServiceable = useMemo(() => {
+    if (mapLocation) {
+      return checkServiceability(mapLocation.lat, mapLocation.lng, mapLocation.pincode, mapLocation.state);
+    }
+    if (selectedAddress?.latitude && selectedAddress?.longitude) {
+      return checkServiceability(
+        Number(selectedAddress.latitude),
+        Number(selectedAddress.longitude),
+        selectedAddress.pincode,
+        selectedAddress.city?.state
+      );
+    }
+    // Manual address can't be validated against zones
+    return null; // unknown
+  }, [mapLocation, selectedAddress, checkServiceability]);
+
   // Redirect unauthenticated users
   useEffect(() => {
     if (!user && !cartLoading) {
