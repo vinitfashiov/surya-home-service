@@ -755,7 +755,7 @@ export type Database = {
           phone: string | null
           rating: number | null
           status: string
-          user_id: string
+          user_id: string | null
           verified_at: string | null
           zone_id: string | null
         }
@@ -771,7 +771,7 @@ export type Database = {
           phone?: string | null
           rating?: number | null
           status?: string
-          user_id: string
+          user_id?: string | null
           verified_at?: string | null
           zone_id?: string | null
         }
@@ -787,7 +787,7 @@ export type Database = {
           phone?: string | null
           rating?: number | null
           status?: string
-          user_id?: string
+          user_id?: string | null
           verified_at?: string | null
           zone_id?: string | null
         }
