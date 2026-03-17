@@ -1,0 +1,2 @@
+ALTER TABLE public.providers ALTER COLUMN user_id DROP NOT NULL;
+ALTER TABLE public.providers ALTER COLUMN user_id SET DEFAULT NULL;
