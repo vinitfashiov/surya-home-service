@@ -7,7 +7,7 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   roles: string[];
-  signUp: (email: string, password: string, fullName: string) => Promise<{ error: any }>;
+  signUp: (email: string, password: string, fullName: string, role?: string) => Promise<{ data: { user: User | null }; error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
 }
@@ -21,13 +21,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [roles, setRoles] = useState<string[]>([]);
 
   useEffect(() => {
+    // Set a short safety timeout for connectivity issues
+    const timeoutId = setTimeout(() => {
+      if (loading) {
+        console.warn('Auth initialization timed out - likely a network block');
+        setLoading(false);
+      }
+    }, 3000); // 3s timeout
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
+      clearTimeout(timeoutId);
 
       if (session?.user) {
-        // Fetch roles after auth state change (deferred to avoid deadlocks)
         setTimeout(() => fetchRoles(session.user.id), 0);
       } else {
         setRoles([]);
@@ -38,12 +46,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
+      clearTimeout(timeoutId);
       if (session?.user) {
         fetchRoles(session.user.id);
       }
+    }).catch(err => {
+      console.error('Session fetch failed:', err);
+      setLoading(false);
+      clearTimeout(timeoutId);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+      clearTimeout(timeoutId);
+    };
   }, []);
 
   const fetchRoles = async (userId: string) => {
@@ -56,16 +72,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const signUp = async (email: string, password: string, fullName: string) => {
-    const { error } = await supabase.auth.signUp({
+  const signUp = async (email: string, password: string, fullName: string, role?: string) => {
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: { full_name: fullName },
+        data: { 
+          full_name: fullName,
+          role: role || 'customer'
+        },
         emailRedirectTo: window.location.origin,
       },
     });
-    return { error };
+    return { data, error };
   };
 
   const signIn = async (email: string, password: string) => {
@@ -77,6 +96,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await supabase.auth.signOut();
     setRoles([]);
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4">
+        <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4" />
+        <p className="text-muted-foreground font-medium animate-pulse">Connecting to ServisGo...</p>
+        <p className="text-[10px] text-muted-foreground/50 mt-8 max-w-[200px] text-center">
+          If this takes too long, please check your internet or try a VPN.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <AuthContext.Provider value={{ user, session, loading, roles, signUp, signIn, signOut }}>

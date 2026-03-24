@@ -41,7 +41,7 @@ export function useDeleteCategory() {
 export function useCreateProvider() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (prov: { company_name: string; owner_name: string; email: string; phone?: string; address?: string; city_id?: string; status?: string; user_id?: string }) => {
+    mutationFn: async (prov: { company_name: string; owner_name: string; email: string; phone?: string; address?: string; city_id?: string; zone_id?: string; latitude?: number; longitude?: number; status?: string; user_id?: string }) => {
       const { data, error } = await supabase.from('providers').insert(prov as any).select().single();
       if (error) throw error;
       return data;
@@ -53,7 +53,7 @@ export function useCreateProvider() {
 export function useUpdateProvider() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, ...updates }: { id: string; status?: string; company_name?: string; owner_name?: string; email?: string; phone?: string; address?: string }) => {
+    mutationFn: async ({ id, ...updates }: { id: string; status?: string; company_name?: string; owner_name?: string; email?: string; phone?: string; address?: string; city_id?: string; zone_id?: string; latitude?: number; longitude?: number }) => {
       const { data, error } = await supabase.from('providers').update(updates).eq('id', id).select().single();
       if (error) throw error;
       return data;
@@ -77,8 +77,15 @@ export function useDeleteProvider() {
 export function useCreateEmployee() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (emp: { name: string; email: string; user_id: string; department?: string; permissions?: string[]; phone?: string }) => {
-      const { data, error } = await supabase.from('employees').insert(emp).select().single();
+    mutationFn: async (emp: { name: string; email: string; password?: string; department?: string; permissions?: string[]; phone?: string }) => {
+      const { data, error } = await supabase.rpc('create_admin_employee' as any, {
+        p_name: emp.name,
+        p_email: emp.email,
+        p_password: emp.password || 'vibe1234',
+        p_department: emp.department || 'general',
+        p_permissions: emp.permissions || [],
+        p_phone: emp.phone || null
+      });
       if (error) throw error;
       return data;
     },

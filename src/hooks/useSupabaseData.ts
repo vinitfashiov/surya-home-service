@@ -1,6 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useEffect, useState } from 'react';
+export * from './useCities';
+export * from './useZones';
 
 // Auth hook
 export function useAuth() {
@@ -173,13 +175,29 @@ export function useProviderBookings(userId?: string) {
     queryKey: ['provider-bookings', userId],
     queryFn: async () => {
       if (!userId) return [];
-      // First get the provider for this user
-      const { data: provider } = await supabase
+      
+      let providerId = null;
+      
+      // First try provider
+      const { data: prov } = await supabase
         .from('providers')
         .select('id')
         .eq('user_id', userId)
         .single();
-      if (!provider) return [];
+        
+      if (prov) {
+        providerId = prov.id;
+      } else {
+        // Try provider employee
+        const { data: emp } = await supabase
+          .from('provider_employees' as any)
+          .select('provider_id')
+          .eq('user_id', userId)
+          .single();
+        if (emp) providerId = (emp as any).provider_id;
+      }
+
+      if (!providerId) return [];
 
       const { data, error } = await supabase
         .from('bookings')
@@ -189,7 +207,7 @@ export function useProviderBookings(userId?: string) {
           customer:profiles!bookings_customer_id_fkey(full_name),
           serviceman:servicemen(name)
         `)
-        .eq('provider_id', provider.id)
+        .eq('provider_id', providerId)
         .order('created_at', { ascending: false });
       if (error) throw error;
       return data;
@@ -299,13 +317,46 @@ export function useMyProvider(userId?: string) {
     queryKey: ['my-provider', userId],
     queryFn: async () => {
       if (!userId) return null;
-      const { data, error } = await supabase
+      
+      // Check direct provider first
+      const { data: prov, error } = await supabase
         .from('providers')
         .select('*')
         .eq('user_id', userId)
         .single();
+        
+      if (prov) {
+        return { ...prov, is_employee: false, permissions: ['all'] };
+      }
+
       if (error && error.code !== 'PGRST116') throw error;
-      return data;
+
+      // Check provider employee
+      const { data: emp, error: empErr } = await supabase
+        .from('provider_employees' as any)
+        .select('provider_id, permissions')
+        .eq('user_id', userId)
+        .single();
+        
+      if (emp) {
+        const empData = emp as any;
+        const { data: parentProvider, error: pErr } = await supabase
+          .from('providers')
+          .select('*')
+          .eq('id', empData.provider_id)
+          .single();
+          
+        if (pErr) throw pErr;
+        
+        return { 
+          ...parentProvider, 
+          is_employee: true, 
+          permissions: empData.permissions || [] 
+        };
+      }
+
+      if (empErr && empErr.code !== 'PGRST116') throw empErr;
+      return null;
     },
     enabled: !!userId,
   });

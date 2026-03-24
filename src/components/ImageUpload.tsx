@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
 interface ImageUploadProps {
-  bucket: 'avatars' | 'service-images' | 'provider-logos';
+  bucket: 'avatars' | 'service-images' | 'provider-logos' | 'ad-campaigns' | 'provider-documents';
   path: string; // e.g. "userId/avatar" or "serviceId/main"
   currentUrl?: string | null;
   onUpload: (url: string) => void;

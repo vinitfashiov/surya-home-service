@@ -23,6 +23,7 @@ const roleLabels: Record<string, string> = {
   employee: 'Employee',
   customer: 'Customer',
   provider: 'Provider',
+  provider_employee: 'Staff',
   serviceman: 'Serviceman',
 };
 
@@ -31,6 +32,7 @@ const roleColors: Record<string, string> = {
   employee: 'bg-info/10 text-info',
   customer: 'bg-primary/10 text-primary',
   provider: 'bg-accent/10 text-accent',
+  provider_employee: 'bg-accent/10 text-accent',
   serviceman: 'bg-success/10 text-success',
 };
 
@@ -60,8 +62,10 @@ export default function Navbar() {
     { to: '/provider', label: 'Dashboard' },
     { to: '/provider/analytics', label: 'Analytics' },
     { to: '/provider/bookings', label: 'Bookings' },
+    { to: '/provider/campaigns', label: 'Campaigns' },
     { to: '/provider/availability', label: 'Availability' },
     { to: '/provider/servicemen', label: 'Servicemen' },
+    { to: '/provider/team', label: 'Team' },
     { to: '/provider/profile', label: 'Profile' },
   ];
 
@@ -71,14 +75,20 @@ export default function Navbar() {
 
   const links = roles.includes('admin') || roles.includes('employee')
     ? [{ to: '/admin', label: 'Admin Panel' }, ...customerLinks]
-    : roles.includes('provider')
+    : roles.includes('provider') || roles.includes('provider_employee')
     ? providerLinks
     : roles.includes('serviceman')
     ? servicemanLinks
     : customerLinks;
 
+  const isDashboard = location.pathname.startsWith('/admin') ||
+                      location.pathname.startsWith('/provider') ||
+                      location.pathname.startsWith('/serviceman');
+
+  if (isDashboard) return null;
+
   return (
-    <nav className="sticky top-0 z-50 bg-card/80 backdrop-blur-lg border-b">
+    <nav className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-lg">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-14 md:h-16 gap-1">
           {/* Logo - always visible but compact on mobile */}

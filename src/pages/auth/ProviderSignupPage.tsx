@@ -57,16 +57,11 @@ export default function ProviderSignupPage() {
 
     setLoading(true);
     try {
-      // 1. Create user account
-      const { error: signUpError } = await signUp(form.email, form.password, form.fullName);
+      // 1. Create user account with provider role metadata
+      const { data, error: signUpError } = await signUp(form.email, form.password, form.fullName, 'provider');
       if (signUpError) throw signUpError;
-
-      // 2. Get the newly created user
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = data?.user;
       if (!user) throw new Error('Account created but unable to fetch user');
-
-      // 3. Add provider role
-      await supabase.from('user_roles').insert({ user_id: user.id, role: 'provider' as any });
 
       // 4. Create provider record (pending approval)
       const { error: providerError } = await supabase.from('providers').insert({

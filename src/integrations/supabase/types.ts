@@ -14,6 +14,123 @@ export type Database = {
   }
   public: {
     Tables: {
+      ad_analytics: {
+        Row: {
+          campaign_id: string
+          created_at: string
+          event_type: string
+          id: string
+          user_id: string | null
+        }
+        Insert: {
+          campaign_id: string
+          created_at?: string
+          event_type: string
+          id?: string
+          user_id?: string | null
+        }
+        Update: {
+          campaign_id?: string
+          created_at?: string
+          event_type?: string
+          id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ad_analytics_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "ad_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ad_campaigns: {
+        Row: {
+          admin_notes: string | null
+          bid_amount: number
+          category_id: string | null
+          city_id: string | null
+          created_at: string
+          daily_budget: number
+          description: string | null
+          end_date: string | null
+          id: string
+          image_url: string | null
+          name: string
+          provider_id: string
+          spent_amount: number
+          start_date: string
+          status: string
+          target_url: string | null
+          total_budget: number
+          updated_at: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          bid_amount?: number
+          category_id?: string | null
+          city_id?: string | null
+          created_at?: string
+          daily_budget?: number
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          image_url?: string | null
+          name: string
+          provider_id: string
+          spent_amount?: number
+          start_date?: string
+          status?: string
+          target_url?: string | null
+          total_budget?: number
+          updated_at?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          bid_amount?: number
+          category_id?: string | null
+          city_id?: string | null
+          created_at?: string
+          daily_budget?: number
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          image_url?: string | null
+          name?: string
+          provider_id?: string
+          spent_amount?: number
+          start_date?: string
+          status?: string
+          target_url?: string | null
+          total_budget?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ad_campaigns_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "service_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ad_campaigns_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ad_campaigns_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       booking_custom_fields: {
         Row: {
           booking_id: string
@@ -557,7 +674,6 @@ export type Database = {
           created_at?: string
           id?: string
           is_active?: boolean
-          linked_field_name?: string | null
           max_units?: number | null
           min_units?: number | null
           rule_type?: string
@@ -1227,6 +1343,19 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_targeted_ads: {
+        Args: { p_category_id?: string; p_city_id?: string; p_limit?: number }
+        Returns: {
+          bid_amount: number
+          description: string
+          id: string
+          image_url: string
+          name: string
+          provider_company_name: string
+          provider_id: string
+          target_url: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

@@ -2,8 +2,11 @@ import { useProviders } from '@/hooks/useSupabaseData';
 import { useUpdateProvider, useDeleteProvider, useCreateProvider } from '@/hooks/useAdminMutations';
 import { useCreateNotification } from '@/hooks/useNotifications';
 import { useCities } from '@/hooks/useCities';
+import { useActiveZones } from '@/hooks/useZones';
 import { useVerifyProvider } from '@/hooks/useProviderDocuments';
 import AdminDocumentReview from '@/components/admin/AdminDocumentReview';
+import LocationPicker from '@/components/maps/LocationPicker';
+import GoogleMapsProvider from '@/components/maps/GoogleMapsProvider';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -18,16 +21,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 
-const emptyForm = { company_name: '', owner_name: '', email: '', phone: '', address: '', status: 'pending', city_id: '' };
+const emptyForm = { company_name: '', owner_name: '', email: '', phone: '', address: '', status: 'pending', city_id: '', zone_id: 'none', latitude: null as number | null, longitude: null as number | null };
 
 export default function AdminProviders() {
   const { data: providers = [], isLoading, error: providersError } = useProviders();
   const { data: cities = [], error: citiesError } = useCities();
+  const { data: zones = [], error: zonesError } = useActiveZones();
 
   useEffect(() => {
     if (providersError) toast.error(`Failed to load providers: ${providersError.message}`);
     if (citiesError) toast.error(`Failed to load cities: ${citiesError.message}`);
-  }, [providersError, citiesError]);
+    if (zonesError) toast.error(`Failed to load zones: ${zonesError.message}`);
+  }, [providersError, citiesError, zonesError]);
   const updateMut = useUpdateProvider();
   const deleteMut = useDeleteProvider();
   const createMut = useCreateProvider();
@@ -52,7 +57,7 @@ export default function AdminProviders() {
   const openEdit = (p: any) => {
     setEditProvider(p);
     setIsAdding(false);
-    setForm({ company_name: p.company_name, owner_name: p.owner_name, email: p.email, phone: p.phone || '', address: p.address || '', status: p.status, city_id: p.city_id || '' });
+    setForm({ company_name: p.company_name, owner_name: p.owner_name, email: p.email, phone: p.phone || '', address: p.address || '', status: p.status, city_id: p.city_id || '', zone_id: p.zone_id || 'none', latitude: p.latitude || null, longitude: p.longitude || null });
   };
 
   const openAdd = () => {
@@ -90,8 +95,9 @@ export default function AdminProviders() {
   const handleSave = async () => {
     if (!editProvider) return;
     try {
-      const updates: any = { id: editProvider.id, company_name: form.company_name, owner_name: form.owner_name, email: form.email, phone: form.phone, address: form.address, status: form.status };
-      if (form.city_id) updates.city_id = form.city_id;
+      const updates: any = { id: editProvider.id, company_name: form.company_name, owner_name: form.owner_name, email: form.email, phone: form.phone, address: form.address, status: form.status, latitude: form.latitude, longitude: form.longitude };
+      if (form.city_id && form.city_id !== 'none') updates.city_id = form.city_id;
+      if (form.zone_id) updates.zone_id = form.zone_id === 'none' ? null : form.zone_id;
       await updateMut.mutateAsync(updates);
       toast.success('Provider updated');
       setEditProvider(null);
@@ -111,6 +117,9 @@ export default function AdminProviders() {
         phone: form.phone || undefined,
         address: form.address || undefined,
         city_id: form.city_id || undefined,
+        zone_id: form.zone_id === 'none' ? undefined : form.zone_id,
+        latitude: form.latitude || undefined,
+        longitude: form.longitude || undefined,
         status: form.status,
       });
       toast.success('Provider created');
@@ -232,7 +241,10 @@ export default function AdminProviders() {
                               <div className="text-muted-foreground">{p.email}</div>
                               {p.phone && <div className="text-xs text-muted-foreground/70">{p.phone}</div>}
                             </td>
-                            <td className="px-6 py-3.5 text-muted-foreground">{cityName(p.city_id)}</td>
+                            <td className="px-6 py-3.5 text-muted-foreground">
+                              {cityName(p.city_id)}
+                              {p.zone_id && <div className="text-xs opacity-70">{zones.find((z:any)=>z.id===p.zone_id)?.name}</div>}
+                            </td>
                             <td className="px-6 py-3.5">
                               <span className="flex items-center gap-1"><Star className="h-3.5 w-3.5 text-warning fill-warning" />{p.rating}</span>
                             </td>
@@ -272,7 +284,7 @@ export default function AdminProviders() {
       </Tabs>
 
       <Dialog open={dialogOpen} onOpenChange={o => !o && closeDialog()}>
-        <DialogContent>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle>{isAdding ? 'Add Provider' : 'Edit Provider'}</DialogTitle></DialogHeader>
           <div className="space-y-4">
             <div className="space-y-1.5"><Label>Company Name</Label><Input value={form.company_name} onChange={e => setForm(f => ({ ...f, company_name: e.target.value }))} /></div>
@@ -281,18 +293,58 @@ export default function AdminProviders() {
               <div className="space-y-1.5"><Label>Email</Label><Input value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} /></div>
               <div className="space-y-1.5"><Label>Phone</Label><Input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} /></div>
             </div>
-            <div className="space-y-1.5"><Label>Address</Label><Input value={form.address} onChange={e => setForm(f => ({ ...f, address: e.target.value }))} /></div>
+            
+            <div className="space-y-1.5 pt-2">
+              <Label>Exact Map Location</Label>
+              <GoogleMapsProvider>
+                <LocationPicker 
+                  initialLocation={form.latitude && form.longitude ? { lat: form.latitude, lng: form.longitude } : undefined}
+                  onLocationSelect={(loc) => {
+                    setForm(f => ({ 
+                      ...f, 
+                      latitude: loc.lat, 
+                      longitude: loc.lng,
+                      address: f.address || loc.address // Auto-fill address if empty
+                    }));
+                  }}
+                  className="bg-muted/10 p-2 rounded-lg border shadow-sm"
+                />
+              </GoogleMapsProvider>
+            </div>
+            
+            <div className="space-y-1.5 pt-2">
+              <Label>Street Address</Label>
+              <Input 
+                value={form.address} 
+                onChange={e => setForm(f => ({ ...f, address: e.target.value }))} 
+                placeholder="Auto-filled from map or enter manually"
+              />
+            </div>
+            
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <Label>City</Label>
-                <Select value={form.city_id} onValueChange={v => setForm(f => ({ ...f, city_id: v }))}>
-                  <SelectTrigger><SelectValue placeholder="Select city" /></SelectTrigger>
-                  <SelectContent>
-                    {cities.map((c: any) => (
-                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="space-y-1.5">
+                  <Label>City</Label>
+                  <Select value={form.city_id} onValueChange={v => setForm(f => ({ ...f, city_id: v }))}>
+                    <SelectTrigger><SelectValue placeholder="Select city" /></SelectTrigger>
+                    <SelectContent>
+                      {cities.map((c: any) => (
+                        <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Service Zone</Label>
+                  <Select value={form.zone_id} onValueChange={v => setForm(f => ({ ...f, zone_id: v }))}>
+                    <SelectTrigger><SelectValue placeholder="Select zone" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">No Zone</SelectItem>
+                      {zones.map((z: any) => (
+                        <SelectItem key={z.id} value={z.id}>{z.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
               <div className="space-y-1.5">
                 <Label>Status</Label>
@@ -305,7 +357,6 @@ export default function AdminProviders() {
                   </SelectContent>
                 </Select>
               </div>
-            </div>
           </div>
           <DialogFooter>
             {isAdding ? (

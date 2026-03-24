@@ -16,7 +16,7 @@ import { toast } from 'sonner';
 import { useAuthContext } from '@/contexts/AuthContext';
 
 const allPermissions = ['bookings', 'categories', 'providers', 'employees', 'services', 'reports'];
-const emptyForm = { name: '', email: '', department: 'general', phone: '', permissions: [] as string[], status: 'active' };
+const emptyForm = { name: '', email: '', password: '', department: 'general', phone: '', permissions: [] as string[], status: 'active' };
 
 export default function AdminEmployees() {
   const { data: employees = [], isLoading, error: employeesError } = useEmployees();
@@ -33,10 +33,9 @@ export default function AdminEmployees() {
   const [editId, setEditId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
-  const [newUserId, setNewUserId] = useState('');
 
-  const openCreate = () => { setEditId(null); setForm(emptyForm); setNewUserId(''); setDialogOpen(true); };
-  const openEdit = (emp: any) => { setEditId(emp.id); setForm({ name: emp.name, email: emp.email, department: emp.department || 'general', phone: emp.phone || '', permissions: emp.permissions || [], status: emp.status }); setDialogOpen(true); };
+  const openCreate = () => { setEditId(null); setForm(emptyForm); setDialogOpen(true); };
+  const openEdit = (emp: any) => { setEditId(emp.id); setForm({ name: emp.name, email: emp.email, password: '', department: emp.department || 'general', phone: emp.phone || '', permissions: emp.permissions || [], status: emp.status }); setDialogOpen(true); };
 
   const togglePerm = (perm: string) => {
     setForm(f => ({
@@ -52,9 +51,8 @@ export default function AdminEmployees() {
         await updateMut.mutateAsync({ id: editId, ...form });
         toast.success('Employee updated');
       } else {
-        const userId = newUserId.trim() || user?.id;
-        if (!userId) { toast.error('User ID is required'); return; }
-        await createMut.mutateAsync({ ...form, user_id: userId });
+        if (!form.password || form.password.length < 6) { toast.error('Temporary password must be at least 6 characters'); return; }
+        await createMut.mutateAsync({ ...form });
         toast.success('Employee created');
       }
       setDialogOpen(false);
@@ -145,7 +143,7 @@ export default function AdminEmployees() {
           <DialogHeader><DialogTitle>{editId ? 'Edit Employee' : 'New Employee'}</DialogTitle></DialogHeader>
           <div className="space-y-4">
             {!editId && (
-              <div className="space-y-1.5"><Label>User ID (from Supabase Auth)</Label><Input placeholder="UUID of the auth user" value={newUserId} onChange={e => setNewUserId(e.target.value)} /></div>
+              <div className="space-y-1.5"><Label>Temporary Password</Label><Input type="password" placeholder="At least 6 characters" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} /><p className="text-[10px] text-muted-foreground">They can change this after logging in.</p></div>
             )}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5"><Label>Name</Label><Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} /></div>
