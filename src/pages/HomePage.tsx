@@ -80,6 +80,17 @@ export default function HomePage() {
                </button>
             </div>
           )}
+
+          {services.length > 0 && (
+            <div className="mt-8 flex justify-center">
+              <Link
+                to="/services"
+                className="inline-flex items-center justify-center bg-white border border-gray-200 text-[#1DA653] font-bold text-[13px] px-8 py-3 rounded-full shadow-sm hover:shadow-md transition-all active:scale-95"
+              >
+                See all services
+              </Link>
+            </div>
+          )}
         </section>
       </main>
 

@@ -4,6 +4,7 @@ import { useMyBookings } from '@/hooks/useSupabaseData';
 import { useMyAddresses, useCreateAddress, useUpdateAddress, useDeleteAddress } from '@/hooks/useAddresses';
 import { useCities } from '@/hooks/useCities';
 import { supabase } from '@/integrations/supabase/client';
+import { cn } from '@/lib/utils';
 import ImageUpload from '@/components/ImageUpload';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -13,12 +14,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import { User, Phone, Mail, CalendarDays, DollarSign, Star, MapPin, Plus, Trash2, Edit, Check } from 'lucide-react';
+import { User, Phone, Mail, CalendarDays, DollarSign, Star, MapPin, Plus, Trash2, Edit, Check, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 
 export default function ProfilePage() {
-  const { user } = useAuthContext();
+  const { user, roles } = useAuthContext();
   const { data: bookings = [], isLoading: bLoading } = useMyBookings(user?.id);
   const { data: addresses = [], isLoading: aLoading } = useMyAddresses(user?.id);
   const { data: cities = [] } = useCities();
@@ -138,9 +139,21 @@ export default function ProfilePage() {
                       <span className="flex items-center gap-1"><Mail className="h-3.5 w-3.5" /> {profile?.email}</span>
                       {profile?.phone && <span className="flex items-center gap-1"><Phone className="h-3.5 w-3.5" /> {profile.phone}</span>}
                     </div>
-                    <Button variant="outline" size="sm" className="mt-3" onClick={() => setEditing(true)}>
-                      <Edit className="h-3.5 w-3.5 mr-1" /> Edit Profile
-                    </Button>
+                    <div className="flex flex-wrap gap-2 mt-3">
+                      <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
+                        <Edit className="h-3.5 w-3.5 mr-1" /> Edit Profile
+                      </Button>
+                      {roles.includes('admin') && (
+                        <Button 
+                          variant="default" 
+                          size="sm" 
+                          className="bg-[#24423A] hover:bg-[#1C332D]"
+                          onClick={() => window.location.href = '/admin'}
+                        >
+                          <ShieldCheck className="h-3.5 w-3.5 mr-1" /> Admin Panel
+                        </Button>
+                      )}
+                    </div>
                   </>
                 )}
               </div>
@@ -245,6 +258,62 @@ export default function ProfilePage() {
                 </div>
                 <Button variant="ghost" size="icon" onClick={() => handleEditAddr(a)}><Edit className="h-4 w-4" /></Button>
                 <Button variant="ghost" size="icon" onClick={() => handleDeleteAddr(a.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {/* Recent Bookings */}
+      <div className="mt-8 mb-4">
+        <h2 className="text-xl font-heading font-bold text-foreground">Recent Bookings</h2>
+      </div>
+
+      {bLoading ? (
+        <div className="space-y-3">{[...Array(3)].map((_, i) => <Skeleton key={i} className="h-20 rounded-xl" />)}</div>
+      ) : bookings.length === 0 ? (
+        <p className="text-center py-10 text-muted-foreground bg-gray-50 rounded-2xl border-2 border-dashed">No bookings found yet.</p>
+      ) : (
+        <div className="space-y-4 pb-10">
+          {bookings.map((booking: any) => (
+            <Card key={booking.id} className="border shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+              <CardContent className="p-0">
+                <div className="flex items-stretch">
+                   <div className="w-2 bg-[#1DA653]" />
+                   <div className="flex-1 p-4">
+                     <div className="flex justify-between items-start mb-2">
+                       <div>
+                         <h3 className="font-bold text-foreground">{booking.service?.name || 'Service'}</h3>
+                         <p className="text-xs text-muted-foreground mt-0.5">
+                           {(booking.provider as any)?.company_name || 'Provider'}
+                         </p>
+                       </div>
+                       <Badge 
+                         className={cn(
+                           "capitalize text-[10px] px-2 py-0",
+                           booking.status === 'completed' ? "bg-green-100 text-green-700 hover:bg-green-100" :
+                           booking.status === 'pending' ? "bg-amber-100 text-amber-700 hover:bg-amber-100" :
+                           "bg-blue-100 text-blue-700 hover:bg-blue-100"
+                         )}
+                       >
+                         {booking.status}
+                       </Badge>
+                     </div>
+                     
+                     <div className="flex items-center gap-4 mt-3 pt-3 border-t border-gray-50">
+                       <div className="flex items-center gap-1.5">
+                         <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
+                         <span className="text-xs font-medium text-muted-foreground">
+                           {new Date(booking.booking_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                         </span>
+                       </div>
+                       <div className="flex items-center gap-1.5">
+                         <Star className="h-3.5 w-3.5 text-amber-400 fill-current" />
+                         <span className="text-xs font-bold text-foreground">₹{booking.amount?.toLocaleString('en-IN')}</span>
+                       </div>
+                     </div>
+                   </div>
+                </div>
               </CardContent>
             </Card>
           ))}

@@ -1,320 +1,221 @@
-import { useSearchParams, Link } from 'react-router-dom';
+import { useState, useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useCategories, useServices } from '@/hooks/useSupabaseData';
-import { useCities } from '@/hooks/useCities';
 import { useSubcategories } from '@/hooks/useSubcategoriesVariants';
 import { useCityStore } from '@/lib/cityStore';
-import { Star, Clock, MapPin, Search, SlidersHorizontal, X, ShieldCheck } from 'lucide-react';
-import FavoriteButton from '@/components/FavoriteButton';
+import { Search, SlidersHorizontal, X, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Slider } from '@/components/ui/slider';
-import { Badge } from '@/components/ui/badge';
-import { Label } from '@/components/ui/label';
-import { useState, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { Skeleton } from '@/components/ui/skeleton';
-
-const SORT_OPTIONS = [
-  { value: 'rating', label: 'Top Rated' },
-  { value: 'price_low', label: 'Price: Low to High' },
-  { value: 'price_high', label: 'Price: High to Low' },
-  { value: 'duration_low', label: 'Shortest Duration' },
-  { value: 'newest', label: 'Newest First' },
-];
+import { Badge } from '@/components/ui/badge';
+import { motion, AnimatePresence } from 'framer-motion';
+import AppHeader from '@/components/v2/AppHeader';
+import ServiceCardApp from '@/components/v2/ServiceCardApp';
+import VariantSheet from '@/components/v2/VariantSheet';
+import { cn } from '@/lib/utils';
 
 export default function ServicesPage() {
   const [searchParams] = useSearchParams();
   const categoryId = searchParams.get('category');
-  const { selectedCityId } = useCityStore();
+  const { selectedCityId, selectedCityName } = useCityStore();
+  
   const [selectedCategory, setSelectedCategory] = useState(categoryId || 'all');
   const [selectedSubcategory, setSelectedSubcategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState('rating');
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 50000]);
-  const [minRating, setMinRating] = useState(0);
-  const [maxDuration, setMaxDuration] = useState(480);
   const [showFilters, setShowFilters] = useState(false);
+  const [sheetServiceId, setSheetServiceId] = useState<string | null>(null);
 
   const { data: categories = [] } = useCategories();
-  const { data: services = [], isLoading } = useServices(selectedCategory, selectedCityId);
+  const { data: services = [], isLoading } = useServices(selectedCategory === 'all' ? undefined : selectedCategory, selectedCityId);
   const { data: subcategories = [] } = useSubcategories(selectedCategory === 'all' ? undefined : selectedCategory);
 
-  // Reset subcategory when category changes
   const handleCategoryChange = (catId: string) => {
     setSelectedCategory(catId);
     setSelectedSubcategory('all');
   };
 
-  // Compute max price for slider
-  const maxPrice = useMemo(() => {
-    const prices = services.map((s: any) => Number(s.price));
-    return prices.length ? Math.max(...prices, 1000) : 50000;
-  }, [services]);
-
-  // Filter and sort
   const filteredServices = useMemo(() => {
     let result = [...services];
-
-    // Search
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       result = result.filter((s: any) =>
         s.name?.toLowerCase().includes(q) ||
         s.description?.toLowerCase().includes(q) ||
-        s.provider?.company_name?.toLowerCase().includes(q) ||
-        s.category?.name?.toLowerCase().includes(q)
+        s.provider?.company_name?.toLowerCase().includes(q)
       );
     }
-
-    // City filtering is handled at the query level via selectedCityId
-
-    // Subcategory
     if (selectedSubcategory !== 'all') {
       result = result.filter((s: any) => s.subcategory_id === selectedSubcategory);
     }
-
-    // Price range
-    result = result.filter((s: any) => {
-      const p = Number(s.price);
-      return p >= priceRange[0] && p <= priceRange[1];
-    });
-
-    // Rating
-    if (minRating > 0) {
-      result = result.filter((s: any) => Number(s.rating || 0) >= minRating);
-    }
-
-    // Duration
-    if (maxDuration < 480) {
-      result = result.filter((s: any) => Number(s.duration) <= maxDuration);
-    }
-
-    // Sort
-    switch (sortBy) {
-      case 'price_low': result.sort((a: any, b: any) => a.price - b.price); break;
-      case 'price_high': result.sort((a: any, b: any) => b.price - a.price); break;
-      case 'duration_low': result.sort((a: any, b: any) => a.duration - b.duration); break;
-      case 'newest': result.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()); break;
-      default: result.sort((a: any, b: any) => (b.rating || 0) - (a.rating || 0));
-    }
-
     return result;
-  }, [services, searchQuery, selectedSubcategory, priceRange, minRating, maxDuration, sortBy]);
-
-  const activeFilterCount = [
-    minRating > 0,
-    minRating > 0,
-    maxDuration < 480,
-    priceRange[0] > 0 || priceRange[1] < maxPrice,
-  ].filter(Boolean).length;
-
-  const clearFilters = () => {
-    setPriceRange([0, maxPrice]);
-    setMinRating(0);
-    setMaxDuration(480);
-    setSearchQuery('');
-    setSelectedSubcategory('all');
-  };
+  }, [services, searchQuery, selectedSubcategory]);
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-heading font-bold text-foreground">All Services</h1>
-      <p className="text-muted-foreground mt-1">Browse and book professional services near you</p>
+    <div className="min-h-screen bg-white relative pb-32 overflow-x-hidden">
+      <AppHeader />
 
-      {/* Search bar */}
-      <div className="mt-6 space-y-3">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search services, providers, categories..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
-          />
-          {searchQuery && (
-            <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
-              <X className="h-4 w-4" />
+      <main className="px-4 sm:px-6 lg:px-8 py-6 relative z-10 max-w-5xl mx-auto">
+        <div className="flex flex-col gap-6">
+          
+          {/* Page Title & Back */}
+          <div className="flex items-center gap-3">
+             <button 
+               onClick={() => window.history.back()}
+               className="p-2 -ml-2 rounded-full hover:bg-gray-100 transition-colors"
+             >
+               <ArrowLeft className="h-5 w-5 text-[#1F2937]" />
+             </button>
+             <h1 className="text-[22px] font-black text-[#1F2937]">All services</h1>
+          </div>
+
+          {/* Search & Filter Bar */}
+          <div className="flex gap-3">
+            <div className="relative flex-1 group">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#718096] group-focus-within:text-[#1DA653] transition-colors" />
+              <Input
+                placeholder="Search for any service..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 h-11 bg-[#F7F8F9] border-none rounded-xl focus-visible:ring-1 focus-visible:ring-[#1DA653] transition-all text-sm font-medium"
+              />
+              {searchQuery && (
+                <button 
+                  onClick={() => setSearchQuery('')} 
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-gray-200"
+                >
+                  <X className="h-3 w-3 text-[#718096]" />
+                </button>
+              )}
+            </div>
+            <Button
+              variant="outline"
+              onClick={() => setShowFilters(!showFilters)}
+              className={cn(
+                "h-11 w-11 p-0 border-[#E2E8F0] rounded-xl transition-all shadow-sm active:scale-95",
+                showFilters && "bg-[#1DA653] border-[#1DA653] text-white"
+              )}
+            >
+              <SlidersHorizontal className="h-5 w-5" />
+            </Button>
+          </div>
+
+          {/* Category Chips */}
+          <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 scrollbar-hide">
+            <button
+              onClick={() => handleCategoryChange('all')}
+              className={cn(
+                "px-5 py-2 rounded-full text-[13px] font-bold whitespace-nowrap transition-all border",
+                selectedCategory === 'all' 
+                  ? "bg-[#24423A] border-[#24423A] text-white shadow-md shadow-[#24423A]/20" 
+                  : "bg-white border-[#E2E8F0] text-[#718096] hover:border-[#CBD5E0]"
+              )}
+            >
+              All
             </button>
+            {categories.map((cat: any) => (
+              <button
+                key={cat.id}
+                onClick={() => handleCategoryChange(cat.id)}
+                className={cn(
+                  "px-5 py-2 rounded-full text-[13px] font-bold whitespace-nowrap transition-all border",
+                  selectedCategory === cat.id 
+                    ? "bg-[#24423A] border-[#24423A] text-white shadow-md shadow-[#24423A]/20" 
+                    : "bg-white border-[#E2E8F0] text-[#718096] hover:border-[#CBD5E0]"
+                )}
+              >
+                {cat.name}
+              </button>
+            ))}
+          </div>
+
+          {/* Subcategories (if any) */}
+          <AnimatePresence>
+            {subcategories.length > 0 && selectedCategory !== 'all' && (
+              <motion.div 
+                initial={{ opacity: 0, y: -10 }} 
+                animate={{ opacity: 1, y: 0 }} 
+                exit={{ opacity: 0, y: -10 }}
+                className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 scrollbar-hide"
+              >
+                <button
+                  onClick={() => setSelectedSubcategory('all')}
+                  className={cn(
+                    "px-4 py-1.5 rounded-lg text-[12px] font-bold border transition-all",
+                    selectedSubcategory === 'all'
+                      ? "bg-[#1DA653]/10 border-[#1DA653] text-[#1DA653]"
+                      : "bg-[#F7F8F9] border-transparent text-[#718096]"
+                  )}
+                >
+                  All
+                </button>
+                {subcategories.map((sub: any) => (
+                  <button
+                    key={sub.id}
+                    onClick={() => setSelectedSubcategory(sub.id)}
+                    className={cn(
+                      "px-4 py-1.5 rounded-lg text-[12px] font-bold border transition-all",
+                      selectedSubcategory === sub.id
+                        ? "bg-[#1DA653]/10 border-[#1DA653] text-[#1DA653]"
+                        : "bg-[#F7F8F9] border-transparent text-[#718096]"
+                    )}
+                  >
+                    {sub.name}
+                  </button>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Results Info */}
+          <div className="flex items-center justify-between text-[#718096] text-[12px] font-extrabold uppercase tracking-wider">
+             <span>{filteredServices.length} Results</span>
+             <span className="text-[#1DA653]">Best matches</span>
+          </div>
+
+          {/* Services Grid */}
+          {isLoading ? (
+            <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-x-4 gap-y-6">
+              {[...Array(12)].map((_, i) => (
+                <div key={i} className="w-full aspect-square bg-[#F7F8F9] rounded-2xl animate-pulse" />
+              ))}
+            </div>
+          ) : filteredServices.length > 0 ? (
+            <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-x-4 gap-y-6">
+              {filteredServices.map((service: any) => (
+                <ServiceCardApp
+                  key={service.id}
+                  id={service.id}
+                  name={service.name}
+                  imageUrl={service.image_url}
+                  price={service.price}
+                  onAddClick={(id) => setSheetServiceId(id)}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="py-20 text-center bg-[#F7F8F9] rounded-3xl border border-dashed border-[#E2E8F0]">
+              <p className="text-[#718096] font-extrabold text-[15px] mb-2 uppercase tracking-tight">No matching services</p>
+              <p className="text-[#718096]/60 text-[12px] font-medium max-w-[200px] mx-auto">Try adjusting your filters or search query to find what you're looking for.</p>
+              <button 
+                onClick={() => {
+                  setSearchQuery('');
+                  setSelectedSubcategory('all');
+                  setSelectedCategory('all');
+                }}
+                className="mt-6 text-[#1DA653] font-bold text-sm underline"
+              >
+                Clear all filters
+              </button>
+            </div>
           )}
         </div>
-        <div className="flex gap-2">
-          <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className="flex-1 sm:w-48 sm:flex-none">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {SORT_OPTIONS.map(opt => (
-                <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Button
-            variant={showFilters ? 'default' : 'outline'}
-            onClick={() => setShowFilters(!showFilters)}
-            className="gap-2 shrink-0"
-          >
-            <SlidersHorizontal className="h-4 w-4" />
-            <span className="hidden sm:inline">Filters</span>
-            {activeFilterCount > 0 && (
-              <Badge className="h-5 w-5 p-0 flex items-center justify-center text-xs rounded-full">
-                {activeFilterCount}
-              </Badge>
-            )}
-          </Button>
-        </div>
-      </div>
+      </main>
 
-      {/* Advanced filters panel */}
-      <AnimatePresence>
-        {showFilters && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            className="overflow-hidden"
-          >
-            <div className="bg-card rounded-xl border shadow-card p-6 mt-4 grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-
-              {/* Price range */}
-              <div className="space-y-2">
-                <Label className="text-sm font-medium text-foreground">
-                  Price Range: ₹{priceRange[0]} – ₹{priceRange[1]}
-                </Label>
-                <Slider
-                  min={0}
-                  max={maxPrice}
-                  step={100}
-                  value={priceRange}
-                  onValueChange={(v) => setPriceRange(v as [number, number])}
-                  className="mt-3"
-                />
-              </div>
-
-              {/* Rating */}
-              <div className="space-y-2">
-                <Label className="text-sm font-medium text-foreground">Min Rating: {minRating}★</Label>
-                <Slider
-                  min={0}
-                  max={5}
-                  step={0.5}
-                  value={[minRating]}
-                  onValueChange={([v]) => setMinRating(v)}
-                  className="mt-3"
-                />
-              </div>
-
-              {/* Duration */}
-              <div className="space-y-2">
-                <Label className="text-sm font-medium text-foreground">
-                  Max Duration: {maxDuration >= 480 ? 'Any' : `${maxDuration} min`}
-                </Label>
-                <Slider
-                  min={15}
-                  max={480}
-                  step={15}
-                  value={[maxDuration]}
-                  onValueChange={([v]) => setMaxDuration(v)}
-                  className="mt-3"
-                />
-              </div>
-
-              <div className="sm:col-span-2 lg:col-span-3 flex justify-end">
-                <Button variant="ghost" size="sm" onClick={clearFilters} className="text-muted-foreground">
-                  Clear all filters
-                </Button>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Category pills */}
-      <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide mt-5">
-        <Button variant={selectedCategory === 'all' ? 'default' : 'outline'} size="sm" onClick={() => handleCategoryChange('all')}>All</Button>
-        {categories.map((cat: any) => (
-          <Button key={cat.id} variant={selectedCategory === cat.id ? 'default' : 'outline'} size="sm" onClick={() => handleCategoryChange(cat.id)} className="whitespace-nowrap">
-            {cat.name}
-          </Button>
-        ))}
-      </div>
-
-      {/* Subcategory pills */}
-      {subcategories.length > 0 && selectedCategory !== 'all' && (
-        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide mt-2">
-          <Button variant={selectedSubcategory === 'all' ? 'secondary' : 'ghost'} size="sm" onClick={() => setSelectedSubcategory('all')}>All Sub</Button>
-          {subcategories.map((sub) => (
-            <Button key={sub.id} variant={selectedSubcategory === sub.id ? 'secondary' : 'ghost'} size="sm" onClick={() => setSelectedSubcategory(sub.id)} className="whitespace-nowrap">
-              {sub.name}
-            </Button>
-          ))}
-        </div>
-      )}
-
-      {/* Results count */}
-      <div className="flex items-center justify-between mt-4 mb-2">
-        <p className="text-sm text-muted-foreground">
-          {filteredServices.length} service{filteredServices.length !== 1 ? 's' : ''} found
-          {searchQuery && <> for "<span className="text-foreground font-medium">{searchQuery}</span>"</>}
-        </p>
-      </div>
-
-      {isLoading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5 mt-4">
-          {[...Array(6)].map((_, i) => <Skeleton key={i} className="h-64 rounded-xl" />)}
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5 mt-4">
-          {filteredServices.map((service: any, i: number) => (
-            <motion.div key={service.id} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}>
-              <Link to={`/service/${service.id}`} className="block bg-card rounded-xl shadow-card border overflow-hidden hover:shadow-card-hover transition-shadow group">
-                <div className="h-28 bg-gradient-to-br from-primary/10 to-accent/10 relative">
-                  {service.image_url && (
-                    <img src={service.image_url} alt={service.name} className="w-full h-full object-cover" />
-                  )}
-                  <Badge variant="secondary" className="absolute top-2 left-2 text-xs">
-                    {service.category?.name}
-                  </Badge>
-                  <div className="absolute top-2 right-2 bg-card/90 rounded-full">
-                    <FavoriteButton serviceId={service.id} size="sm" />
-                  </div>
-                </div>
-                <div className="p-5">
-                  <div className="flex justify-between items-start">
-                    <div className="min-w-0 flex-1">
-                      <h3 className="font-heading font-semibold text-foreground truncate group-hover:text-primary transition-colors flex items-center gap-1">
-                        {service.name}
-                        {service.provider?.is_verified && <ShieldCheck className="h-3.5 w-3.5 text-primary fill-primary/20 shrink-0" />}
-                      </h3>
-                      <p className="text-sm text-muted-foreground truncate">{service.provider?.company_name}</p>
-                    </div>
-                    <span className="font-heading font-bold text-primary ml-2 shrink-0">₹{service.price}</span>
-                  </div>
-                  <p className="text-sm text-muted-foreground mt-2 line-clamp-2">{service.description}</p>
-                  <div className="flex items-center justify-between mt-4">
-                    <div className="flex items-center gap-1 text-sm">
-                      <Star className="h-4 w-4 text-warning fill-warning" />
-                      <span className="font-medium">{service.rating}</span>
-                      <span className="text-muted-foreground">({service.review_count})</span>
-                    </div>
-                    <span className="text-xs text-muted-foreground flex items-center gap-1">
-                      <Clock className="h-3 w-3" /> {service.duration} min
-                    </span>
-                  </div>
-                </div>
-              </Link>
-            </motion.div>
-          ))}
-        </div>
-      )}
-
-      {!isLoading && filteredServices.length === 0 && (
-        <div className="text-center py-20">
-          <Search className="h-10 w-10 mx-auto mb-3 text-muted-foreground/40" />
-          <p className="text-muted-foreground">No services found for the selected filters.</p>
-          <Button variant="outline" size="sm" className="mt-3" onClick={clearFilters}>Clear filters</Button>
-        </div>
-      )}
+      <VariantSheet
+        serviceId={sheetServiceId}
+        open={!!sheetServiceId}
+        onOpenChange={(open) => { if (!open) setSheetServiceId(null); }}
+      />
     </div>
   );
 }

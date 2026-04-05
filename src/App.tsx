@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
@@ -58,9 +58,6 @@ import BottomNav from "@/components/BottomNav";
 const queryClient = new QueryClient();
 
 const App = () => {
-  const { selectedCityId } = useCityStore();
-  const showCityGate = !selectedCityId;
-
   return (
     <RootErrorBoundary>
       <QueryClientProvider client={queryClient}>
@@ -70,78 +67,105 @@ const App = () => {
             <Sonner />
             <BrowserRouter>
               <AuthProvider>
-                <Routes>
-                  {/* Admin routes */}
-                  <Route
-                    path="/admin"
-                    element={
-                      <ProtectedRoute requiredRole="admin">
-                        <AdminLayout />
-                      </ProtectedRoute>
-                    }
-                  >
-                    <Route index element={<AdminDashboard />} />
-                    <Route path="bookings" element={<AdminBookings />} />
-                    <Route path="categories" element={<AdminCategories />} />
-                    <Route path="providers" element={<AdminProviders />} />
-                    <Route path="employees" element={<AdminEmployees />} />
-                    <Route path="services" element={<AdminServices />} />
-                    <Route path="cities" element={<AdminCities />} />
-                    <Route path="zones" element={<AdminZones />} />
-                    <Route path="checkout-fields" element={<AdminCheckoutFields />} />
-                    <Route path="coupons" element={<AdminCoupons />} />
-                    <Route path="banners" element={<AdminBanners />} />
-                    <Route path="campaigns" element={<AdminAdsPage />} />
-                    <Route path="pricing-rules" element={<AdminPricingRules />} />
-                    <Route path="settings" element={<AdminSettings />} />
-                  </Route>
-
-                  {/* Public / customer routes */}
-                  <Route
-                    path="*"
-                    element={
-                      <>
-                        {showCityGate && <CityGate />}
-                        {!['/', '/service/'].some(path => location.pathname === path || location.pathname.startsWith('/service/')) && <Navbar />}
-                        <div className="min-h-[calc(100vh-4rem)] pb-16 md:pb-0">
-                          <Routes>
-                            <Route path="/" element={<HomePage />} />
-                            <Route path="/services" element={<ServicesPage />} />
-                            <Route path="/service/:serviceId" element={<ServiceDetailsPage />} />
-                            <Route path="/booking/:serviceId" element={<BookingPage />} />
-                            <Route path="/order/:bookingId" element={<OrderTrackingPage />} />
-                            <Route path="/my-bookings" element={<MyBookingsPage />} />
-                            <Route path="/wishlist" element={<WishlistPage />} />
-                            <Route path="/profile" element={<ProfilePage />} />
-                            <Route path="/login" element={<LoginPage />} />
-                            <Route path="/signup" element={<SignupPage />} />
-                            <Route path="/provider-signup" element={<ProviderSignupPage />} />
-                            <Route path="/provider" element={<ProviderLayout />}>
-                              <Route index element={<ProviderDashboard />} />
-                              <Route path="analytics" element={<ProviderAnalytics />} />
-                              <Route path="bookings" element={<ProviderBookings />} />
-                              <Route path="servicemen" element={<ProviderServicemen />} />
-                              <Route path="team" element={<ProviderEmployees />} />
-                              <Route path="profile" element={<ProviderProfile />} />
-                              <Route path="availability" element={<ProviderAvailability />} />
-                              <Route path="campaigns" element={<ProviderAdsPage />} />
-                            </Route>
-                            <Route path="/serviceman" element={<ServicemanDashboard />} />
-                            <Route path="*" element={<NotFound />} />
-                          </Routes>
-                        </div>
-                        <Footer />
-                        <BottomNav />
-                      </>
-                    }
-                  />
-                </Routes>
+                <AppLayout />
               </AuthProvider>
             </BrowserRouter>
           </TooltipProvider>
         </ThemeProvider>
       </QueryClientProvider>
     </RootErrorBoundary>
+  );
+};
+
+const AppLayout = () => {
+  const { selectedCityId } = useCityStore();
+  const showCityGate = !selectedCityId;
+  const location = useLocation();
+
+  // Hide navbars on checkout related pages and service details
+  const isCheckoutPath = ['/cart', '/checkout'].includes(location.pathname);
+  const isServiceDetailPath = location.pathname.startsWith('/service/');
+  const hideNavs = isCheckoutPath || isServiceDetailPath;
+
+  // New Design v2 pages (no top Navbar, uses AppHeader instead)
+  const isV2Page = ['/', '/services', '/profile'].includes(location.pathname);
+
+  return (
+    <>
+      {showCityGate && <CityGate />}
+      
+      {/* Show main Navbar only on desktop and legacy pages */}
+      {!hideNavs && !isV2Page && <Navbar />}
+
+      <div className={hideNavs ? "" : "min-h-screen pb-16 md:pb-0"}>
+        <Routes>
+          {/* Admin routes */}
+          <Route
+            path="/admin/*"
+            element={
+              <ProtectedRoute requiredRole="admin">
+                <AdminLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<AdminDashboard />} />
+            <Route path="bookings" element={<AdminBookings />} />
+            <Route path="categories" element={<AdminCategories />} />
+            <Route path="providers" element={<AdminProviders />} />
+            <Route path="employees" element={<AdminEmployees />} />
+            <Route path="services" element={<AdminServices />} />
+            <Route path="cities" element={<AdminCities />} />
+            <Route path="zones" element={<AdminZones />} />
+            <Route path="checkout-fields" element={<AdminCheckoutFields />} />
+            <Route path="coupons" element={<AdminCoupons />} />
+            <Route path="banners" element={<AdminBanners />} />
+            <Route path="campaigns" element={<AdminAdsPage />} />
+            <Route path="pricing-rules" element={<AdminPricingRules />} />
+            <Route path="settings" element={<AdminSettings />} />
+          </Route>
+
+          {/* Provider routes */}
+          <Route path="/provider/*" element={<ProviderLayout />}>
+            <Route index element={<ProviderDashboard />} />
+            <Route path="analytics" element={<ProviderAnalytics />} />
+            <Route path="bookings" element={<ProviderBookings />} />
+            <Route path="servicemen" element={<ProviderServicemen />} />
+            <Route path="team" element={<ProviderEmployees />} />
+            <Route path="profile" element={<ProviderProfile />} />
+            <Route path="availability" element={<ProviderAvailability />} />
+            <Route path="campaigns" element={<ProviderAdsPage />} />
+          </Route>
+
+          {/* Employee/Serviceman routes */}
+          <Route path="/serviceman" element={<ServicemanDashboard />} />
+
+          {/* Public / Customer routes */}
+          <Route path="/" element={<HomePage />} />
+          <Route path="/services" element={<ServicesPage />} />
+          <Route path="/service/:serviceId" element={<ServiceDetailsPage />} />
+          <Route path="/cart" element={<CartPage />} />
+          <Route path="/checkout" element={<CheckoutPage />} />
+          <Route path="/booking/:serviceId" element={<BookingPage />} />
+          <Route path="/order/:bookingId" element={<OrderTrackingPage />} />
+          <Route path="/my-bookings" element={<MyBookingsPage />} />
+          <Route path="/wishlist" element={<WishlistPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
+          
+          {/* Auth routes */}
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/signup" element={<SignupPage />} />
+          <Route path="/provider-signup" element={<ProviderSignupPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
+
+          {/* 404 */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </div>
+
+      {!hideNavs && <Footer />}
+      {!hideNavs && <BottomNav />}
+    </>
   );
 };
 

@@ -4,7 +4,7 @@ import { useAuthContext } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
 export default function AppHeader() {
-  const { selectedCityName } = useCityStore();
+  const { selectedCityName, setHasChecked } = useCityStore();
   const { user } = useAuthContext();
   const navigate = useNavigate();
 
@@ -16,8 +16,11 @@ export default function AppHeader() {
             <span className="text-[17px] tracking-tight">10</span>
             <span className="text-[8px] uppercase tracking-wider font-extrabold">mins</span>
           </div>
-          <div className="flex flex-col gap-0.5">
-            <div className="flex items-center gap-1 cursor-pointer">
+          <div 
+            className="flex flex-col gap-0.5 cursor-pointer hover:opacity-80 transition-opacity"
+            onClick={() => setHasChecked(false)}
+          >
+            <div className="flex items-center gap-1">
               <span className="text-white font-bold text-[16px]">{selectedCityName || 'Select City'}</span>
               <ChevronDown className="h-4 w-4 text-white" strokeWidth={2.5} />
             </div>

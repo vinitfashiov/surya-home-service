@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Grid3X3, ShoppingCart, User } from 'lucide-react';
+import { Home, Grid3X3, ShoppingCart, User, ShieldCheck } from 'lucide-react';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { useCartCount } from '@/hooks/useCart';
 import { cn } from '@/lib/utils';
@@ -13,13 +13,18 @@ const navItems = [
 
 export default function BottomNav() {
   const location = useLocation();
-  const { user } = useAuthContext();
+  const { user, roles } = useAuthContext();
   const cartCount = useCartCount(user?.id);
+
+  const dynamicItems = [
+    ...navItems,
+    ...(roles.includes('admin') ? [{ to: '/admin', label: 'Admin', icon: ShieldCheck }] : [])
+  ];
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-lg border-t md:hidden safe-area-bottom">
       <div className="flex items-center justify-around h-14">
-        {navItems.map((item) => {
+        {dynamicItems.map((item) => {
           const isActive = item.to === '/'
             ? location.pathname === '/'
             : location.pathname.startsWith(item.to);
