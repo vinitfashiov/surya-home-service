@@ -102,7 +102,7 @@ const App = () => {
                     element={
                       <>
                         {showCityGate && <CityGate />}
-                        <Navbar />
+                        {!['/', '/service/'].some(path => location.pathname === path || location.pathname.startsWith('/service/')) && <Navbar />}
                         <div className="min-h-[calc(100vh-4rem)] pb-16 md:pb-0">
                           <Routes>
                             <Route path="/" element={<HomePage />} />

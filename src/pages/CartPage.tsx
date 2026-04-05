@@ -1,147 +1,168 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { useCart, useUpdateCartQuantity, useRemoveFromCart } from '@/hooks/useCart';
-import { ShoppingCart, Trash2, Plus, Minus, ArrowLeft, Clock } from 'lucide-react';
+import { useCityStore } from '@/lib/cityStore';
+import { ArrowLeft, ChevronRight, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { motion } from 'framer-motion';
+import { useState } from 'react';
+import BookingTypeTabs, { BookingType } from '@/components/v2/BookingTypeTabs';
+import QuantityStepper from '@/components/v2/QuantityStepper';
 
 export default function CartPage() {
   const navigate = useNavigate();
   const { user } = useAuthContext();
+  const { selectedCityName } = useCityStore();
   const { data: cartItems = [], isLoading } = useCart(user?.id);
   const updateQuantity = useUpdateCartQuantity();
-  const removeItem = useRemoveFromCart();
-
-  if (!user) {
-    return (
-      <div className="container mx-auto px-4 py-20 text-center">
-        <ShoppingCart className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-        <h2 className="text-xl font-heading font-bold text-foreground">Please log in</h2>
-        <p className="text-muted-foreground mt-1">Sign in to view your cart</p>
-        <Button className="mt-4" onClick={() => navigate('/login?redirect=/cart')}>Sign In</Button>
-      </div>
-    );
-  }
-
-  if (isLoading) {
-    return (
-      <div className="container mx-auto px-4 py-8 max-w-3xl">
-        <Skeleton className="h-8 w-48 mb-6" />
-        {[1, 2, 3].map(i => <Skeleton key={i} className="h-24 rounded-xl mb-3" />)}
-      </div>
-    );
-  }
+  const [bookingType, setBookingType] = useState<BookingType>('Instant');
 
   const subtotal = cartItems.reduce((sum: number, item: any) => {
     const addonTotal = (item.addons || []).reduce((s: number, a: any) => s + Number(a.addon?.price || 0), 0);
     return sum + (Number(item.service?.price || 0) + addonTotal) * (item.quantity || 1);
   }, 0);
 
-  const totalDuration = cartItems.reduce((sum: number, item: any) => sum + (item.service?.duration || 0) * (item.quantity || 1), 0);
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-white p-10 text-center flex flex-col items-center justify-center">
+        <h2 className="text-[17px] font-black text-gray-800">Please log in</h2>
+        <Button className="mt-4 rounded-xl px-10 h-12 bg-[#1DA653] font-bold" onClick={() => navigate('/login?redirect=/cart')}>Sign In</Button>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-white p-6 space-y-4">
+        <Skeleton className="h-10 w-48" />
+        <Skeleton className="h-40 w-full rounded-3xl" />
+      </div>
+    );
+  }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-3xl">
-      <button onClick={() => navigate(-1)} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-6">
-        <ArrowLeft className="h-4 w-4" /> Back
-      </button>
+    <div className="min-h-screen bg-white relative pb-32 overflow-x-hidden">
+      {/* Header */}
+      <header className="bg-white px-5 pt-12 pb-4 sticky top-0 z-50 flex items-center gap-4">
+        <button onClick={() => navigate(-1)} className="w-8 h-8 flex items-center justify-center text-gray-700">
+          <ArrowLeft className="h-[22px] w-[22px]" strokeWidth={2.5} />
+        </button>
+        <h1 className="text-[17px] font-black text-[#1F2937]">My cart</h1>
+      </header>
 
-      <div className="flex items-center gap-3 mb-6">
-        <ShoppingCart className="h-6 w-6 text-primary" />
-        <h1 className="text-2xl font-heading font-bold text-foreground">Your Cart</h1>
-        <span className="text-sm text-muted-foreground">({cartItems.length} items)</span>
-      </div>
+      <main className="px-5 py-2 flex flex-col gap-6 relative z-10 bg-white">
+        {/* Booking Type Switcher */}
+        <BookingTypeTabs activeType={bookingType} onChange={setBookingType} />
 
-      {cartItems.length === 0 ? (
-        <div className="text-center py-16 bg-card rounded-xl shadow-card border">
-          <ShoppingCart className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-          <h3 className="font-heading font-semibold text-foreground">Your cart is empty</h3>
-          <p className="text-sm text-muted-foreground mt-1">Browse services and add them to your cart</p>
-          <Button className="mt-4" onClick={() => navigate('/services')}>Browse Services</Button>
-        </div>
-      ) : (
-        <div className="grid md:grid-cols-3 gap-6">
-          {/* Cart items */}
-          <div className="md:col-span-2 space-y-3">
-            {cartItems.map((item: any, i: number) => (
-              <motion.div key={item.id} initial={{ opacity: 0, x: -15 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }} className="bg-card rounded-xl shadow-card border p-4">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <h4 className="font-heading font-semibold text-foreground">{item.service?.name}</h4>
-                    <p className="text-sm text-muted-foreground">{item.service?.provider?.company_name}</p>
-                    <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
-                      <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {item.service?.duration} min</span>
-                    </div>
-                    {/* Addons */}
-                    {item.addons?.length > 0 && (
-                      <div className="mt-2 flex flex-wrap gap-1">
-                        {item.addons.map((a: any) => (
-                          <span key={a.id} className="inline-block bg-primary/10 text-primary text-xs px-2 py-0.5 rounded-full">
-                            +{a.addon?.name} (₹{a.addon?.price})
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  <div className="text-right">
-                    <p className="font-heading font-bold text-primary">₹{Number(item.service?.price || 0) * item.quantity}</p>
-                    <div className="flex items-center gap-2 mt-2">
-                      <button
-                        onClick={() => updateQuantity.mutate({ cartItemId: item.id, quantity: item.quantity - 1 })}
-                        className="w-7 h-7 rounded-lg border flex items-center justify-center hover:bg-muted"
-                      >
-                        <Minus className="h-3 w-3" />
-                      </button>
-                      <span className="text-sm font-medium w-6 text-center">{item.quantity}</span>
-                      <button
-                        onClick={() => updateQuantity.mutate({ cartItemId: item.id, quantity: item.quantity + 1 })}
-                        className="w-7 h-7 rounded-lg border flex items-center justify-center hover:bg-muted"
-                      >
-                        <Plus className="h-3 w-3" />
-                      </button>
-                      <button
-                        onClick={() => removeItem.mutate(item.id)}
-                        className="w-7 h-7 rounded-lg border flex items-center justify-center text-destructive hover:bg-destructive/10 ml-1"
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
+        {/* Review Booking Section */}
+        <section>
+          <div className="flex items-center justify-between mb-4 px-1">
+             <h2 className="text-[15px] font-extrabold text-[#1F2937]">Review booking</h2>
+             <span className="text-[10px] text-gray-400 font-bold">{cartItems.length} services</span>
           </div>
 
-          {/* Summary */}
-          <div>
-            <div className="bg-card rounded-xl shadow-card border p-6 sticky top-24">
-              <h3 className="font-heading font-semibold text-foreground mb-4">Order Summary</h3>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Subtotal</span>
-                  <span className="text-foreground">₹{subtotal}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Est. Duration</span>
-                  <span className="text-foreground flex items-center gap-1"><Clock className="h-3 w-3" /> {totalDuration} min</span>
-                </div>
-                <Separator />
-                <div className="flex justify-between text-base">
-                  <span className="font-semibold text-foreground">Total</span>
-                  <span className="font-heading font-bold text-primary">₹{subtotal}</span>
-                </div>
+          <div className="bg-white rounded-[1.25rem] p-4 shadow-[0_2px_15px_rgba(0,0,0,0.04)] border border-gray-100">
+            {cartItems.length === 0 ? (
+              <div className="text-center py-6">
+                 <p className="text-gray-400 font-medium text-sm">Your cart is empty</p>
               </div>
-              <Button className="w-full mt-6" size="lg" onClick={() => navigate('/checkout')}>
-                Proceed to Checkout
-              </Button>
-              <Button variant="ghost" className="w-full mt-2" size="sm" onClick={() => navigate('/services')}>
-                Continue Shopping
-              </Button>
-            </div>
+            ) : (
+              <div className="flex flex-col gap-4">
+                {cartItems.map((item: any, idx: number) => (
+                  <div key={item.id} className={`flex items-center justify-between ${idx !== cartItems.length - 1 ? 'border-b border-gray-50 pb-4' : ''}`}>
+                     <div className="flex items-center gap-3.5 w-1/2">
+                        <div className="w-12 h-12 rounded-[10px] bg-[#F7F8F9] shrink-0 p-1 border border-black/5">
+                           <img 
+                             src={item.service?.image_url || 'https://via.placeholder.com/150'} 
+                             alt={item.service?.name} 
+                             className="w-full h-full object-contain mix-blend-multiply"
+                           />
+                        </div>
+                        <h4 className="text-[12px] font-extrabold text-[#1F2937] leading-tight pr-2">{item.service?.name}</h4>
+                     </div>
+                     
+                     <div className="flex items-center gap-4">
+                       <div className="flex flex-col items-end pt-1">
+                          {item.service?.price && (
+                             <span className="text-[9px] text-[#A0AEC0] font-bold line-through tracking-wide">₹{Math.round(item.service?.price * 1.3)}</span>
+                          )}
+                          <span className="text-[15px] font-black text-[#1F2937]">₹{item.service?.price}</span>
+                       </div>
+
+                       <QuantityStepper 
+                         quantity={item.quantity} 
+                         label={item.service?.name.split(' ')[0].toLowerCase() + 's'}
+                         onIncrease={() => updateQuantity.mutate({ cartItemId: item.id, quantity: item.quantity + 1 })}
+                         onDecrease={() => updateQuantity.mutate({ cartItemId: item.id, quantity: item.quantity - 1 })}
+                       />
+                     </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {cartItems.length > 0 && (
+              <div className="mt-5 text-center">
+                 <button 
+                  onClick={() => navigate('/services')}
+                  className="text-[11px] font-bold text-[#718096]"
+                 >
+                   Missed something? <span className="text-[#1DA653]">Add more services.</span>
+                 </button>
+              </div>
+            )}
           </div>
-        </div>
-      )}
+        </section>
+
+        {/* Coupons */}
+        <section className="bg-white rounded-[1.25rem] p-4.5 shadow-[0_2px_15px_rgba(0,0,0,0.04)] border border-gray-100 flex items-center justify-between cursor-pointer py-5">
+           <span className="text-[14px] font-bold text-[#1F2937]">View all coupons</span>
+           <ChevronRight className="h-[20px] w-[20px] text-gray-400" />
+        </section>
+
+        {/* Booking Details / Location */}
+        <section>
+           <h2 className="text-[15px] font-extrabold text-[#1F2937] mb-3 px-1">Booking details</h2>
+           <div className="bg-white rounded-[1.25rem] p-4 shadow-[0_2px_15px_rgba(0,0,0,0.04)] border border-gray-100 flex items-center justify-between cursor-pointer">
+              <div className="flex items-center gap-3.5">
+                 <div className="w-[38px] h-[38px] rounded-full bg-gray-50 flex items-center justify-center text-gray-400 shrink-0">
+                    <MapPin className="h-[18px] w-[18px]" strokeWidth={2.5} />
+                 </div>
+                 <div className="flex flex-col gap-0.5">
+                    <span className="text-[13px] font-extrabold text-[#1F2937]">Location</span>
+                    <span className="text-[10px] text-[#718096] font-semibold truncate max-w-[200px]">
+                      {selectedCityName || 'Select a location'} B124, Sector 55, Gurugram, Haryana...
+                    </span>
+                 </div>
+              </div>
+              <ChevronRight className="h-[20px] w-[20px] text-gray-400" />
+           </div>
+        </section>
+      </main>
+
+      {/* Decorative Bottom Bubbles/Background */}
+      <div className="fixed bottom-0 left-0 right-0 h-[220px] bg-[#1DA653] z-0 opacity-10 pointer-events-none rounded-t-[100%]" style={{ transform: 'translateY(30%) scale(1.5)' }}></div>
+      <div className="fixed bottom-0 left-0 right-0 h-[220px] bg-[#1DA653] z-0 opacity-20 pointer-events-none rounded-t-[100%]" style={{ transform: 'translateY(50%) scale(1.8)' }}></div>
+
+      {/* Sticky Bottom Bar */}
+      <div className="fixed bottom-0 left-0 right-0 p-5 z-50">
+         <motion.div 
+           initial={{ y: 50, opacity: 0 }}
+           animate={{ y: 0, opacity: 1 }}
+           className="container mx-auto"
+         >
+           <Button 
+              className="w-full h-[52px] rounded-2xl bg-[#1DA653] hover:bg-[#199448] text-white text-[15px] font-black flex items-center justify-center gap-2 shadow-[0_4px_15px_rgba(29,166,83,0.3)] transition-all active:scale-[0.98] border-none"
+              onClick={() => navigate('/checkout')}
+              disabled={cartItems.length === 0}
+           >
+              <span>Pay now</span>
+              <span>·</span>
+              <span>₹{subtotal}</span>
+           </Button>
+         </motion.div>
+      </div>
     </div>
   );
 }

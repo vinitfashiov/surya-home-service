@@ -326,22 +326,47 @@ export default function CheckoutPage() {
 
   if (confirmed) {
     return (
-      <div className="container mx-auto px-4 py-20 text-center max-w-md">
-        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-card rounded-2xl p-10 shadow-card border">
-          <div className="w-16 h-16 mx-auto rounded-full bg-success/10 flex items-center justify-center mb-4">
-            <CheckCircle className="h-8 w-8 text-success" />
+      <div className="min-h-screen bg-[#F9FAFB] flex items-center justify-center p-6">
+        <motion.div 
+          initial={{ scale: 0.9, opacity: 0 }} 
+          animate={{ scale: 1, opacity: 1 }} 
+          className="bg-white rounded-[2.5rem] p-10 shadow-soft border border-black/5 text-center max-w-sm w-full"
+        >
+          <div className="w-20 h-20 mx-auto rounded-full bg-[#10B981]/10 flex items-center justify-center mb-6">
+            <CheckCircle className="h-10 w-10 text-[#10B981]" strokeWidth={3} />
           </div>
-          <h2 className="text-2xl font-heading font-bold text-foreground">Booking Confirmed!</h2>
-          <p className="text-muted-foreground mt-2">Your services have been booked successfully.</p>
-          <div className="mt-6 space-y-2 text-sm text-left bg-muted rounded-xl p-4">
-            <p><span className="text-muted-foreground">Services:</span> <span className="font-medium text-foreground">{lineItems.map(i => i.name).join(', ')}</span></p>
-            <p><span className="text-muted-foreground">Date:</span> <span className="font-medium text-foreground">{date}</span></p>
-            <p><span className="text-muted-foreground">Time:</span> <span className="font-medium text-foreground">{time}</span></p>
-            <p><span className="text-muted-foreground">Total:</span> <span className="font-medium text-primary">₹{total}</span></p>
+          <h2 className="text-2xl font-black text-gray-800 tracking-tight mb-2">Booking Confirmed!</h2>
+          <p className="text-sm text-gray-400 font-medium leading-relaxed">Your services have been booked successfully. Our professional will arrive shortly.</p>
+          
+          <div className="mt-8 space-y-3 text-sm text-left bg-gray-50 rounded-2xl p-6 border border-black/5">
+            <div className="flex justify-between">
+               <span className="text-gray-400 font-medium">Services</span>
+               <span className="text-gray-800 font-black text-right line-clamp-1 ml-4">{lineItems.map(i => i.name).join(', ')}</span>
+            </div>
+            <div className="flex justify-between">
+               <span className="text-gray-400 font-medium">Date & Time</span>
+               <span className="text-gray-800 font-black">{date}, {time}</span>
+            </div>
+            <div className="flex justify-between">
+               <span className="text-gray-400 font-medium">Total Paid</span>
+               <span className="text-primary font-black">₹{total}</span>
+            </div>
           </div>
-          <div className="mt-6 flex gap-3">
-            <Button variant="outline" className="flex-1" onClick={() => navigate('/my-bookings')}>View Bookings</Button>
-            <Button className="flex-1" onClick={() => navigate('/')}>Home</Button>
+
+          <div className="mt-10 space-y-3">
+            <Button 
+               className="w-full h-14 rounded-2xl bg-primary hover:bg-primary/90 text-white font-black shadow-lg shadow-primary/20" 
+               onClick={() => navigate('/')}
+            >
+              Done
+            </Button>
+            <Button 
+               variant="ghost" 
+               className="w-full h-14 rounded-2xl text-gray-400 font-bold hover:text-gray-800" 
+               onClick={() => navigate('/my-bookings')}
+            >
+              View Bookings
+            </Button>
           </div>
         </motion.div>
       </div>
@@ -361,12 +386,14 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
-      <button onClick={() => navigate(-1)} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-6">
-        <ArrowLeft className="h-4 w-4" /> Back
-      </button>
-
-      <h1 className="text-2xl font-heading font-bold text-foreground mb-6">Checkout</h1>
+    <div className="min-h-screen bg-[#F9FAFB] pb-40">
+      {/* Header */}
+      <header className="bg-white px-6 pt-10 pb-6 sticky top-0 z-50 border-b border-gray-100 flex items-center gap-4">
+        <button onClick={() => navigate(-1)} className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-gray-800 transition-colors">
+          <ArrowLeft className="h-6 w-6" />
+        </button>
+        <h1 className="text-xl font-black text-gray-800">Checkout</h1>
+      </header>
 
       {/* Summary modal */}
       {showSummary && (

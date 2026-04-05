@@ -1,131 +1,236 @@
 import re
-import os
+import uuid
+import sys
 
-def parse_sql_values(block):
-    extracted = []
-    i, n = 0, len(block)
-    while i < n:
-        while i < n and block[i] != "(": i += 1
-        if i >= n: break
-        i += 1
-        parts, current_val, in_string, depth = [], "", False, 1
-        while i < n and depth > 0:
-            char = block[i]
-            if char == "'":
-                if i + 1 < n and block[i+1] == "'": current_val += "'"; i += 1
-                else: in_string = not in_string
-            elif char == "(" and not in_string: depth += 1; current_val += char
-            elif char == ")" and not in_string:
-                depth -= 1
-                if depth > 0: current_val += char
-            elif char == "," and not in_string and depth == 1:
-                parts.append(current_val.strip()); current_val = ""
-            else: current_val += char
-            i += 1
-        parts.append(current_val.strip())
-        cleaned = []
-        for p in parts:
-            if p.upper() == "NULL": cleaned.append(None)
-            elif p.startswith("'") and p.endswith("'"): cleaned.append(p[1:-1].replace("''", "'"))
-            else: cleaned.append(p)
-        extracted.append(cleaned)
-        while i < n and block[i] in " \n\r\t,": i += 1
-    return extracted
+# Configuration
+SQL_FILE = "u430492535_2ndriun (1).sql"
+OUTPUT_SQL = "migration_bihar_all.sql"
+PROVIDER_ID = "5b0ed0a7-7c34-4eda-852e-c7a32f469386"
+SUPABASE_BIHAR_ZONE_ID = "5ce29515-d1ff-403a-899b-564996753fa9"
+LEGACY_BIHAR_ZONE_ID = "e5d1d616-130b-4b76-a578-53c7e12b3ceb"
 
-def main():
-    sql_file = "u430492535_2ndriun (1).sql"
-    output_file = "migration.sql"
-    provider_id = "5b0ed0a7-7c34-4eda-852e-c7a32f469386"
-    if not os.path.exists(sql_file): return
-    with open(sql_file, "r", encoding="latin-1") as f: content = f.read()
+# Target INSERT line numbers
+TARGET_LINES = {
+    'categories': [1704],
+    'services': [6130, 6146],
+    'variations': [8319]
+}
 
-    def get_data_for_table(table_name):
-        data = []
-        pattern = rf"INSERT INTO\s+[`\"']?{table_name}[`\"']?\s+.*?VALUES\s+"
-        for m in re.finditer(pattern, content, re.I | re.S):
-            start = m.end()
-            end = content.find(";", start)
-            if end != -1: data.extend(parse_sql_values(content[start:end]))
-        return data
+def parse_val(val):
+    val = val.strip()
+    if val.startswith("'") and val.endswith("'"):
+        # Handle escaped quotes for MySQL
+        return val[1:-1].replace("''", "'").replace("\\'", "'")
+    if val.upper() == 'NULL':
+        return None
+    return val
 
-    raw_categories = get_data_for_table("categories")
-    raw_services = get_data_for_table("services")
-    raw_translations = get_data_for_table("translations")
-    
-    trans_map = {}
-    for t in raw_translations:
-        if len(t) >= 6:
-            mid, key, val = t[2], t[4], t[5]
-            if mid not in trans_map: trans_map[mid] = {}
-            trans_map[mid][key] = val
-
-    categories_map = {}
-    top_categories = []
-    subcategories = []
-    subcat_ids = set()
-    for c in raw_categories:
-        if len(c) < 3: continue
-        cid, pid = c[0], c[1]
-        name = trans_map.get(cid, {}).get('name', c[2])
-        desc = trans_map.get(cid, {}).get('description', c[5] if len(c) > 5 else "")
-        img = c[3] if len(c) > 3 else None
-        cat_obj = {'id': cid, 'pid': pid, 'name': name, 'desc': desc, 'img': img}
-        categories_map[cid] = cat_obj
-        if not pid or pid == '0' or pid == 'NULL': top_categories.append(cat_obj)
+def split_sql_row(row):
+    # Robust CSV splitter that respects escaping and quotes
+    parts = []
+    current = []
+    in_quotes = False
+    escaped = False
+    for char in row:
+        if char == "\\" and not escaped:
+            escaped = True
+            current.append(char)
+            continue
+        if char == "'" and not escaped:
+            in_quotes = not in_quotes
+        if char == "," and not in_quotes:
+            parts.append("".join(current).strip())
+            current = []
         else:
-            subcategories.append(cat_obj)
-            subcat_ids.add(cid)
+            current.append(char)
+        escaped = False
+    parts.append("".join(current).strip())
+    return parts
 
-    services_processed, service_id_set = [], set()
-    for s in raw_services:
-        if len(s) < 2: continue
-        sid = s[0]
-        name = trans_map.get(sid, {}).get('name', s[1])
-        desc = trans_map.get(sid, {}).get('description', s[3] if len(s) > 3 else "")
-        cat_id = s[6] if len(s) > 6 and s[6] and s[6] != '0' else None
-        subcat_id = s[7] if len(s) > 7 and s[7] and s[7] != '0' else None
+def get_buffer(lines, start_idx):
+    values_started = False
+    buffer = ""
+    for i in range(start_idx, len(lines)):
+        line = lines[i].strip()
+        if not values_started:
+            if "VALUES" in line:
+                values_started = True
+                buffer = line.split("VALUES", 1)[1]
+        else:
+            buffer += " " + line
+        if values_started and line.endswith(";"):
+            break
+    content = buffer.strip()
+    if content.endswith(";"): content = content[:-1]
+    return content
+
+def extract_rows(content):
+    # Balanced parenthesis scanner to reliably extract (row1), (row2)
+    rows = []
+    current_row = []
+    depth = 0
+    in_quotes = False
+    escaped = False
+    for char in content:
+        if char == "\\" and not escaped:
+            escaped = True
+            current_row.append(char)
+            continue
+        if char == "'" and not escaped:
+            in_quotes = not in_quotes
+        if not in_quotes:
+            if char == "(":
+                depth += 1
+                if depth == 1: 
+                    current_row = []
+                    continue
+            elif char == ")":
+                depth -= 1
+                if depth == 0:
+                    rows.append("".join(current_row))
+                    current_row = []
+                    continue
+        current_row.append(char)
+        escaped = False
+    return rows
+
+def parse_all():
+    with open(SQL_FILE, "r", encoding="latin-1") as f:
+        lines = f.readlines()
+
+    print("Parsing variations for Bihar...")
+    bihar_variations = {}
+    bihar_service_ids = set()
+    for start in TARGET_LINES['variations']:
+        content = get_buffer(lines, start)
+        rows = extract_rows(content)
+        for row in rows:
+            parts = [parse_val(p) for p in split_sql_row(row)]
+            if len(parts) >= 6:
+                # (id, variant, variant_key, service_id, zone_id, price)
+                v_name, s_id, z_id, price = parts[1], parts[3], parts[4], parts[5]
+                if z_id == LEGACY_BIHAR_ZONE_ID:
+                    if s_id not in bihar_variations: bihar_variations[s_id] = []
+                    bihar_variations[s_id].append({'name': v_name, 'price': float(price)})
+                    bihar_service_ids.add(s_id)
+    print(f"Found {len(bihar_service_ids)} services with variations in Bihar.")
+
+    print("Parsing services...")
+    services_dict = {}
+    for start in TARGET_LINES['services']:
+        content = get_buffer(lines, start)
+        rows = extract_rows(content)
+        for row in rows:
+            parts = [parse_val(p) for p in split_sql_row(row)]
+            if len(parts) >= 8:
+                # (id, name, short_desc, desc, cover, thumb, cat_id, subcat_id)
+                s_id, name, s_desc, desc, cat_id, subcat_id = parts[0], parts[1], parts[2], parts[3], parts[6], parts[7]
+                if s_id in bihar_service_ids:
+                    services_dict[s_id] = {
+                        'name': name, 'description': desc or s_desc,
+                        'category_id': cat_id, 'subcategory_id': subcat_id
+                    }
+    print(f"Loaded {len(services_dict)} services for Bihar.")
+
+    print("Parsing categories...")
+    hierarchy = {}
+    for start in TARGET_LINES['categories']:
+        content = get_buffer(lines, start)
+        rows = extract_rows(content)
+        for row in rows:
+            parts = [parse_val(p) for p in split_sql_row(row)]
+            if len(parts) >= 7:
+                # (id, parent_id, name, image, position, description, is_active)
+                c_id, p_id, name, desc, active = parts[0], parts[1], parts[2], parts[5], parts[6]
+                hierarchy[c_id] = {
+                    'name': name, 
+                    'parent_id': p_id if p_id != '0' else None, 
+                    'is_active': active == '1'
+                }
+    print(f"Loaded {len(hierarchy)} total categories.")
+
+    return hierarchy, services_dict, bihar_variations
+
+def generate_sql(hierarchy, services, variations):
+    print(f"Generating {OUTPUT_SQL}...")
+    sql_lines = [
+        "-- Migration for Bihar Services (All categories and services from SQL)",
+        "BEGIN;",
+        f"-- Provider: Digital Studio ({PROVIDER_ID})",
+        f"-- Zone: Bihar ({SUPABASE_BIHAR_ZONE_ID})",
+        "\n-- 1. Insert Categories"
+    ]
+
+    # Map legacy IDs to new UUIDs
+    cat_uuid_map = {}
+    
+    # First, collect categories needed by services
+    needed_cats = set()
+    for s_id, s_data in services.items():
+        needed_cats.add(s_data['category_id'])
+        if s_data['subcategory_id']:
+            needed_cats.add(s_data['subcategory_id'])
+            # Ensure parent is also included
+            sub_data = hierarchy.get(s_data['subcategory_id'])
+            if sub_data and sub_data['parent_id']:
+                needed_cats.add(sub_data['parent_id'])
+
+    # Insert Root Categories
+    for c_id in sorted(needed_cats):
+        data = hierarchy.get(c_id)
+        if data and data['parent_id'] is None:
+            new_id = str(uuid.uuid4())
+            cat_uuid_map[c_id] = new_id
+            name = data['name'].replace("'", "''")
+            sql_lines.append(f"INSERT INTO public.service_categories (id, name, is_active) VALUES ('{new_id}', '{name}', {str(data['is_active']).lower()}) ON CONFLICT DO NOTHING;")
+
+    sql_lines.append("\n-- 2. Insert Subcategories")
+    subcat_uuid_map = {}
+    for c_id in sorted(needed_cats):
+        data = hierarchy.get(c_id)
+        if data and data['parent_id'] is not None:
+            parent_id = data['parent_id']
+            parent_uuid = cat_uuid_map.get(parent_id)
+            if parent_uuid:
+                new_id = str(uuid.uuid4())
+                subcat_uuid_map[c_id] = new_id
+                name = data['name'].replace("'", "''")
+                sql_lines.append(f"INSERT INTO public.service_subcategories (id, category_id, name, is_active) VALUES ('{new_id}', '{parent_uuid}', '{name}', {str(data['is_active']).lower()}) ON CONFLICT DO NOTHING;")
+
+    sql_lines.append("\n-- 3. Insert Services & Variants")
+    svc_count = 0
+    var_count = 0
+    for s_id, s_data in services.items():
+        vars = variations[s_id]
+        base_price = vars[0]['price'] if vars else 0
         
-        # Foreign Key check: ensure subcat_id exists
-        if subcat_id and subcat_id not in subcat_ids: subcat_id = None
+        # Determine category and subcategory UUIDs
+        cat_uuid = cat_uuid_map.get(s_data['category_id'])
+        subcat_uuid = subcat_uuid_map.get(s_data['subcategory_id'])
         
-        if subcat_id and not cat_id:
-            cat_id = categories_map.get(subcat_id, {}).get('pid')
-            if cat_id == '0': cat_id = None
-            
-        img = s[5] if len(s) > 5 else None
-        try: price = float(s[13]) if len(s) > 13 and s[13] else 0.0
-        except: price = 0.0
-        services_processed.append({'id': sid, 'name': name, 'description': desc, 'price': price, 'image': img, 'cat_id': cat_id, 'subcat_id': subcat_id})
-        service_id_set.add(sid)
+        # If the category_id from service is actually a subcategory
+        if not cat_uuid and subcat_uuid:
+            subcat_data = hierarchy.get(s_data['subcategory_id'])
+            if subcat_data and subcat_data['parent_id']:
+                cat_uuid = cat_uuid_map.get(subcat_data['parent_id'])
 
-    for c in subcategories:
-        if c['desc'] and any(k in c['desc'].lower() for k in ['â‚¹', 'price', 'book', '7999', '3499', '10999']):
-            if c['id'] not in service_id_set:
-                # If a subcategory behaves as a service, it belongs to its parent category
-                # and its OWN id is not inserted as a subcategory grouping if it's already a service.
-                # Actually, let's just make it a service linked to the parent.
-                services_processed.append({'id': c['id'], 'name': c['name'], 'description': c['desc'], 'price': 0.0, 'image': c['img'], 'cat_id': c['pid'], 'subcat_id': None})
-                service_id_set.add(c['id'])
+        if cat_uuid:
+            svc_uuid = str(uuid.uuid4())
+            name = s_data['name'].replace("'", "''")
+            desc = s_data['description'].replace("'", "''") if s_data['description'] else ""
+            subcat_val = f"'{subcat_uuid}'" if subcat_uuid else "NULL"
+            sql_lines.append(f"INSERT INTO public.services (id, category_id, subcategory_id, provider_id, zone_id, name, description, price, is_active) VALUES ('{svc_uuid}', '{cat_uuid}', {subcat_val}, '{PROVIDER_ID}', '{SUPABASE_BIHAR_ZONE_ID}', '{name}', '{desc}', {base_price}, true) ON CONFLICT DO NOTHING;")
+            svc_count += 1
+            for v in vars:
+                v_name = v['name'].replace("'", "''")
+                sql_lines.append(f"INSERT INTO public.service_variants (service_id, name, price, is_active) VALUES ('{svc_uuid}', '{v_name}', {v['price']}, true) ON CONFLICT DO NOTHING;")
+                var_count += 1
 
-    with open(output_file, "w", encoding="utf-8") as out:
-        out.write("BEGIN;\n")
-        # Ensure we only insert valid subcategories (those that ARE NOT acting as services)
-        # Actually, let's just insert all.
-        for c in top_categories:
-            n, d = str(c['name']).replace("'", "''"), str(c['desc'] or "").replace("'", "''")
-            img = f"'{c['img']}'" if c['img'] else "NULL"
-            out.write(f"INSERT INTO public.service_categories (id, name, image_url, description, is_active) VALUES ('{c['id']}', '{n}', {img}, '{d}', True) ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name;\n")
-        for c in subcategories:
-            n, d = str(c['name']).replace("'", "''"), str(c['desc'] or "").replace("'", "''")
-            pid = f"'{c['pid']}'" if c['pid'] and c['pid'] != '0' else "NULL"
-            out.write(f"INSERT INTO public.service_subcategories (id, category_id, name, description, is_active) VALUES ('{c['id']}', {pid}, '{n}', '{d}', True) ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name;\n")
-        for s in services_processed:
-            n, d = str(s['name']).replace("'", "''"), str(s['description'] or "").replace("'", "''")
-            img = f"'{s['image']}'" if s['image'] else "NULL"
-            cid = f"'{s['cat_id']}'" if s['cat_id'] and s['cat_id'] != '0' else "NULL"
-            scid = f"'{s['subcat_id']}'" if s['subcat_id'] and s['subcat_id'] != '0' else "NULL"
-            out.write(f"INSERT INTO public.services (id, name, description, price, image_url, category_id, subcategory_id, provider_id, is_active) VALUES ('{s['id']}', '{n}', '{d}', {s['price']}, {img}, {cid}, {scid}, '{provider_id}', True) ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name;\n")
-        out.write("COMMIT;")
-    print("Done.")
+    sql_lines.append("COMMIT;")
+    with open(OUTPUT_SQL, "w", encoding="utf-8") as f:
+        f.write("\n".join(sql_lines))
+    print(f"Summary: Generated {svc_count} services and {var_count} variants for Bihar.")
 
-if __name__ == "__main__": main()
+if __name__ == "__main__":
+    h, s, v = parse_all()
+    generate_sql(h, s, v)

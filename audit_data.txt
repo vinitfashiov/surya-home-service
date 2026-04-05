@@ -1,0 +1,6 @@
+--- CATEGORIES ---
+Camera (ID: daa6059b-874b-4117-9447-601638959295)
+Still Photography (ID: 7c3aee0a-ffef-4def-b196-33c266072f89)
+
+--- SERVICES ---
+Still Photography (ID: 74b8eddf-49c9-467e-a057-2a6314f1299b)

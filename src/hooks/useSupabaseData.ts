@@ -78,7 +78,7 @@ export function useServices(categoryId?: string, cityId?: string | null, zoneId?
       if (zoneId) {
         query = query.eq('zone_id', zoneId);
       } else if (cityId) {
-        query = query.eq('city_id', cityId);
+        query = query.or(`city_id.eq.${cityId},city_id.is.null`);
       }
       const { data, error } = await query;
       if (error) throw error;

@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(where python:*)",
+      "Bash(where py:*)",
+      "Bash(where node:*)",
+      "Bash(py extract_data.py)",
+      "Bash(\"C:/Program Files/Python311/python.exe\" extract_data.py)",
+      "Bash(node -e \"console.log\\('test'\\)\")",
+      "Bash(node extract_data.js)",
+      "Bash(mv \"d:/PY/anti-gravity-google-app and improvement project for storekriti/vibe-service/extract_data.js\" \"d:/PY/anti-gravity-google-app and improvement project for storekriti/vibe-service/extract_data.cjs\")",
+      "Bash(node extract_data.cjs)",
+      "Bash(node -e ':*)"
+    ]
+  }
+}
