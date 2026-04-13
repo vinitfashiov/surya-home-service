@@ -26,8 +26,23 @@ export default function ServicesPage() {
   const [sheetServiceId, setSheetServiceId] = useState<string | null>(null);
 
   const { data: categories = [] } = useCategories();
+  // Fetch ALL services for the city (unfiltered by category) to know which categories have services
+  const { data: allCityServices = [] } = useServices(undefined, selectedCityId);
   const { data: services = [], isLoading } = useServices(selectedCategory === 'all' ? undefined : selectedCategory, selectedCityId);
   const { data: subcategories = [] } = useSubcategories(selectedCategory === 'all' ? undefined : selectedCategory);
+
+  // Only show categories that have at least one service in this city, deduplicated by name
+  const availableCategories = useMemo(() => {
+    const categoryIdsWithServices = new Set(allCityServices.map((s: any) => s.category_id));
+    const seen = new Set<string>();
+    return categories.filter((cat: any) => {
+      if (!categoryIdsWithServices.has(cat.id)) return false;
+      const lowerName = cat.name.toLowerCase();
+      if (seen.has(lowerName)) return false;
+      seen.add(lowerName);
+      return true;
+    });
+  }, [categories, allCityServices]);
 
   const handleCategoryChange = (catId: string) => {
     setSelectedCategory(catId);
@@ -112,7 +127,7 @@ export default function ServicesPage() {
             >
               All
             </button>
-            {categories.map((cat: any) => (
+            {availableCategories.map((cat: any) => (
               <button
                 key={cat.id}
                 onClick={() => handleCategoryChange(cat.id)}

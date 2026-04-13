@@ -87,15 +87,21 @@ const AppLayout = () => {
   const isServiceDetailPath = location.pathname.startsWith('/service/');
   const hideNavs = isCheckoutPath || isServiceDetailPath;
 
-  // New Design v2 pages (no top Navbar, uses AppHeader instead)
+  // New Design v2 pages (no top Navbar on mobile, uses AppHeader instead)
+  // But always show Navbar on desktop so admin/provider links are accessible
   const isV2Page = ['/', '/services', '/profile'].includes(location.pathname);
 
   return (
     <>
       {showCityGate && <CityGate />}
-      
-      {/* Show main Navbar only on desktop and legacy pages */}
+
+      {/* Show Navbar: always on non-v2 pages; on v2 pages only on desktop (md+) */}
       {!hideNavs && !isV2Page && <Navbar />}
+      {!hideNavs && isV2Page && (
+        <div className="hidden md:block">
+          <Navbar />
+        </div>
+      )}
 
       <div className={hideNavs ? "" : "min-h-screen pb-16 md:pb-0"}>
         <Routes>
