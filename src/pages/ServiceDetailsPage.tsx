@@ -212,6 +212,29 @@ export default function ServiceDetailsPage() {
             </ul>
           </div>
 
+          {/* How It Works */}
+          <div className="mb-6">
+            <h3 className="text-sm font-bold text-[#1F2937] mb-3">How it works</h3>
+            <div className="space-y-3">
+              {[
+                { step: '1', title: 'Book Online', desc: 'Choose your service, pick a date & time that works for you.' },
+                { step: '2', title: 'Get Confirmation', desc: 'Receive instant booking confirmation with provider details.' },
+                { step: '3', title: 'Service Delivered', desc: 'Our verified professional arrives and delivers quality service.' },
+                { step: '4', title: 'Rate & Review', desc: 'Share your experience to help others make informed decisions.' },
+              ].map((item) => (
+                <div key={item.step} className="flex items-start gap-3">
+                  <div className="w-7 h-7 flex-shrink-0 rounded-full bg-[#1DA653]/10 flex items-center justify-center">
+                    <span className="text-xs font-black text-[#1DA653]">{item.step}</span>
+                  </div>
+                  <div>
+                    <p className="text-[12px] font-bold text-[#1F2937]">{item.title}</p>
+                    <p className="text-[11px] text-[#718096] leading-snug">{item.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
           {/* Provider Info */}
           {service.provider && (
             <div className="bg-[#F8FAFC] rounded-2xl p-4 border border-gray-100">

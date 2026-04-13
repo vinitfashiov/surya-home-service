@@ -1,4 +1,4 @@
-import { Plus } from 'lucide-react';
+import { Plus, Star } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 interface ServiceCardAppProps {
@@ -7,11 +7,12 @@ interface ServiceCardAppProps {
   imageUrl?: string;
   price?: number;
   discountPrice?: number;
+  rating?: number;
   tag?: string;
   onAddClick?: (id: string) => void;
 }
 
-export default function ServiceCardApp({ id, name, imageUrl, price, tag, onAddClick }: ServiceCardAppProps) {
+export default function ServiceCardApp({ id, name, imageUrl, price, rating, tag, onAddClick }: ServiceCardAppProps) {
   return (
     <div className="flex flex-col relative w-full group">
       <Link to={`/service/${id}`} className="block">
@@ -32,6 +33,13 @@ export default function ServiceCardApp({ id, name, imageUrl, price, tag, onAddCl
           {tag && (
             <div className="absolute top-1.5 left-1.5 bg-[#FF5722] text-white text-[9px] font-bold px-2 py-0.5 rounded-md shadow-sm z-10">
               {tag}
+            </div>
+          )}
+
+          {rating != null && rating > 0 && (
+            <div className="absolute bottom-1.5 left-1.5 flex items-center gap-0.5 bg-white/90 backdrop-blur-sm px-1.5 py-0.5 rounded-md shadow-sm z-10">
+              <Star className="w-2.5 h-2.5 text-[#FF9800] fill-current" />
+              <span className="text-[9px] font-bold text-[#1F2937]">{rating}</span>
             </div>
           )}
         </div>
