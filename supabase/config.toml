@@ -1,4 +1,4 @@
-project_id = "oycckglbqjqtzpaufcql"
+project_id = "zgzwnbvpfebdphnajsua"
 
 [functions.razorpay]
 verify_jwt = false

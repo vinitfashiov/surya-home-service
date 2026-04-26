@@ -1,0 +1,49 @@
+{
+  "categories": [
+    {"sl": "1", "name": "Floor & Appliance Cleaning", "sub_categories": "2", "zones": "1", "status": true, "featured": false},
+    {"sl": "2", "name": "Window & Glass Cleaning", "sub_categories": "1", "zones": "1", "status": true, "featured": false},
+    {"sl": "3", "name": "Car Cleaning", "sub_categories": "1", "zones": "1", "status": true, "featured": false},
+    {"sl": "4", "name": "Balcony & Utility Cleaning", "sub_categories": "1", "zones": "1", "status": true, "featured": false},
+    {"sl": "5", "name": "Kitchen Cleaning", "sub_categories": "2", "zones": "1", "status": true, "featured": false},
+    {"sl": "6", "name": "Home Cleaning", "sub_categories": "2", "zones": "1", "status": true, "featured": false},
+    {"sl": "7", "name": "Painting Services", "sub_categories": "4", "zones": "1", "status": true, "featured": false},
+    {"sl": "8", "name": "Cleaning Services", "sub_categories": "2", "zones": "1", "status": true, "featured": false}
+  ],
+  "sub_categories": [
+    {"sl": "1", "name": "Appliance Cleaning", "parent": "Floor & Appliance Cleaning", "services": "1", "status": true},
+    {"sl": "2", "name": "Floor Cleaning", "parent": "Floor & Appliance Cleaning", "services": "1", "status": true},
+    {"sl": "3", "name": "Window Cleaning", "parent": "Window & Glass Cleaning", "services": "1", "status": true},
+    {"sl": "4", "name": "Car Wash", "parent": "Car Cleaning", "services": "1", "status": true},
+    {"sl": "5", "name": "Balcony Cleaning", "parent": "Balcony & Utility Cleaning", "services": "1", "status": true},
+    {"sl": "6", "name": "Kitchen Accessories Cleaning", "parent": "Kitchen Cleaning", "services": "1", "status": true},
+    {"sl": "7", "name": "Complete Kitchen Cleaning", "parent": "Kitchen Cleaning", "services": "1", "status": true},
+    {"sl": "8", "name": "Empty / Move-In Cleaning", "parent": "Home Cleaning", "services": "1", "status": true},
+    {"sl": "9", "name": "Full Home Cleaning", "parent": "Home Cleaning", "services": "1", "status": true},
+    {"sl": "10", "name": "Furniture & Fixture Painting", "parent": "Painting Services", "services": "1", "status": true},
+    {"sl": "11", "name": "Outdoor & Utility Area Painting", "parent": "Painting Services", "services": "1", "status": true},
+    {"sl": "12", "name": "Room Painting", "parent": "Painting Services", "services": "1", "status": true},
+    {"sl": "13", "name": "Full House Painting Packages", "parent": "Painting Services", "services": "1", "status": true},
+    {"sl": "14", "name": "Sofa Cleaning", "parent": "Cleaning Services", "services": "1", "status": true},
+    {"sl": "15", "name": "Bathroom & WC Cleaning", "parent": "Cleaning Services", "services": "1", "status": true}
+  ],
+  "service_zones": [
+    {"sl": "1", "name": "South Delhi", "providers": "2", "services": "8", "status": true}
+  ],
+  "services": [
+    {"sl": "1", "name": "Fridge Cleaning", "category": "Floor & Appliance Cleaning", "zones": "South Delhi", "min_price": "₹480.00", "status": true},
+    {"sl": "2", "name": "Floor Cleaning Service", "category": "Floor & Appliance Cleaning", "zones": "South Delhi", "min_price": "₹45.00", "status": true},
+    {"sl": "3", "name": "Window / Glass Cleaning Service", "category": "Window & Glass Cleaning", "zones": "South Delhi", "min_price": "₹499.00", "status": true},
+    {"sl": "4", "name": "Car Wash Service", "category": "Car Cleaning", "zones": "South Delhi", "min_price": "₹499.00", "status": true},
+    {"sl": "5", "name": "Balcony Cleaning Service", "category": "Balcony & Utility Cleaning", "zones": "South Delhi", "min_price": "₹369.00", "status": true},
+    {"sl": "6", "name": "Kitchen Accessories Cleaning Service", "category": "Kitchen Cleaning", "zones": "South Delhi", "min_price": "₹399.00", "status": true},
+    {"sl": "7", "name": "Complete Kitchen Cleaning Service", "category": "Kitchen Cleaning", "zones": "South Delhi", "min_price": "₹999.00", "status": true},
+    {"sl": "8", "name": "Empty / Move-In Cleaning Service", "category": "Home Cleaning", "zones": "South Delhi", "min_price": "₹350.00", "status": true},
+    {"sl": "9", "name": "Home Cleaning Service", "category": "Home Cleaning", "zones": "South Delhi", "min_price": "₹2,690.00", "status": true},
+    {"sl": "10", "name": "Furniture & Fixture Painting", "category": "Painting Services", "zones": "South Delhi", "min_price": "₹1,349.00", "status": true},
+    {"sl": "11", "name": "Outdoor & Utility Area Painting", "category": "Painting Services", "zones": "South Delhi", "min_price": "₹2,300.00", "status": true},
+    {"sl": "12", "name": "Single Room Painting", "category": "Painting Services", "zones": "South Delhi", "min_price": "₹2,339.00", "status": true},
+    {"sl": "13", "name": "House Painting Packages", "category": "Painting Services", "zones": "South Delhi", "min_price": "₹9,000.00", "status": true},
+    {"sl": "14", "name": "Sofa Cleaning", "category": "Cleaning Services", "zones": "South Delhi", "min_price": "₹125.00", "status": true},
+    {"sl": "15", "name": "WC / Toilet Cleaning", "category": "Cleaning Services", "zones": "South Delhi", "min_price": "₹249.00", "status": true}
+  ]
+}

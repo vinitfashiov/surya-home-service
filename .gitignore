@@ -26,3 +26,7 @@ dist-ssr
 # Environment Files
 .env
 .env.*
+
+# Supabase CLI cache
+supabase/.temp/
+supabase/.branches/
