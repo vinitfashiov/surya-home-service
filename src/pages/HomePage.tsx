@@ -180,7 +180,7 @@ export default function HomePage() {
                   id={service.id}
                   name={service.name}
                   imageUrl={service.image_url}
-                  price={service.price}
+                  startingPrice={service.starting_price}
                   rating={service.rating}
                   onAddClick={(id) => setSheetServiceId(id)}
                 />
@@ -205,7 +205,7 @@ export default function HomePage() {
                   id={service.id}
                   name={service.name}
                   imageUrl={service.image_url}
-                  price={service.price}
+                  startingPrice={service.starting_price}
                   rating={service.rating}
                   onAddClick={(id) => setSheetServiceId(id)}
                 />

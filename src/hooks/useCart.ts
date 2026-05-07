@@ -11,8 +11,11 @@ export function useCart(userId?: string) {
         .select(`
           *,
           service:services(
-            id, name, price, duration, rating, image_url,
+            id, name, price, duration, rating, image_url, category_id,
             provider:providers(id, company_name)
+          ),
+          variant:service_variants(
+            id, name, price, duration
           ),
           addons:cart_item_addons(
             id,
@@ -36,14 +39,21 @@ export function useCartCount(userId?: string) {
 export function useAddToCart() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ userId, serviceId, addonIds = [] }: { userId: string; serviceId: string; addonIds?: string[] }) => {
-      // Check if already in cart
-      const { data: existing } = await supabase
+    mutationFn: async ({ userId, serviceId, variantId, addonIds = [] }: { userId: string; serviceId: string; variantId?: string; addonIds?: string[] }) => {
+      // Check if already in cart with SAME variant
+      const query = supabase
         .from('cart_items')
         .select('id, quantity')
         .eq('user_id', userId)
-        .eq('service_id', serviceId)
-        .maybeSingle();
+        .eq('service_id', serviceId);
+      
+      if (variantId) {
+        query.eq('variant_id', variantId);
+      } else {
+        query.is('variant_id', null);
+      }
+
+      const { data: existing } = await query.maybeSingle();
 
       if (existing) {
         // Increment quantity
@@ -57,7 +67,7 @@ export function useAddToCart() {
 
       const { data: item, error } = await supabase
         .from('cart_items')
-        .insert({ user_id: userId, service_id: serviceId })
+        .insert({ user_id: userId, service_id: serviceId, variant_id: variantId })
         .select()
         .single();
       if (error) throw error;

@@ -1,0 +1,137 @@
+﻿[
+  {
+    "id": "55550000-0000-4000-8000-000000000001",
+    "category_id": "44440000-0000-4000-8000-000000000001",
+    "name": "Appliance Cleaning",
+    "description": "Refrigerator, microwave, washing machine cleaning",
+    "icon": "Refrigerator",
+    "is_active": true,
+    "created_at": "2026-04-26T20:51:45.402039+00:00"
+  },
+  {
+    "id": "55550000-0000-4000-8000-000000000002",
+    "category_id": "44440000-0000-4000-8000-000000000001",
+    "name": "Floor Cleaning",
+    "description": "Tile, marble, and hardwood floor scrubbing",
+    "icon": "Brush",
+    "is_active": true,
+    "created_at": "2026-04-26T20:51:45.402039+00:00"
+  },
+  {
+    "id": "55550000-0000-4000-8000-000000000003",
+    "category_id": "44440000-0000-4000-8000-000000000002",
+    "name": "Window Cleaning",
+    "description": "Window panes, glass doors, and grills",
+    "icon": "Square",
+    "is_active": true,
+    "created_at": "2026-04-26T20:51:45.402039+00:00"
+  },
+  {
+    "id": "55550000-0000-4000-8000-000000000004",
+    "category_id": "44440000-0000-4000-8000-000000000003",
+    "name": "Car Wash",
+    "description": "Exterior wash and interior vacuum",
+    "icon": "Car",
+    "is_active": true,
+    "created_at": "2026-04-26T20:51:45.402039+00:00"
+  },
+  {
+    "id": "55550000-0000-4000-8000-000000000005",
+    "category_id": "44440000-0000-4000-8000-000000000004",
+    "name": "Balcony Cleaning",
+    "description": "Balcony floor, railing, and grill cleaning",
+    "icon": "Trees",
+    "is_active": true,
+    "created_at": "2026-04-26T20:51:45.402039+00:00"
+  },
+  {
+    "id": "55550000-0000-4000-8000-000000000006",
+    "category_id": "44440000-0000-4000-8000-000000000005",
+    "name": "Kitchen Accessories Cleaning",
+    "description": "Chimney, hob, exhaust fan deep cleaning",
+    "icon": "ChefHat",
+    "is_active": true,
+    "created_at": "2026-04-26T20:51:45.402039+00:00"
+  },
+  {
+    "id": "55550000-0000-4000-8000-000000000007",
+    "category_id": "44440000-0000-4000-8000-000000000005",
+    "name": "Complete Kitchen Cleaning",
+    "description": "Full kitchen deep clean with cabinets and slabs",
+    "icon": "Utensils",
+    "is_active": true,
+    "created_at": "2026-04-26T20:51:45.402039+00:00"
+  },
+  {
+    "id": "55550000-0000-4000-8000-000000000008",
+    "category_id": "44440000-0000-4000-8000-000000000006",
+    "name": "Empty / Move-In Cleaning",
+    "description": "Pre-move sanitization for empty homes",
+    "icon": "PackageOpen",
+    "is_active": true,
+    "created_at": "2026-04-26T20:51:45.402039+00:00"
+  },
+  {
+    "id": "55550000-0000-4000-8000-000000000009",
+    "category_id": "44440000-0000-4000-8000-000000000006",
+    "name": "Full Home Cleaning",
+    "description": "Whole-home deep cleaning across all rooms",
+    "icon": "Home",
+    "is_active": true,
+    "created_at": "2026-04-26T20:51:45.402039+00:00"
+  },
+  {
+    "id": "55550000-0000-4000-8000-00000000000a",
+    "category_id": "44440000-0000-4000-8000-000000000007",
+    "name": "Furniture & Fixture Painting",
+    "description": "Doors, cabinets, wooden furniture, metal fixtures",
+    "icon": "Brush",
+    "is_active": true,
+    "created_at": "2026-04-26T20:51:45.402039+00:00"
+  },
+  {
+    "id": "55550000-0000-4000-8000-00000000000b",
+    "category_id": "44440000-0000-4000-8000-000000000007",
+    "name": "Outdoor & Utility Area Painting",
+    "description": "Exterior walls and utility area painting",
+    "icon": "PaintBucket",
+    "is_active": true,
+    "created_at": "2026-04-26T20:51:45.402039+00:00"
+  },
+  {
+    "id": "55550000-0000-4000-8000-00000000000c",
+    "category_id": "44440000-0000-4000-8000-000000000007",
+    "name": "Room Painting",
+    "description": "Single room painting with primer and finish coats",
+    "icon": "Paintbrush",
+    "is_active": true,
+    "created_at": "2026-04-26T20:51:45.402039+00:00"
+  },
+  {
+    "id": "55550000-0000-4000-8000-00000000000d",
+    "category_id": "44440000-0000-4000-8000-000000000007",
+    "name": "Full House Painting Packages",
+    "description": "Complete house interior painting packages",
+    "icon": "Palette",
+    "is_active": true,
+    "created_at": "2026-04-26T20:51:45.402039+00:00"
+  },
+  {
+    "id": "55550000-0000-4000-8000-00000000000e",
+    "category_id": "44440000-0000-4000-8000-000000000008",
+    "name": "Sofa Cleaning",
+    "description": "Upholstery shampooing and stain treatment",
+    "icon": "Sofa",
+    "is_active": true,
+    "created_at": "2026-04-26T20:51:45.402039+00:00"
+  },
+  {
+    "id": "55550000-0000-4000-8000-00000000000f",
+    "category_id": "44440000-0000-4000-8000-000000000008",
+    "name": "Bathroom & WC Cleaning",
+    "description": "Toilet, washbasin, and bathroom fixture cleaning",
+    "icon": "Bath",
+    "is_active": true,
+    "created_at": "2026-04-26T20:51:45.402039+00:00"
+  }
+]

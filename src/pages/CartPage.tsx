@@ -19,8 +19,9 @@ export default function CartPage() {
   const [bookingType, setBookingType] = useState<BookingType>('Instant');
 
   const subtotal = cartItems.reduce((sum: number, item: any) => {
+    const itemPrice = Number(item.variant?.price || item.service?.price || 0);
     const addonTotal = (item.addons || []).reduce((s: number, a: any) => s + Number(a.addon?.price || 0), 0);
-    return sum + (Number(item.service?.price || 0) + addonTotal) * (item.quantity || 1);
+    return sum + (itemPrice + addonTotal) * (item.quantity || 1);
   }, 0);
 
   if (!user) {
@@ -69,36 +70,44 @@ export default function CartPage() {
               </div>
             ) : (
               <div className="flex flex-col gap-4">
-                {cartItems.map((item: any, idx: number) => (
-                  <div key={item.id} className={`flex items-center justify-between ${idx !== cartItems.length - 1 ? 'border-b border-gray-50 pb-4' : ''}`}>
-                     <div className="flex items-center gap-3.5 w-1/2">
-                        <div className="w-12 h-12 rounded-[10px] bg-[#F7F8F9] shrink-0 p-1 border border-black/5">
-                           <img 
-                             src={item.service?.image_url || 'https://via.placeholder.com/150'} 
-                             alt={item.service?.name} 
-                             className="w-full h-full object-contain mix-blend-multiply"
-                           />
-                        </div>
-                        <h4 className="text-[12px] font-extrabold text-[#1F2937] leading-tight pr-2">{item.service?.name}</h4>
-                     </div>
-                     
-                     <div className="flex items-center gap-4">
-                       <div className="flex flex-col items-end pt-1">
-                          {item.service?.price && (
-                             <span className="text-[9px] text-[#A0AEC0] font-bold line-through tracking-wide">₹{Math.round(item.service?.price * 1.3)}</span>
-                          )}
-                          <span className="text-[15px] font-black text-[#1F2937]">₹{item.service?.price}</span>
+                {cartItems.map((item: any, idx: number) => {
+                  const itemPrice = Number(item.variant?.price || item.service?.price || 0);
+                  return (
+                    <div key={item.id} className={`flex items-center justify-between ${idx !== cartItems.length - 1 ? 'border-b border-gray-50 pb-4' : ''}`}>
+                       <div className="flex items-center gap-3.5 w-1/2">
+                          <div className="w-12 h-12 rounded-[10px] bg-[#F7F8F9] shrink-0 p-1 border border-black/5">
+                             <img 
+                               src={item.service?.image_url || 'https://via.placeholder.com/150'} 
+                               alt={item.service?.name} 
+                               className="w-full h-full object-contain mix-blend-multiply"
+                             />
+                          </div>
+                          <div>
+                            <h4 className="text-[12px] font-extrabold text-[#1F2937] leading-tight pr-2">{item.service?.name}</h4>
+                            {item.variant && (
+                              <p className="text-[10px] text-[#1DA653] font-bold mt-0.5">{item.variant.name}</p>
+                            )}
+                          </div>
                        </div>
+                       
+                       <div className="flex items-center gap-4">
+                         <div className="flex flex-col items-end pt-1">
+                            {itemPrice > 0 && (
+                               <span className="text-[9px] text-[#A0AEC0] font-bold line-through tracking-wide">₹{Math.round(itemPrice * 1.3)}</span>
+                            )}
+                            <span className="text-[15px] font-black text-[#1F2937]">₹{itemPrice}</span>
+                         </div>
 
-                       <QuantityStepper 
-                         quantity={item.quantity} 
-                         label={item.service?.name.split(' ')[0].toLowerCase() + 's'}
-                         onIncrease={() => updateQuantity.mutate({ cartItemId: item.id, quantity: item.quantity + 1 })}
-                         onDecrease={() => updateQuantity.mutate({ cartItemId: item.id, quantity: item.quantity - 1 })}
-                       />
-                     </div>
-                  </div>
-                ))}
+                         <QuantityStepper 
+                           quantity={item.quantity} 
+                           label={item.service?.name.split(' ')[0].toLowerCase() + 's'}
+                           onIncrease={() => updateQuantity.mutate({ cartItemId: item.id, quantity: item.quantity + 1 })}
+                           onDecrease={() => updateQuantity.mutate({ cartItemId: item.id, quantity: item.quantity - 1 })}
+                         />
+                       </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
 

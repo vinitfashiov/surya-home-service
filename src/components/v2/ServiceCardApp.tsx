@@ -5,18 +5,19 @@ interface ServiceCardAppProps {
   id: string;
   name: string;
   imageUrl?: string;
-  price?: number;
-  discountPrice?: number;
+  startingPrice?: number;
   rating?: number;
   tag?: string;
   onAddClick?: (id: string) => void;
 }
 
-export default function ServiceCardApp({ id, name, imageUrl, price, rating, tag, onAddClick }: ServiceCardAppProps) {
+export default function ServiceCardApp({ id, name, imageUrl, startingPrice, rating, tag, onAddClick }: ServiceCardAppProps) {
+  const displayPrice = Number(startingPrice || 0);
+
   return (
     <div className="flex flex-col relative w-full group">
       <Link to={`/service/${id}`} className="block">
-        <div className="w-full aspect-square rounded-2xl bg-[#F7F8F9] overflow-hidden relative mb-2">
+        <div className="w-full aspect-square rounded-2xl bg-[#F7F8F9] overflow-hidden relative mb-2 shadow-sm">
           {imageUrl ? (
             <img
               src={imageUrl}
@@ -25,9 +26,7 @@ export default function ServiceCardApp({ id, name, imageUrl, price, rating, tag,
               loading="lazy"
             />
           ) : (
-            <div className="w-full h-full bg-[#E2E8F0] flex items-center justify-center">
-              <span className="text-[#A0AEC0] text-xs font-medium">No image</span>
-            </div>
+            <div className="w-full h-full bg-[#E2E8F0] flex items-center justify-center text-gray-400 font-medium text-[10px]">Vibe</div>
           )}
 
           {tag && (
@@ -46,7 +45,7 @@ export default function ServiceCardApp({ id, name, imageUrl, price, rating, tag,
       </Link>
 
       <button
-        className="absolute bottom-[26px] right-0 w-7 h-7 bg-white rounded-lg shadow-[0_2px_8px_rgba(0,0,0,0.12)] flex items-center justify-center text-[#1DA653] z-10 hover:bg-[#1DA653] hover:text-white transition-colors active:scale-95"
+        className="absolute bottom-[28px] right-0 w-7 h-7 bg-white rounded-lg shadow-[0_2px_8px_rgba(0,0,0,0.12)] flex items-center justify-center text-[#1DA653] z-10 hover:bg-[#1DA653] hover:text-white transition-colors active:scale-95"
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();
@@ -57,14 +56,15 @@ export default function ServiceCardApp({ id, name, imageUrl, price, rating, tag,
       </button>
 
       <div className="px-0.5">
-        <h3 className="text-[11px] sm:text-xs font-bold text-[#1F2937] leading-tight line-clamp-2">
+        <h3 className="text-[11px] sm:text-xs font-bold text-[#1F2937] leading-tight line-clamp-2 min-h-[2.4em]">
           {name}
         </h3>
-        {price != null && price > 0 && (
-          <p className="text-[10px] sm:text-[11px] font-semibold text-[#1DA653] mt-0.5">
-            ₹{price.toLocaleString('en-IN')}
+        <div className="flex items-center gap-1 mt-0.5">
+          <span className="text-[8px] text-gray-400 font-medium uppercase">From</span>
+          <p className="text-[11px] sm:text-[12px] font-bold text-[#1DA653]">
+            ₹{displayPrice > 0 ? displayPrice.toLocaleString('en-IN') : '...'}
           </p>
-        )}
+        </div>
       </div>
     </div>
   );

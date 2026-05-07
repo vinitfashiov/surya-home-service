@@ -1,0 +1,100 @@
+﻿[
+  {
+    "name": "Empty / Move-In Cleaning Service",
+    "price": 350,
+    "service_categories": {
+      "name": "Full Home Cleaning"
+    }
+  },
+  {
+    "name": "Home Cleaning Service",
+    "price": 2698,
+    "service_categories": {
+      "name": "Full Home Cleaning"
+    }
+  },
+  {
+    "name": "Complete Kitchen Cleaning Service",
+    "price": 499,
+    "service_categories": {
+      "name": "Kitchen Cleaning"
+    }
+  },
+  {
+    "name": "Car Wash Service",
+    "price": 499,
+    "service_categories": {
+      "name": "Car Cleaning"
+    }
+  },
+  {
+    "name": "Balcony Cleaning Service",
+    "price": 369,
+    "service_categories": {
+      "name": "Balcony & Utility Cleaning"
+    }
+  },
+  {
+    "name": "Kitchen Accessories Cleaning Service",
+    "price": 699,
+    "service_categories": {
+      "name": "Kitchen Cleaning"
+    }
+  },
+  {
+    "name": "Furniture & Fixture Painting",
+    "price": 1640,
+    "service_categories": {
+      "name": "Painting Services"
+    }
+  },
+  {
+    "name": "Complete Bathroom Cleaning",
+    "price": 149,
+    "service_categories": {
+      "name": "Bathroom Cleaning"
+    }
+  },
+  {
+    "name": "Fridge Cleaning",
+    "price": 499,
+    "service_categories": {
+      "name": "Appliance Cleaning"
+    }
+  },
+  {
+    "name": "Ceiling Fan Cleaning",
+    "price": 50,
+    "service_categories": {
+      "name": "Appliance Cleaning"
+    }
+  },
+  {
+    "name": "Outdoor & Utility Area Painting",
+    "price": 2300,
+    "service_categories": {
+      "name": "Painting Services"
+    }
+  },
+  {
+    "name": "Single Room Painting",
+    "price": 2339,
+    "service_categories": {
+      "name": "Painting Services"
+    }
+  },
+  {
+    "name": "House Painting Packages",
+    "price": 9000,
+    "service_categories": {
+      "name": "Painting Services"
+    }
+  },
+  {
+    "name": "Sofa & Upholstery Cleaning",
+    "price": 125,
+    "service_categories": {
+      "name": "Sofa & Furniture Cleaning"
+    }
+  }
+]

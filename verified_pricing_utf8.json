@@ -1,0 +1,212 @@
+﻿Fetching services...
+Fetching variants...
+Fetching addons...
+{
+  "services": [
+    {
+      "id": "66660000-0000-4000-8000-000000000010",
+      "name": "Ceiling Fan Cleaning",
+      "price": 50
+    },
+    {
+      "id": "66660000-0000-4000-8000-000000000007",
+      "name": "Complete Kitchen Cleaning Service",
+      "price": 999
+    },
+    {
+      "id": "66660000-0000-4000-8000-00000000000f",
+      "name": "WC / Toilet Cleaning",
+      "price": 249
+    },
+    {
+      "id": "66660000-0000-4000-8000-000000000004",
+      "name": "Car Wash Service",
+      "price": 499
+    },
+    {
+      "id": "66660000-0000-4000-8000-000000000005",
+      "name": "Balcony Cleaning Service",
+      "price": 369
+    },
+    {
+      "id": "66660000-0000-4000-8000-000000000008",
+      "name": "Empty / Move-In Cleaning Service",
+      "price": 350
+    },
+    {
+      "id": "66660000-0000-4000-8000-000000000006",
+      "name": "Kitchen Accessories Cleaning Service",
+      "price": 699
+    },
+    {
+      "id": "66660000-0000-4000-8000-000000000009",
+      "name": "Home Cleaning Service",
+      "price": 2698
+    },
+    {
+      "id": "66660000-0000-4000-8000-000000000001",
+      "name": "Fridge Cleaning",
+      "price": 499
+    },
+    {
+      "id": "66660000-0000-4000-8000-00000000000a",
+      "name": "Furniture & Fixture Painting",
+      "price": 1640
+    },
+    {
+      "id": "66660000-0000-4000-8000-00000000000b",
+      "name": "Outdoor & Utility Area Painting",
+      "price": 2300
+    },
+    {
+      "id": "66660000-0000-4000-8000-00000000000c",
+      "name": "Single Room Painting",
+      "price": 2339
+    },
+    {
+      "id": "66660000-0000-4000-8000-00000000000d",
+      "name": "House Painting Packages",
+      "price": 9000
+    },
+    {
+      "id": "66660000-0000-4000-8000-00000000000e",
+      "name": "Sofa Cleaning",
+      "price": 125
+    }
+  ],
+  "variants": [
+    {
+      "id": "77770000-0000-4000-8000-000000000003",
+      "service_id": "66660000-0000-4000-8000-00000000000f",
+      "name": "Badi Toilet (Large)",
+      "price": 700
+    },
+    {
+      "id": "77770000-0000-4000-8000-000000000001",
+      "service_id": "66660000-0000-4000-8000-00000000000f",
+      "name": "Classic",
+      "price": 349
+    },
+    {
+      "id": "77770000-0000-4000-8000-000000000002",
+      "service_id": "66660000-0000-4000-8000-00000000000f",
+      "name": "Deep Cleaning",
+      "price": 449
+    },
+    {
+      "id": "77770000-0000-4000-8000-000000000004",
+      "service_id": "66660000-0000-4000-8000-00000000000f",
+      "name": "Move-in Intense",
+      "price": 589
+    },
+    {
+      "id": "fd794b62-f437-4a90-ac17-ff8a344527cc",
+      "service_id": "66660000-0000-4000-8000-00000000000f",
+      "name": "Wash Basin Cleaning",
+      "price": 149
+    },
+    {
+      "id": "77770000-0000-4000-8000-000000000005",
+      "service_id": "66660000-0000-4000-8000-000000000006",
+      "name": "Chimney Only",
+      "price": 499
+    },
+    {
+      "id": "38982847-140b-4776-a8c0-05a761c7d6a5",
+      "service_id": "66660000-0000-4000-8000-000000000006",
+      "name": "Kitchen Cabinet Cleaning",
+      "price": 699
+    },
+    {
+      "id": "4604300a-c346-4e37-996f-fc86145c5875",
+      "service_id": "66660000-0000-4000-8000-000000000007",
+      "name": "Deep Kitchen Cleaning",
+      "price": 1399
+    },
+    {
+      "id": "922250f4-63b0-4d9f-844f-caaded51f725",
+      "service_id": "66660000-0000-4000-8000-000000000009",
+      "name": "Two Bedroom Home Cleaning",
+      "price": 5000
+    },
+    {
+      "id": "421f05fb-fb1f-4f96-b716-bd7aef949b83",
+      "service_id": "66660000-0000-4000-8000-000000000009",
+      "name": "Three Bedroom Home Cleaning",
+      "price": 6500
+    },
+    {
+      "id": "297644d7-8c0c-4321-893c-4d9ac7e80fc2",
+      "service_id": "66660000-0000-4000-8000-000000000004",
+      "name": "Premium Car Wash (SUV/Large)",
+      "price": 599
+    },
+    {
+      "id": "16b1a5ba-d3fd-4c04-94c3-68ac4b04326b",
+      "service_id": "66660000-0000-4000-8000-000000000004",
+      "name": "Luxury Car Wash",
+      "price": 699
+    },
+    {
+      "id": "0664132c-8bc6-447b-b059-881bb1242252",
+      "service_id": "66660000-0000-4000-8000-000000000001",
+      "name": "Double Door Fridge Cleaning",
+      "price": 649
+    },
+    {
+      "id": "50ff09be-add5-4e63-9beb-0fc118670e27",
+      "service_id": "66660000-0000-4000-8000-00000000000a",
+      "name": "Grill Painting",
+      "price": 1350
+    },
+    {
+      "id": "2ad1ccb1-3bf2-4828-8e41-4c081cf35f96",
+      "service_id": "66660000-0000-4000-8000-00000000000a",
+      "name": "Door Painting",
+      "price": 1349
+    },
+    {
+      "id": "416ef8a2-5e53-4271-85a3-0a6f439cdc07",
+      "service_id": "66660000-0000-4000-8000-00000000000b",
+      "name": "Store Room Painting",
+      "price": 2349
+    },
+    {
+      "id": "3775d4b0-f5cb-4fc1-8219-d9ecffa4a38c",
+      "service_id": "66660000-0000-4000-8000-00000000000b",
+      "name": "Balcony Painting",
+      "price": 3250
+    },
+    {
+      "id": "21d382e8-b893-4602-af37-c2e652bf18e8",
+      "service_id": "66660000-0000-4000-8000-00000000000b",
+      "name": "Terrace Painting",
+      "price": 3149
+    },
+    {
+      "id": "e9fbfeed-6b3c-4041-939f-21ed68783d18",
+      "service_id": "66660000-0000-4000-8000-00000000000c",
+      "name": "Kitchen Cabinet Painting",
+      "price": 3340
+    },
+    {
+      "id": "4ec33126-ba2c-4c5f-955e-8eb1e863ecf2",
+      "service_id": "66660000-0000-4000-8000-00000000000c",
+      "name": "Kitchen Painting",
+      "price": 3340
+    },
+    {
+      "id": "118a7cc7-086b-4909-a950-259b3345c635",
+      "service_id": "66660000-0000-4000-8000-00000000000d",
+      "name": "2 Bedroom 1 Bathroom Painting",
+      "price": 11000
+    },
+    {
+      "id": "8e8268b8-3e67-4723-97f8-876a606cfb6b",
+      "service_id": "66660000-0000-4000-8000-00000000000d",
+      "name": "3 Bedroom 1 Bathroom Painting",
+      "price": 14000
+    }
+  ],
+  "addons": []
+}

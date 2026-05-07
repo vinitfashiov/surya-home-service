@@ -111,14 +111,17 @@ export default function CheckoutPage() {
     }
     return cartItems.map((item: any) => {
       const addonTotal = (item.addons || []).reduce((s: number, a: any) => s + Number(a.addon?.price || 0), 0);
+      const itemPrice = Number(item.variant?.price || item.service?.price || 0);
       return {
         serviceId: item.service?.id,
+        variantId: item.variant?.id,
         name: item.service?.name,
+        variantName: item.variant?.name,
         providerId: item.service?.provider?.id,
         providerName: item.service?.provider?.company_name || 'Provider',
         categoryId: item.service?.category_id,
-        price: Number(item.service?.price || 0),
-        duration: item.service?.duration || 0,
+        price: itemPrice,
+        duration: item.variant?.duration || item.service?.duration || 0,
         quantity: item.quantity || 1,
         addons: item.addons?.map((a: any) => a.addon) || [],
         addonsTotal: addonTotal,
@@ -221,11 +224,12 @@ export default function CheckoutPage() {
       const bookingIds: string[] = [];
       for (const item of lineItems) {
         for (let q = 0; q < item.quantity; q++) {
-          const pricedItem = pricedItems.find(p => p.serviceId === item.serviceId);
+          const pricedItem = pricedItems.find(p => p.serviceId === item.serviceId && p.variantId === item.variantId);
           const bookingAmount = (pricedItem?.dynamicPrice ?? item.price) + item.addonsTotal;
           const booking = await createBooking.mutateAsync({
             customer_id: user.id,
             service_id: item.serviceId,
+            variant_id: item.variantId,
             provider_id: item.providerId,
             booking_date: date,
             booking_time: time,
@@ -452,6 +456,9 @@ export default function CheckoutPage() {
                 <div key={i} className="flex justify-between items-center text-sm">
                   <div>
                     <p className="font-medium text-foreground">{item.name} {item.quantity > 1 && `x${item.quantity}`}</p>
+                    {item.variantName && (
+                      <p className="text-[10px] font-bold text-[#1DA653] uppercase tracking-wider">{item.variantName}</p>
+                    )}
                     <p className="text-xs text-muted-foreground">{item.providerName} · {item.duration} min</p>
                     {item.addons.length > 0 && (
                       <p className="text-xs text-primary">+ {item.addons.map((a: any) => a.name).join(', ')}</p>

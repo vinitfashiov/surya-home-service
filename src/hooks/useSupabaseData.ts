@@ -57,34 +57,26 @@ export function useCategories() {
   });
 }
 
-// Services with provider info (supports zone filtering)
+// Services with provider info (supports zone filtering) - uses optimized catalog RPC
 export function useServices(categoryId?: string, cityId?: string | null, zoneId?: string | null) {
   return useQuery({
     queryKey: ['services', categoryId, cityId, zoneId],
     queryFn: async () => {
-      let query = supabase
-        .from('services')
-        .select(`
-          *,
-          provider:providers(id, company_name, is_verified),
-          category:service_categories(id, name, icon)
-        `)
-        .eq('is_active', true)
-        .order('rating', { ascending: false });
+      const { data, error } = await supabase.rpc('get_service_catalog_v2', {
+        p_category_id: category_id_validator(categoryId),
+        p_city_id: cityId || null,
+        p_zone_id: zoneId || null
+      });
 
-      if (categoryId && categoryId !== 'all') {
-        query = query.eq('category_id', categoryId);
-      }
-      if (zoneId) {
-        query = query.eq('zone_id', zoneId);
-      } else if (cityId) {
-        query = query.or(`city_id.eq.${cityId},city_id.is.null`);
-      }
-      const { data, error } = await query;
       if (error) throw error;
-      return data;
+      return data as any[];
     },
   });
+}
+
+function category_id_validator(id: string | undefined): string | null {
+  if (!id || id === 'all') return null;
+  return id;
 }
 
 export function useService(serviceId?: string) {
@@ -252,6 +244,7 @@ export function useCreateBooking() {
     mutationFn: async (booking: {
       customer_id: string;
       service_id: string;
+      variant_id?: string;
       provider_id: string;
       booking_date: string;
       booking_time: string;

@@ -202,7 +202,7 @@ export default function ServicesPage() {
                   id={service.id}
                   name={service.name}
                   imageUrl={service.image_url}
-                  price={service.price}
+                  startingPrice={service.starting_price}
                   onAddClick={(id) => setSheetServiceId(id)}
                 />
               ))}

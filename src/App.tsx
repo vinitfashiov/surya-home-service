@@ -58,6 +58,7 @@ import PrivacyPage from "@/pages/PrivacyPage";
 import NotFound from "./pages/NotFound";
 import Footer from "@/components/Footer";
 import BottomNav from "@/components/BottomNav";
+import { usePWA } from "@/hooks/usePWA";
 
 const queryClient = new QueryClient();
 
@@ -82,6 +83,7 @@ const App = () => {
 };
 
 const AppLayout = () => {
+  usePWA();
   const { selectedCityId } = useCityStore();
   const showCityGate = !selectedCityId;
   const location = useLocation();

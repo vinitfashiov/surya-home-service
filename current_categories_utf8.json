@@ -1,0 +1,145 @@
+﻿[
+  {
+    "id": "b1111111-1111-1111-1111-111111111111",
+    "name": "Home Cleaning",
+    "description": "Professional home cleaning services",
+    "icon": "Sparkles",
+    "image_url": null,
+    "is_active": true,
+    "created_at": "2026-04-26T18:12:41.11906+00:00",
+    "commission_rate": 20,
+    "category_type": "standard"
+  },
+  {
+    "id": "b2222222-2222-2222-2222-222222222222",
+    "name": "Plumbing",
+    "description": "Expert plumbing repair and installation",
+    "icon": "Wrench",
+    "image_url": null,
+    "is_active": true,
+    "created_at": "2026-04-26T18:12:41.11906+00:00",
+    "commission_rate": 15,
+    "category_type": "standard"
+  },
+  {
+    "id": "b3333333-3333-3333-3333-333333333333",
+    "name": "Electrical",
+    "description": "Electrical repair and wiring services",
+    "icon": "Zap",
+    "image_url": null,
+    "is_active": true,
+    "created_at": "2026-04-26T18:12:41.11906+00:00",
+    "commission_rate": 15,
+    "category_type": "standard"
+  },
+  {
+    "id": "b4444444-4444-4444-4444-444444444444",
+    "name": "AC & Appliance Repair",
+    "description": "AC servicing and appliance repair",
+    "icon": "Fan",
+    "image_url": null,
+    "is_active": true,
+    "created_at": "2026-04-26T18:12:41.11906+00:00",
+    "commission_rate": 18,
+    "category_type": "standard"
+  },
+  {
+    "id": "b5555555-5555-5555-5555-555555555555",
+    "name": "Salon at Home",
+    "description": "Beauty and grooming at your doorstep",
+    "icon": "Scissors",
+    "image_url": null,
+    "is_active": true,
+    "created_at": "2026-04-26T18:12:41.11906+00:00",
+    "commission_rate": 25,
+    "category_type": "standard"
+  },
+  {
+    "id": "44440000-0000-4000-8000-000000000001",
+    "name": "Floor & Appliance Cleaning",
+    "description": "Deep cleaning of floors, refrigerators, and home appliances",
+    "icon": "Refrigerator",
+    "image_url": "https://images.unsplash.com/photo-1570222094114-d054a817e56b?fm=jpg&q=80&w=1200&auto=format&fit=crop",
+    "is_active": true,
+    "created_at": "2026-04-26T20:51:45.402039+00:00",
+    "commission_rate": 20,
+    "category_type": "standard"
+  },
+  {
+    "id": "44440000-0000-4000-8000-000000000002",
+    "name": "Window & Glass Cleaning",
+    "description": "Streak-free cleaning of windows, glass doors, and panels",
+    "icon": "Square",
+    "image_url": "https://images.unsplash.com/photo-1527352774566-e4916e36c645?fm=jpg&q=80&w=1200&auto=format&fit=crop",
+    "is_active": true,
+    "created_at": "2026-04-26T20:51:45.402039+00:00",
+    "commission_rate": 20,
+    "category_type": "standard"
+  },
+  {
+    "id": "44440000-0000-4000-8000-000000000003",
+    "name": "Car Cleaning",
+    "description": "Doorstep car wash and interior detailing",
+    "icon": "Car",
+    "image_url": "https://images.unsplash.com/photo-1567808291548-fc3ee04dbcf0?fm=jpg&q=80&w=1200&auto=format&fit=crop",
+    "is_active": true,
+    "created_at": "2026-04-26T20:51:45.402039+00:00",
+    "commission_rate": 20,
+    "category_type": "standard"
+  },
+  {
+    "id": "44440000-0000-4000-8000-000000000004",
+    "name": "Balcony & Utility Cleaning",
+    "description": "Balcony, terrace, and utility area cleaning",
+    "icon": "Trees",
+    "image_url": "https://images.unsplash.com/photo-1486484290742-0ce4eb743a34?fm=jpg&q=80&w=1200&auto=format&fit=crop",
+    "is_active": true,
+    "created_at": "2026-04-26T20:51:45.402039+00:00",
+    "commission_rate": 20,
+    "category_type": "standard"
+  },
+  {
+    "id": "44440000-0000-4000-8000-000000000005",
+    "name": "Kitchen Cleaning",
+    "description": "Kitchen accessories, chimney, and complete deep cleans",
+    "icon": "Utensils",
+    "image_url": "https://images.unsplash.com/photo-1556912167-f556f1f39fdf?fm=jpg&q=80&w=1200&auto=format&fit=crop",
+    "is_active": true,
+    "created_at": "2026-04-26T20:51:45.402039+00:00",
+    "commission_rate": 20,
+    "category_type": "standard"
+  },
+  {
+    "id": "44440000-0000-4000-8000-000000000006",
+    "name": "Home Cleaning",
+    "description": "Full-home cleaning including move-in / move-out services",
+    "icon": "Home",
+    "image_url": "https://images.unsplash.com/photo-1583847268964-b28dc8f51f92?fm=jpg&q=80&w=1200&auto=format&fit=crop",
+    "is_active": true,
+    "created_at": "2026-04-26T20:51:45.402039+00:00",
+    "commission_rate": 20,
+    "category_type": "standard"
+  },
+  {
+    "id": "44440000-0000-4000-8000-000000000007",
+    "name": "Painting Services",
+    "description": "Interior, exterior, and furniture painting",
+    "icon": "PaintBucket",
+    "image_url": "https://images.unsplash.com/photo-1629941633816-a1d688cb2d1d?fm=jpg&q=80&w=1200&auto=format&fit=crop",
+    "is_active": true,
+    "created_at": "2026-04-26T20:51:45.402039+00:00",
+    "commission_rate": 20,
+    "category_type": "standard"
+  },
+  {
+    "id": "44440000-0000-4000-8000-000000000008",
+    "name": "Cleaning Services",
+    "description": "Sofa, upholstery, and bathroom deep cleaning",
+    "icon": "Sparkles",
+    "image_url": "https://images.unsplash.com/photo-1583947215259-38e31be8751f?fm=jpg&q=80&w=1200&auto=format&fit=crop",
+    "is_active": true,
+    "created_at": "2026-04-26T20:51:45.402039+00:00",
+    "commission_rate": 20,
+    "category_type": "standard"
+  }
+]

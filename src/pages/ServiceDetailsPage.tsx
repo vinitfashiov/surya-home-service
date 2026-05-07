@@ -1,401 +1,238 @@
-import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useService } from '@/hooks/useSupabaseData';
 import { useServiceVariants } from '@/hooks/useSubcategoriesVariants';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { useAddToCart } from '@/hooks/useCart';
-import { ArrowLeft, Share2, Star, Clock, ShoppingCart, Check, ChevronRight } from 'lucide-react';
-import { Skeleton } from '@/components/ui/skeleton';
+import { 
+  Star, 
+  Clock, 
+  ArrowLeft, 
+  ShoppingCart, 
+  Check, 
+  Share2
+} from 'lucide-react';
+import { useState, useMemo } from 'react';
 import { toast } from 'sonner';
+import { Skeleton } from '@/components/ui/skeleton';
+import { cn } from '@/lib/utils';
 
 export default function ServiceDetailsPage() {
   const { serviceId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuthContext();
-  const { data: service, isLoading } = useService(serviceId);
+  const { data: service, isLoading: serviceLoading } = useService(serviceId);
   const { data: variants = [], isLoading: variantsLoading } = useServiceVariants(serviceId);
   const addToCart = useAddToCart();
+  
   const [selectedVariantId, setSelectedVariantId] = useState<string | null>(null);
+
+  const selectedVariant = useMemo(() => 
+    variants.find(v => v.id === selectedVariantId), 
+    [variants, selectedVariantId]
+  );
 
   const handleAddToCart = async () => {
     if (!user) {
-      toast.error('Please log in to add to cart.');
-      navigate('/login?redirect=/service/' + serviceId);
+      toast.error('Please log in to continue');
+      navigate('/login?redirect=' + encodeURIComponent(window.location.pathname));
       return;
     }
+    
+    if (variants.length > 0 && !selectedVariantId) {
+      toast.error('Please select an option');
+      return;
+    }
+
     try {
-      await addToCart.mutateAsync({ userId: user.id, serviceId: serviceId!, addonIds: [] });
+      await addToCart.mutateAsync({ 
+        userId: user.id, 
+        serviceId: serviceId!, 
+        variantId: selectedVariantId || undefined,
+        addonIds: [] 
+      });
       toast.success('Added to cart!');
     } catch (err: any) {
       toast.error(err.message || 'Failed to add to cart');
     }
   };
 
-  const formatDuration = (mins: number) => {
-    if (!mins) return '';
-    if (mins >= 60) {
-      const h = Math.floor(mins / 60);
-      const m = mins % 60;
-      return m > 0 ? `${h}h ${m}min` : `${h} hours`;
-    }
-    return `${mins} min`;
-  };
-
-  if (isLoading) {
+  if (serviceLoading || variantsLoading) {
     return (
       <div className="min-h-screen bg-white">
         <Skeleton className="h-[40vh] w-full" />
         <div className="p-6 space-y-4">
-          <Skeleton className="h-8 w-3/4" />
-          <Skeleton className="h-4 w-1/4" />
-          <Skeleton className="h-24 w-full rounded-2xl" />
-          <Skeleton className="h-20 w-full rounded-2xl" />
-          <Skeleton className="h-20 w-full rounded-2xl" />
+          <Skeleton className="h-10 w-3/4 rounded-xl" />
+          <Skeleton className="h-6 w-1/2 rounded-lg" />
+          <Skeleton className="h-40 w-full rounded-3xl" />
         </div>
       </div>
     );
   }
 
-  if (!service) return <div className="p-20 text-center text-gray-400">Service not found.</div>;
+  if (!service) return <div className="p-10 text-center font-bold">Service not found</div>;
 
-  const selectedVariant = variants.find(v => v.id === selectedVariantId);
-  const displayPrice = selectedVariant ? selectedVariant.price : service.price;
-  const displayDuration = selectedVariant ? selectedVariant.duration : service.duration;
+  const hasVariants = variants.length > 0;
+  const displayPrice = selectedVariantId 
+    ? selectedVariant?.price 
+    : (hasVariants ? 0 : service.price);
+  const displayDuration = selectedVariantId ? selectedVariant?.duration : service.duration;
 
   return (
-    <div className="min-h-screen bg-white relative pb-28 overflow-x-hidden">
-      {/* Hero Image */}
-      <section className="relative h-[38vh] sm:h-[45vh] bg-gray-100">
-        <img
-          src={service.image_url || 'https://images.unsplash.com/photo-1519741497674-611481863552?w=800&q=80'}
-          alt={service.name}
-          className="w-full h-full object-cover"
-        />
-
-        {/* Gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/20" />
-
-        {/* Top nav buttons */}
-        <div className="absolute top-12 left-0 right-0 px-4 flex justify-between z-10">
-          <button
-            onClick={() => navigate(-1)}
-            className="w-10 h-10 rounded-full bg-black/30 backdrop-blur-md flex items-center justify-center text-white hover:bg-black/50 transition-colors"
+    <div className="min-h-screen bg-white relative pb-32">
+      {/* Visual Header (Full Bleed Image) */}
+      <section className="relative h-[45vh] w-full">
+        <div className="absolute top-12 left-5 right-5 z-30 flex justify-between">
+          <button 
+            onClick={() => navigate(-1)} 
+            className="w-10 h-10 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center text-white active:scale-90 transition-transform"
           >
-            <ArrowLeft className="h-5 w-5" strokeWidth={2.5} />
+            <ArrowLeft className="h-6 w-6" />
           </button>
-          <button className="w-10 h-10 rounded-full bg-black/30 backdrop-blur-md flex items-center justify-center text-white hover:bg-black/50 transition-colors">
-            <Share2 className="h-[18px] w-[18px]" strokeWidth={2.5} />
+          <button className="w-10 h-10 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center text-white active:scale-90 transition-transform">
+            <Share2 className="h-5 w-5" />
           </button>
         </div>
-
-        {/* Rating badge on image */}
-        {service.rating > 0 && (
-          <div className="absolute bottom-8 left-5 flex items-center gap-2 bg-white/95 backdrop-blur-sm rounded-xl px-3 py-1.5 shadow-lg">
-            <Star className="w-4 h-4 text-[#FF9800] fill-current" />
-            <span className="text-sm font-bold text-[#1F2937]">{service.rating}</span>
-            {service.review_count > 0 && (
-              <span className="text-xs text-[#718096]">({service.review_count} reviews)</span>
-            )}
-          </div>
+        
+        {service.image_url ? (
+          <img 
+            src={service.image_url} 
+            alt={service.name} 
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="w-full h-full bg-gray-200" />
         )}
       </section>
 
-      {/* Main Content */}
-      <section className="relative -mt-5 bg-white rounded-t-3xl z-20 shadow-[0_-8px_20px_rgba(0,0,0,0.06)]">
-        <div className="px-5 pt-6 pb-4 max-w-3xl mx-auto">
-
-          {/* Title + Price */}
-          <div className="flex items-start justify-between mb-2">
-            <div className="flex-1 min-w-0 pr-4">
-              <h1 className="text-xl font-black text-[#1F2937] leading-tight">{service.name}</h1>
-              {service.category && (
-                <p className="text-xs text-[#1DA653] font-semibold mt-1">{(service.category as any).name}</p>
-              )}
-            </div>
-            <div className="text-right flex-shrink-0">
-              <p className="text-xl font-black text-[#1F2937]">₹{displayPrice?.toLocaleString('en-IN')}</p>
-              {service.price !== displayPrice && (
-                <p className="text-xs text-[#A0AEC0] line-through">₹{service.price?.toLocaleString('en-IN')}</p>
-              )}
-            </div>
-          </div>
-
-          {/* Meta row */}
-          <div className="flex items-center gap-4 mb-5">
-            {displayDuration > 0 && (
-              <div className="flex items-center gap-1.5 text-[#718096]">
-                <Clock className="w-3.5 h-3.5" />
-                <span className="text-xs font-medium">{formatDuration(displayDuration)}</span>
-              </div>
-            )}
-            {service.tax_rate > 0 && (
-              <span className="text-[10px] text-[#A0AEC0] font-medium bg-gray-50 px-2 py-0.5 rounded">
-                +{service.tax_rate}% tax
-              </span>
+      {/* Content Card (Overlapping) */}
+      <section className="relative -mt-8 bg-white rounded-t-[32px] px-6 pt-8 z-20">
+        <div className="flex justify-between items-start mb-1">
+          <div className="flex-1">
+            <h1 className="text-[22px] font-bold text-[#1F2937] leading-tight mb-1">{service.name}</h1>
+            {service.category && (
+              <p className="text-[14px] font-bold text-[#1DA653]">{(service.category as any).name}</p>
             )}
           </div>
-
-          {/* Description */}
-          {service.description && (
-            <div className="mb-6">
-              <h3 className="text-sm font-bold text-[#1F2937] mb-2">About this service</h3>
-              <p className="text-[13px] text-[#4A5568] leading-relaxed">{service.description}</p>
-            </div>
-          )}
-
-          {/* Variants Section */}
-          {!variantsLoading && variants.length > 0 && (
-            <div className="mb-6">
-              <h3 className="text-sm font-bold text-[#1F2937] mb-3">Choose your option</h3>
-              <div className="space-y-2.5">
-                {variants.map((v) => (
-                  <button
-                    key={v.id}
-                    onClick={() => setSelectedVariantId(selectedVariantId === v.id ? null : v.id)}
-                    className={`w-full text-left p-4 rounded-2xl border-2 transition-all ${
-                      selectedVariantId === v.id
-                        ? 'border-[#1DA653] bg-[#1DA653]/5 shadow-sm'
-                        : 'border-gray-100 bg-[#F8FAFC] hover:border-gray-200'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1 min-w-0 pr-3">
-                        <p className="text-[13px] font-bold text-[#1F2937] leading-tight">{v.name}</p>
-                        {v.description && (
-                          <p className="text-[11px] text-[#718096] mt-0.5 line-clamp-2">{v.description}</p>
-                        )}
-                        {v.duration > 0 && (
-                          <div className="flex items-center gap-1 mt-1.5">
-                            <Clock className="w-3 h-3 text-[#A0AEC0]" />
-                            <span className="text-[10px] text-[#A0AEC0] font-medium">{formatDuration(v.duration)}</span>
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <span className="text-sm font-black text-[#1F2937]">₹{v.price.toLocaleString('en-IN')}</span>
-                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
-                          selectedVariantId === v.id
-                            ? 'border-[#1DA653] bg-[#1DA653]'
-                            : 'border-gray-300'
-                        }`}>
-                          {selectedVariantId === v.id && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
-                        </div>
-                      </div>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {variantsLoading && (
-            <div className="space-y-3 mb-6">
-              <Skeleton className="h-5 w-40" />
-              {[1, 2, 3].map(i => (
-                <Skeleton key={i} className="h-20 w-full rounded-2xl" />
-              ))}
-            </div>
-          )}
-
-          {/* What's Included */}
-          <div className="mb-6">
-            <h3 className="text-sm font-bold text-[#1F2937] mb-3">What's included</h3>
-            <ul className="space-y-3">
-              {getIncludedItems(service.name, service.description).map((item, i) => (
-                <li key={i} className="flex items-start gap-3">
-                  <div className="mt-0.5 w-[18px] h-[18px] flex-shrink-0 bg-[#1DA653] rounded-full flex items-center justify-center">
-                    <Check className="w-3 h-3 text-white" strokeWidth={3} />
-                  </div>
-                  <span className="text-[12px] text-[#4A5568] font-medium leading-snug">{item}</span>
-                </li>
-              ))}
-            </ul>
+          <div className="text-right">
+            {displayPrice > 0 && (
+              <p className="text-[22px] font-bold text-[#1F2937]">₹{displayPrice.toLocaleString('en-IN')}</p>
+            )}
           </div>
+        </div>
 
-          {/* How It Works */}
-          <div className="mb-6">
-            <h3 className="text-sm font-bold text-[#1F2937] mb-3">How it works</h3>
+        <div className="flex items-center gap-1 text-[13px] text-gray-500 mb-6">
+          <Clock className="w-4 h-4" />
+          <span>{displayDuration} min</span>
+        </div>
+
+        {/* About Section */}
+        <div className="mb-8">
+          <h2 className="text-[16px] font-bold text-[#1F2937] mb-3">About this service</h2>
+          <p className="text-[14px] text-gray-600 leading-relaxed">
+            {service.description || "Expert service delivered at your doorstep with professional quality and care."}
+          </p>
+        </div>
+
+        {/* Variants Section */}
+        {variants.length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-[16px] font-bold text-[#1F2937] mb-4">Choose your option</h2>
             <div className="space-y-3">
-              {[
-                { step: '1', title: 'Book Online', desc: 'Choose your service, pick a date & time that works for you.' },
-                { step: '2', title: 'Get Confirmation', desc: 'Receive instant booking confirmation with provider details.' },
-                { step: '3', title: 'Service Delivered', desc: 'Our verified professional arrives and delivers quality service.' },
-                { step: '4', title: 'Rate & Review', desc: 'Share your experience to help others make informed decisions.' },
-              ].map((item) => (
-                <div key={item.step} className="flex items-start gap-3">
-                  <div className="w-7 h-7 flex-shrink-0 rounded-full bg-[#1DA653]/10 flex items-center justify-center">
-                    <span className="text-xs font-black text-[#1DA653]">{item.step}</span>
+              {variants.map((v) => (
+                <button
+                  key={v.id}
+                  onClick={() => setSelectedVariantId(v.id)}
+                  className={cn(
+                    "w-full text-left p-5 rounded-[20px] border border-[#F1F5F9] transition-all",
+                    selectedVariantId === v.id 
+                      ? "bg-[#F8FAFC] border-[#E2E8F0]" 
+                      : "bg-[#F8FAFC]/50"
+                  )}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1 pr-4">
+                      <p className="text-[15px] font-bold text-[#1F2937] mb-1">{v.name}</p>
+                      <div className="flex items-center gap-1.5 text-[12px] text-gray-400">
+                        <Clock className="w-3.5 h-3.5" />
+                        <span>{v.duration} hours</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <p className="text-[16px] font-bold text-[#1F2937]">₹{v.price.toLocaleString('en-IN')}</p>
+                      <div className={cn(
+                        "w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all",
+                        selectedVariantId === v.id 
+                          ? "border-[#1DA653] bg-white" 
+                          : "border-gray-200"
+                      )}>
+                        {selectedVariantId === v.id && (
+                          <div className="w-3.5 h-3.5 bg-[#1DA653] rounded-full" />
+                        )}
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-[12px] font-bold text-[#1F2937]">{item.title}</p>
-                    <p className="text-[11px] text-[#718096] leading-snug">{item.desc}</p>
-                  </div>
-                </div>
+                </button>
               ))}
             </div>
           </div>
+        )}
 
-          {/* Provider Info */}
-          {service.provider && (
-            <div className="bg-[#F8FAFC] rounded-2xl p-4 border border-gray-100">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-[10px] text-[#A0AEC0] font-medium uppercase tracking-wider">Provided by</p>
-                  <p className="text-sm font-bold text-[#1F2937] mt-0.5">{(service.provider as any).company_name}</p>
-                  {(service.provider as any).is_verified && (
-                    <div className="flex items-center gap-1 mt-1">
-                      <Check className="w-3 h-3 text-[#1DA653]" />
-                      <span className="text-[10px] text-[#1DA653] font-semibold">Verified Provider</span>
-                    </div>
-                  )}
+        {/* Included Items */}
+        <div className="mb-10">
+          <h2 className="text-[16px] font-bold text-[#1F2937] mb-4">What's included</h2>
+          <ul className="space-y-4">
+            {getIncludedItems(service.name).map((item, i) => (
+              <li key={i} className="flex items-start gap-3">
+                <div className="mt-0.5 w-6 h-6 bg-[#1DA653] rounded-full flex items-center justify-center flex-shrink-0">
+                  <Check className="w-4 h-4 text-white" strokeWidth={3} />
                 </div>
-                <ChevronRight className="w-5 h-5 text-[#CBD5E0]" />
-              </div>
-            </div>
-          )}
+                <span className="text-[14px] text-gray-600 font-medium">{item}</span>
+              </li>
+            ))}
+          </ul>
         </div>
       </section>
 
-      {/* Sticky Bottom Bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-100 shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
-        <div className="px-5 py-3 flex items-center justify-between max-w-3xl mx-auto">
-          <div>
-            <p className="text-lg font-black text-[#1F2937]">₹{displayPrice?.toLocaleString('en-IN')}</p>
-            {selectedVariant && (
-              <p className="text-[10px] text-[#718096] font-medium">{selectedVariant.name}</p>
-            )}
-          </div>
-          <button
-            onClick={handleAddToCart}
-            disabled={addToCart.isPending}
-            className="h-12 px-8 rounded-2xl bg-[#1DA653] text-white font-bold text-sm hover:bg-[#178F48] transition-colors flex items-center gap-2 disabled:opacity-50 active:scale-[0.98]"
-          >
-            <ShoppingCart className="w-4 h-4" />
-            {addToCart.isPending ? 'Adding...' : 'Add to Cart'}
-          </button>
+      {/* Bottom Sticky Bar */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-100 px-6 py-4 flex items-center justify-between shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
+        <div>
+          {displayPrice > 0 ? (
+            <p className="text-[20px] font-bold text-[#1F2937]">₹{displayPrice.toLocaleString('en-IN')}</p>
+          ) : (
+            <p className="text-[20px] font-bold text-[#1F2937]">₹0</p>
+          )}
         </div>
+        
+        <button
+          onClick={handleAddToCart}
+          disabled={addToCart.isPending || (variants.length > 0 && !selectedVariantId)}
+          className={cn(
+            "h-[54px] px-10 rounded-[14px] font-bold text-[16px] flex items-center gap-3 transition-all active:scale-95",
+            variants.length > 0 && !selectedVariantId
+              ? "bg-[#1DA653]/40 text-white cursor-not-allowed"
+              : "bg-[#1DA653] text-white shadow-[0_4px_12px_rgba(29,166,83,0.2)]"
+          )}
+        >
+          <ShoppingCart className="w-5 h-5" strokeWidth={2.5} />
+          {addToCart.isPending ? 'Adding...' : 'Add to Cart'}
+        </button>
       </div>
     </div>
   );
 }
 
-function getIncludedItems(name: string, description?: string): string[] {
+function getIncludedItems(name: string): string[] {
   const lower = (name || '').toLowerCase();
-
-  if (lower.includes('photo') || lower.includes('candid') || lower.includes('wide angle')) {
-    return [
-      'Professional DSLR photographer for full event coverage',
-      'High-resolution edited digital photos',
-      'Online gallery delivery within 7 days',
-      'Print-ready album-quality images',
-    ];
-  }
-  if (lower.includes('video') || lower.includes('cinematic')) {
-    return [
-      'Professional videographer with HD/4K equipment',
-      'Full event video coverage with editing',
-      'Background music and highlight reel',
-      'Digital delivery within 10 days',
-    ];
-  }
-  if (lower.includes('drone')) {
-    return [
-      'Licensed drone operator with 4K camera',
-      'Aerial shots of venue, baraat, and ceremony',
-      'Edited aerial highlight video',
-      'Bird-eye view photography of entire event',
-    ];
-  }
-  if (lower.includes('pre wedding')) {
-    return [
-      'Professional photographer + videographer team',
-      'Indoor & outdoor shoot at scenic locations',
-      'Edited photos and cinematic video',
-      'Props, styling guidance, and creative concepts',
-    ];
-  }
-  if (lower.includes('mandap') || lower.includes('stage')) {
-    return [
-      'Fresh flower arrangements and drapes',
-      'LED and decorative lighting setup',
-      'Setup and teardown handled by our team',
-      'Multiple theme options available',
-    ];
-  }
-  if (lower.includes('car decoration') || lower.includes('dulha car deco')) {
-    return [
-      'Fresh flowers, ribbons, and LED lights',
-      'Custom theme decoration as per choice',
-      'Complete setup before event time',
-      'Premium materials and finishing',
-    ];
-  }
-  if (lower.includes('bed') || lower.includes('gate') || lower.includes('party')) {
-    return [
-      'Premium decoration materials and flowers',
-      'Professional setup by experienced decorators',
-      'Customizable themes and color schemes',
-      'Complete setup and teardown service',
-    ];
-  }
-  if (lower.includes('dj')) {
-    return [
-      'Professional DJ with sound system',
-      'LED lighting and fog effects',
-      'Song requests and custom playlist',
-      'Setup and sound check included',
-    ];
-  }
-  if (lower.includes('bhangra')) {
-    return [
-      'Professional Bhangra dance group (5-10 dancers)',
-      'Colorful traditional costumes and dhol',
-      'High-energy performance for baraat',
-      'Coordination with band and DJ',
-    ];
-  }
-  if (lower.includes('band')) {
-    return [
-      'Full band with brass instruments and dhol',
-      'LED lighting setup for procession',
-      'Experienced musicians for wedding songs',
-      'Baraat route coordination and management',
-    ];
-  }
-  if (lower.includes('makeup') || lower.includes('bridal')) {
-    return [
-      'Professional makeup artist with premium products',
-      'Custom look based on your preference',
-      'Hair styling included',
-      'Touch-up kit for the event',
-    ];
-  }
-  if (lower.includes('mehndi')) {
-    return [
-      'Professional mehndi artist',
-      'Arabic, Rajasthani, and Traditional designs',
-      'Natural chemical-free mehndi',
-      'Both full-hand bridal and guest mehndi',
-    ];
-  }
-  if (lower.includes('car') || lower.includes('cab') || lower.includes('bus') || lower.includes('vehicle')) {
+  if (lower.includes('car')) {
     return [
       'Well-maintained vehicle with AC',
       'Experienced and courteous driver',
-      'Flexible pick-up and drop timing',
-      'Fuel charges as per actuals',
+      'Flexible pick-up and drop timing'
     ];
   }
-
-  // Fallback from description
-  if (description) {
-    return description.split('.').filter(s => s.trim().length > 10).slice(0, 4).map(s => s.trim());
-  }
-
   return [
     'Professional service by verified provider',
     'Quality assured with premium materials',
-    'Timely delivery and setup',
-    'Customer support throughout the process',
+    'Timely delivery and setup'
   ];
 }
