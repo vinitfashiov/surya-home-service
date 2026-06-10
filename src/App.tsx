@@ -58,6 +58,7 @@ import PrivacyPage from "@/pages/PrivacyPage";
 import NotFound from "./pages/NotFound";
 import Footer from "@/components/Footer";
 import BottomNav from "@/components/BottomNav";
+import ProviderBottomNav from "@/components/provider/ProviderBottomNav";
 import { usePWA } from "@/hooks/usePWA";
 
 const queryClient = new QueryClient();
@@ -85,13 +86,19 @@ const App = () => {
 const AppLayout = () => {
   usePWA();
   const { selectedCityId } = useCityStore();
-  const showCityGate = !selectedCityId;
   const location = useLocation();
 
-  // Hide navbars on checkout related pages and service details
+  const isAdminPath = location.pathname.startsWith('/admin');
+  const isProviderPath = location.pathname.startsWith('/provider');
+  const isServicemanPath = location.pathname.startsWith('/serviceman');
+  const isDashboardPath = isAdminPath || isProviderPath || isServicemanPath;
+
+  const showCityGate = !selectedCityId && !isDashboardPath;
+
+  // Hide navbars on checkout related pages, service details, and dashboards
   const isCheckoutPath = ['/cart', '/checkout'].includes(location.pathname);
   const isServiceDetailPath = location.pathname.startsWith('/service/');
-  const hideNavs = isCheckoutPath || isServiceDetailPath;
+  const hideNavs = isCheckoutPath || isServiceDetailPath || isDashboardPath;
 
   // New Design v2 pages (no top Navbar on mobile, uses AppHeader instead)
   // But always show Navbar on desktop so admin/provider links are accessible
@@ -109,7 +116,7 @@ const AppLayout = () => {
         </div>
       )}
 
-      <div className={hideNavs ? "" : "min-h-screen pb-16 md:pb-0"}>
+      <div className={hideNavs ? (isDashboardPath ? "min-h-screen pb-16 md:pb-0 bg-background" : "") : "min-h-screen pb-16 md:pb-0"}>
         <Routes>
           {/* Admin routes */}
           <Route
@@ -137,7 +144,14 @@ const AppLayout = () => {
           </Route>
 
           {/* Provider routes */}
-          <Route path="/provider/*" element={<ProviderLayout />}>
+          <Route
+            path="/provider/*"
+            element={
+              <ProtectedRoute requiredRole="provider">
+                <ProviderLayout />
+              </ProtectedRoute>
+            }
+          >
             <Route index element={<ProviderDashboard />} />
             <Route path="analytics" element={<ProviderAnalytics />} />
             <Route path="bookings" element={<ProviderBookings />} />
@@ -149,7 +163,14 @@ const AppLayout = () => {
           </Route>
 
           {/* Employee/Serviceman routes */}
-          <Route path="/serviceman" element={<ServicemanDashboard />} />
+          <Route
+            path="/serviceman"
+            element={
+              <ProtectedRoute requiredRole="serviceman">
+                <ServicemanDashboard />
+              </ProtectedRoute>
+            }
+          />
 
           {/* Public / Customer routes */}
           <Route path="/" element={<HomePage />} />
@@ -183,6 +204,7 @@ const AppLayout = () => {
 
       {!hideNavs && <Footer />}
       {!hideNavs && <BottomNav />}
+      {isProviderPath && <ProviderBottomNav />}
     </>
   );
 };

@@ -20,6 +20,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 const emptyForm = { company_name: '', owner_name: '', email: '', phone: '', address: '', status: 'pending', city_id: '', zone_id: 'none', latitude: null as number | null, longitude: null as number | null };
 
@@ -69,6 +70,15 @@ export default function AdminProviders() {
   const handleApprove = async (provider: any) => {
     try {
       await updateMut.mutateAsync({ id: provider.id, status: 'active' });
+      
+      // Update role in user_roles if user exists
+      if (provider.user_id) {
+        const { error: roleErr } = await supabase
+          .from('user_roles')
+          .upsert({ user_id: provider.user_id, role: 'provider' }, { onConflict: 'user_id,role' });
+        if (roleErr) console.error("Failed to assign provider role:", roleErr);
+      }
+
       await createNotification.mutateAsync({
         user_id: provider.user_id,
         title: 'Provider Approved!',
@@ -82,6 +92,17 @@ export default function AdminProviders() {
   const handleReject = async (provider: any) => {
     try {
       await updateMut.mutateAsync({ id: provider.id, status: 'inactive' });
+      
+      // Remove role in user_roles if user exists
+      if (provider.user_id) {
+        const { error: roleErr } = await supabase
+          .from('user_roles')
+          .delete()
+          .eq('user_id', provider.user_id)
+          .eq('role', 'provider');
+        if (roleErr) console.error("Failed to revoke provider role:", roleErr);
+      }
+
       await createNotification.mutateAsync({
         user_id: provider.user_id,
         title: 'Provider Application Rejected',
@@ -99,6 +120,22 @@ export default function AdminProviders() {
       if (form.city_id && form.city_id !== 'none') updates.city_id = form.city_id;
       if (form.zone_id) updates.zone_id = form.zone_id === 'none' ? null : form.zone_id;
       await updateMut.mutateAsync(updates);
+      
+      // Update role dynamically based on status
+      if (editProvider.user_id) {
+        if (form.status === 'active') {
+          await supabase
+            .from('user_roles')
+            .upsert({ user_id: editProvider.user_id, role: 'provider' }, { onConflict: 'user_id,role' });
+        } else {
+          await supabase
+            .from('user_roles')
+            .delete()
+            .eq('user_id', editProvider.user_id)
+            .eq('role', 'provider');
+        }
+      }
+
       toast.success('Provider updated');
       setEditProvider(null);
     } catch (e: any) { toast.error(e.message); }

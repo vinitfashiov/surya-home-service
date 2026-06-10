@@ -1,7 +1,7 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { useCartCount } from '@/hooks/useCart';
-import { Menu, X, User, ChevronDown, LogOut, LogIn, MapPin, ShoppingCart, Heart } from 'lucide-react';
+import { Menu, X, User, ChevronDown, LogOut, LogIn, MapPin, ShoppingCart, Heart, Shield, Building2, Briefcase } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
@@ -58,28 +58,18 @@ export default function Navbar() {
     { to: '/my-bookings', label: 'My Bookings' },
   ];
 
-  const providerLinks = [
-    { to: '/provider', label: 'Dashboard' },
-    { to: '/provider/analytics', label: 'Analytics' },
-    { to: '/provider/bookings', label: 'Bookings' },
-    { to: '/provider/campaigns', label: 'Campaigns' },
-    { to: '/provider/availability', label: 'Availability' },
-    { to: '/provider/servicemen', label: 'Servicemen' },
-    { to: '/provider/team', label: 'Team' },
-    { to: '/provider/profile', label: 'Profile' },
-  ];
+  const dashboardLinks = [];
+  if (roles.includes('admin') || roles.includes('employee')) {
+    dashboardLinks.push({ to: '/admin', label: 'Admin Panel' });
+  }
+  if (roles.includes('provider') || roles.includes('provider_employee')) {
+    dashboardLinks.push({ to: '/provider', label: 'Provider Panel' });
+  }
+  if (roles.includes('serviceman')) {
+    dashboardLinks.push({ to: '/serviceman', label: 'My Jobs' });
+  }
 
-  const servicemanLinks = [
-    { to: '/serviceman', label: 'My Jobs' },
-  ];
-
-  const links = roles.includes('admin') || roles.includes('employee')
-    ? [{ to: '/admin', label: 'Admin Panel' }, ...customerLinks]
-    : roles.includes('provider') || roles.includes('provider_employee')
-    ? providerLinks
-    : roles.includes('serviceman')
-    ? servicemanLinks
-    : customerLinks;
+  const links = [...dashboardLinks, ...customerLinks];
 
   const isDashboard = location.pathname.startsWith('/admin') ||
                       location.pathname.startsWith('/provider') ||
@@ -166,6 +156,21 @@ export default function Navbar() {
                         ))}
                         <DropdownMenuSeparator />
                       </>
+                    )}
+                    {roles.includes('admin') && (
+                      <DropdownMenuItem onClick={() => navigate('/admin')} className="cursor-pointer">
+                        <Shield className="h-4 w-4 mr-2 text-primary" /> Admin Panel
+                      </DropdownMenuItem>
+                    )}
+                    {(roles.includes('provider') || roles.includes('provider_employee')) && (
+                      <DropdownMenuItem onClick={() => navigate('/provider')} className="cursor-pointer">
+                        <Building2 className="h-4 w-4 mr-2 text-primary" /> Provider Panel
+                      </DropdownMenuItem>
+                    )}
+                    {roles.includes('serviceman') && (
+                      <DropdownMenuItem onClick={() => navigate('/serviceman')} className="cursor-pointer">
+                        <Briefcase className="h-4 w-4 mr-2 text-primary" /> Serviceman Panel
+                      </DropdownMenuItem>
                     )}
                     <DropdownMenuItem onClick={() => navigate('/profile')} className="cursor-pointer">
                       <User className="h-4 w-4 mr-2" /> My Profile

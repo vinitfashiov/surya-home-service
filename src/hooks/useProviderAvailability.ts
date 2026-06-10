@@ -18,8 +18,10 @@ export function useProviderAvailability(providerId?: string, month?: string) {
     queryFn: async () => {
       if (!providerId || !month) return [];
       // month format: YYYY-MM
+      const [year, monthNum] = month.split('-').map(Number);
+      const lastDay = new Date(year, monthNum, 0).getDate();
       const startDate = `${month}-01`;
-      const endDate = `${month}-31`;
+      const endDate = `${month}-${String(lastDay).padStart(2, '0')}`;
       const { data, error } = await supabase
         .from('provider_availability' as any)
         .select('*')
