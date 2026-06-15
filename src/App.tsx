@@ -4,7 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
-import { AuthProvider } from "@/contexts/AuthContext";
+import { AuthProvider, useAuthContext } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
 import CityGate from "@/components/CityGate";
 import { useCityStore } from "@/lib/cityStore";
@@ -49,6 +49,7 @@ import ServicemanDashboard from "@/pages/serviceman/ServicemanDashboard";
 import LoginPage from "@/pages/auth/LoginPage";
 import SignupPage from "@/pages/auth/SignupPage";
 import ProviderSignupPage from "@/pages/auth/ProviderSignupPage";
+import ProviderLoginPage from "@/pages/auth/ProviderLoginPage";
 import ForgotPasswordPage from "@/pages/auth/ForgotPasswordPage";
 import ResetPasswordPage from "@/pages/auth/ResetPasswordPage";
 import AboutPage from "@/pages/AboutPage";
@@ -86,12 +87,14 @@ const App = () => {
 const AppLayout = () => {
   usePWA();
   const { selectedCityId } = useCityStore();
+  const { user } = useAuthContext();
   const location = useLocation();
 
   const isAdminPath = location.pathname.startsWith('/admin');
   const isProviderPath = location.pathname.startsWith('/provider');
   const isServicemanPath = location.pathname.startsWith('/serviceman');
-  const isDashboardPath = isAdminPath || isProviderPath || isServicemanPath;
+  const isProviderSignupPath = location.pathname === '/provider-signup';
+  const isDashboardPath = isAdminPath || isProviderPath || isServicemanPath || isProviderSignupPath;
 
   const showCityGate = !selectedCityId && !isDashboardPath;
 
@@ -143,11 +146,14 @@ const AppLayout = () => {
             <Route path="settings" element={<AdminSettings />} />
           </Route>
 
+          {/* Public Provider Login */}
+          <Route path="/provider/login" element={<ProviderLoginPage />} />
+
           {/* Provider routes */}
           <Route
             path="/provider/*"
             element={
-              <ProtectedRoute requiredRole="provider">
+              <ProtectedRoute requiredRole="provider" redirectTo="/provider/login">
                 <ProviderLayout />
               </ProtectedRoute>
             }
@@ -204,7 +210,7 @@ const AppLayout = () => {
 
       {!hideNavs && <Footer />}
       {!hideNavs && <BottomNav />}
-      {isProviderPath && <ProviderBottomNav />}
+      {isProviderPath && user && <ProviderBottomNav />}
     </>
   );
 };
