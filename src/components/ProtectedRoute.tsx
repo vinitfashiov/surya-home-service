@@ -8,8 +8,18 @@ interface ProtectedRouteProps {
   redirectTo?: string;
 }
 
-export default function ProtectedRoute({ children, requiredRole, redirectTo = '/' }: ProtectedRouteProps) {
+// Determine default redirect based on role
+function getDefaultRedirect(requiredRole: string): string {
+  if (requiredRole === 'admin') return '/admin/login';
+  if (requiredRole === 'provider' || requiredRole === 'serviceman' || requiredRole === 'provider_employee') {
+    return '/provider/login';
+  }
+  return '/login';
+}
+
+export default function ProtectedRoute({ children, requiredRole, redirectTo }: ProtectedRouteProps) {
   const { user, roles, loading } = useAuthContext();
+  const fallback = redirectTo ?? getDefaultRedirect(requiredRole);
 
   if (loading) {
     return (
@@ -24,11 +34,11 @@ export default function ProtectedRoute({ children, requiredRole, redirectTo = '/
   }
 
   if (!user) {
-    return <Navigate to={redirectTo === '/' ? '/login' : redirectTo} replace />;
+    return <Navigate to={fallback} replace />;
   }
 
   if (!roles.includes(requiredRole)) {
-    return <Navigate to={redirectTo} replace />;
+    return <Navigate to={fallback} replace />;
   }
 
   return <>{children}</>;

@@ -35,6 +35,7 @@ import AdminCoupons from "@/pages/admin/AdminCoupons";
 import AdminBanners from "@/pages/admin/AdminBanners";
 import AdminPricingRules from "@/pages/admin/AdminPricingRules";
 import AdminAdsPage from "@/pages/admin/AdminAdsPage";
+import AdminLoginPage from "@/pages/admin/AdminLoginPage";
 import ProviderLayout from "@/components/provider/ProviderLayout";
 import ProviderDashboard from "@/pages/provider/ProviderDashboard";
 import ProviderAnalytics from "@/pages/provider/ProviderAnalytics";
@@ -121,11 +122,14 @@ const AppLayout = () => {
 
       <div className={hideNavs ? (isDashboardPath ? "min-h-screen pb-16 md:pb-0 bg-background" : "") : "min-h-screen pb-16 md:pb-0"}>
         <Routes>
+          {/* Admin Login — separate, isolated */}
+          <Route path="/admin/login" element={<AdminLoginPage />} />
+
           {/* Admin routes */}
           <Route
             path="/admin/*"
             element={
-              <ProtectedRoute requiredRole="admin">
+              <ProtectedRoute requiredRole="admin" redirectTo="/admin/login">
                 <AdminLayout />
               </ProtectedRoute>
             }

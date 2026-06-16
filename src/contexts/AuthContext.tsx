@@ -7,9 +7,23 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   roles: string[];
-  signUp: (email: string, password: string, fullName: string, role?: string) => Promise<{ data: { user: User | null }; error: any }>;
+  // OTP-based auth (customer + provider)
+  sendOtp: (phone: string) => Promise<{ error: string | null }>;
+  verifyOtp: (params: VerifyOtpParams) => Promise<{ error: string | null; isNewUser?: boolean }>;
+  // Email/password auth (admin only)
   signIn: (email: string, password: string) => Promise<{ error: any }>;
+  signUp: (email: string, password: string, fullName: string, role?: string) => Promise<{ data: { user: User | null }; error: any }>;
   signOut: () => Promise<void>;
+}
+
+interface VerifyOtpParams {
+  phone: string;
+  otp: string;
+  full_name?: string;
+  role?: string;
+  company_name?: string;
+  city_id?: string;
+  address?: string;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -21,13 +35,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [roles, setRoles] = useState<string[]>([]);
 
   useEffect(() => {
-    // Set a short safety timeout for connectivity issues
     const timeoutId = setTimeout(() => {
       if (loading) {
         console.warn('Auth initialization timed out - likely a network block');
         setLoading(false);
       }
-    }, 3000); // 3s timeout
+    }, 3000);
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
@@ -72,12 +85,64 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // ─── OTP: Send OTP via Fast2SMS (edge function) ───
+  const sendOtp = async (phone: string): Promise<{ error: string | null }> => {
+    try {
+      const { data, error } = await supabase.functions.invoke('send-otp', {
+        body: { phone },
+      });
+      if (error) return { error: error.message || 'Failed to send OTP' };
+      if (data?.error) return { error: data.error };
+      return { error: null };
+    } catch (err: any) {
+      return { error: err.message || 'Network error. Please try again.' };
+    }
+  };
+
+  // ─── OTP: Verify OTP and sign in / create user ───
+  const verifyOtp = async (params: VerifyOtpParams): Promise<{ error: string | null; isNewUser?: boolean }> => {
+    try {
+      const { data, error } = await supabase.functions.invoke('verify-otp', {
+        body: params,
+      });
+
+      if (error) return { error: error.message || 'OTP verification failed' };
+      if (data?.error) return { error: data.error };
+
+      const { token_hash, type, is_new_user } = data;
+
+      // Use the token to sign in
+      const { data: sessionData, error: verifyError } = await supabase.auth.verifyOtp({
+        token_hash,
+        type: type || 'email',
+      });
+
+      if (verifyError) {
+        return { error: verifyError.message || 'Failed to create session' };
+      }
+
+      if (sessionData?.user) {
+        await fetchRoles(sessionData.user.id);
+      }
+
+      return { error: null, isNewUser: is_new_user };
+    } catch (err: any) {
+      return { error: err.message || 'Verification failed. Please try again.' };
+    }
+  };
+
+  // ─── Email/Password: Admin only ───
+  const signIn = async (email: string, password: string) => {
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    return { error };
+  };
+
   const signUp = async (email: string, password: string, fullName: string, role?: string) => {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: { 
+        data: {
           full_name: fullName,
           role: role || 'customer'
         },
@@ -85,11 +150,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       },
     });
     return { data, error };
-  };
-
-  const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    return { error };
   };
 
   const signOut = async () => {
@@ -110,7 +170,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, roles, signUp, signIn, signOut }}>
+    <AuthContext.Provider value={{ user, session, loading, roles, sendOtp, verifyOtp, signIn, signUp, signOut }}>
       {children}
     </AuthContext.Provider>
   );
