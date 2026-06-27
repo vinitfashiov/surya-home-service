@@ -79,6 +79,56 @@ Deno.serve(async (req) => {
 
     if (existingUser) {
       userId = existingUser.id;
+
+      // Update full_name in user metadata if provided
+      if (full_name) {
+        await adminClient.auth.admin.updateUserById(userId, {
+          user_metadata: {
+            ...existingUser.user_metadata,
+            full_name: full_name,
+          },
+        });
+      }
+
+      // If logging in / registering as a provider, ensure the role and profile exist
+      if (role === "provider") {
+        // Ensure role exists in user_roles table
+        const { data: roleData } = await adminClient
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", userId)
+          .eq("role", "provider")
+          .maybeSingle();
+
+        if (!roleData) {
+          await adminClient.from("user_roles").insert({
+            user_id: userId,
+            role: "provider",
+          });
+        }
+
+        // Ensure provider profile exists in providers table
+        if (company_name) {
+          const { data: provData } = await adminClient
+            .from("providers")
+            .select("id")
+            .eq("user_id", userId)
+            .maybeSingle();
+
+          if (!provData) {
+            await adminClient.from("providers").insert({
+              user_id: userId,
+              company_name,
+              owner_name: full_name || existingUser.user_metadata?.full_name || "",
+              email: fakeEmail,
+              phone: cleanPhone,
+              address: address || "",
+              city_id: city_id || null,
+              status: "pending",
+            });
+          }
+        }
+      }
     } else {
       // Create new user
       const assignedRole = role || "customer";

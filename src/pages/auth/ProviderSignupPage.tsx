@@ -11,6 +11,8 @@ import { toast } from 'sonner';
 import {
   Building2, Phone, User, MapPin, ShieldCheck, ArrowRight, RotateCw, CheckCircle
 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import ProviderDocuments from '@/components/provider/ProviderDocuments';
 
 const OTP_LENGTH = 6;
 const RESEND_COOLDOWN = 30;
@@ -20,7 +22,8 @@ export default function ProviderSignupPage() {
   const navigate = useNavigate();
   const { data: cities = [] } = useCities();
 
-  const [step, setStep] = useState<'details' | 'otp' | 'success'>('details');
+  const [step, setStep] = useState<'details' | 'otp' | 'documents' | 'success'>('details');
+  const [providerId, setProviderId] = useState<string | null>(null);
   const [otpDigits, setOtpDigits] = useState<string[]>(Array(OTP_LENGTH).fill(''));
   const [loading, setLoading] = useState(false);
   const [countdown, setCountdown] = useState(0);
@@ -122,6 +125,24 @@ export default function ProviderSignupPage() {
       setOtpDigits(Array(OTP_LENGTH).fill(''));
       inputRefs.current[0]?.focus();
     } else {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          const { data: prov } = await supabase
+            .from('providers')
+            .select('id')
+            .eq('user_id', session.user.id)
+            .maybeSingle();
+
+          if (prov) {
+            setProviderId(prov.id);
+            setStep('documents');
+            return;
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch provider ID:', err);
+      }
       setStep('success');
     }
   };
@@ -135,6 +156,39 @@ export default function ProviderSignupPage() {
     if (error) toast.error(error);
     else { toast.success('OTP resent!'); setCountdown(RESEND_COOLDOWN); }
   };
+
+  // ─── Documents Screen ───
+  if (step === 'documents') {
+    return (
+      <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center px-4 py-8">
+        <div className="w-full max-w-xl space-y-6">
+          <div className="text-center mb-8">
+            <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center mx-auto mb-4">
+              <ShieldCheck className="h-6 w-6 text-primary-foreground" />
+            </div>
+            <h1 className="text-2xl font-heading font-bold text-foreground">Upload Verification Documents</h1>
+            <p className="text-muted-foreground mt-1 text-sm">
+              Please upload verification documents for your company to complete the registration.
+            </p>
+          </div>
+
+          <div className="bg-card rounded-2xl p-6 shadow-card border space-y-5">
+            {providerId ? (
+              <ProviderDocuments providerId={providerId} />
+            ) : (
+              <p className="text-center py-4 text-muted-foreground">Initializing provider details...</p>
+            )}
+
+            <div className="pt-4 border-t flex justify-end">
+              <Button onClick={() => setStep('success')} className="gap-2 font-semibold">
+                Submit Application <ArrowRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // ─── Success Screen ───
   if (step === 'success') {

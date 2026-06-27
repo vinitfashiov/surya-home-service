@@ -34,7 +34,40 @@ export function useProviderDocuments(providerId?: string) {
         .eq('provider_id', providerId)
         .order('uploaded_at', { ascending: false });
       if (error) throw error;
-      return (data || []) as unknown as ProviderDocument[];
+
+      const docs = (data || []) as unknown as ProviderDocument[];
+      
+      // Generate signed URLs for each doc
+      const paths = docs.map(d => {
+        const marker = '/provider-documents/';
+        const idx = d.file_url.indexOf(marker);
+        return idx !== -1 ? d.file_url.substring(idx + marker.length) : '';
+      }).filter(Boolean);
+
+      if (paths.length > 0) {
+        try {
+          const { data: signedData, error: signedError } = await supabase.storage
+            .from('provider-documents')
+            .createSignedUrls(paths, 3600); // 1 hour expiry
+
+          if (!signedError && signedData) {
+            return docs.map(d => {
+              const marker = '/provider-documents/';
+              const idx = d.file_url.indexOf(marker);
+              const path = idx !== -1 ? d.file_url.substring(idx + marker.length) : '';
+              const signed = signedData.find(s => s.path === path);
+              return {
+                ...d,
+                file_url: signed?.signedUrl || d.file_url
+              };
+            });
+          }
+        } catch (err) {
+          console.error("Failed to generate signed URLs", err);
+        }
+      }
+
+      return docs;
     },
     enabled: !!providerId,
   });
@@ -49,7 +82,40 @@ export function useAllProviderDocuments() {
         .select('*')
         .order('uploaded_at', { ascending: false });
       if (error) throw error;
-      return (data || []) as unknown as ProviderDocument[];
+
+      const docs = (data || []) as unknown as ProviderDocument[];
+
+      // Generate signed URLs for each doc
+      const paths = docs.map(d => {
+        const marker = '/provider-documents/';
+        const idx = d.file_url.indexOf(marker);
+        return idx !== -1 ? d.file_url.substring(idx + marker.length) : '';
+      }).filter(Boolean);
+
+      if (paths.length > 0) {
+        try {
+          const { data: signedData, error: signedError } = await supabase.storage
+            .from('provider-documents')
+            .createSignedUrls(paths, 3600); // 1 hour expiry
+
+          if (!signedError && signedData) {
+            return docs.map(d => {
+              const marker = '/provider-documents/';
+              const idx = d.file_url.indexOf(marker);
+              const path = idx !== -1 ? d.file_url.substring(idx + marker.length) : '';
+              const signed = signedData.find(s => s.path === path);
+              return {
+                ...d,
+                file_url: signed?.signedUrl || d.file_url
+              };
+            });
+          }
+        } catch (err) {
+          console.error("Failed to generate signed URLs", err);
+        }
+      }
+
+      return docs;
     },
   });
 }
