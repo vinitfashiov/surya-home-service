@@ -70,23 +70,48 @@ export default function ProviderBookings() {
             <div className="flex items-start justify-between">
               <div>
                 <h3 className="font-heading font-semibold text-foreground">{b.service?.name}</h3>
-                <p className="text-sm text-muted-foreground">{b.customer?.full_name} · {b.booking_date} {b.booking_time}</p>
-                <p className="text-sm text-muted-foreground mt-1">{b.address}</p>
+                <p className="text-sm text-muted-foreground font-medium mt-1">
+                  {b.customer?.full_name || 'No Name'} 
+                  {b.customer?.phone && (
+                    <span className="ml-2 font-normal text-primary">
+                      · <a href={`tel:${b.customer.phone}`} className="hover:underline">📞 {b.customer.phone}</a>
+                    </span>
+                  )}
+                </p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  📅 {b.booking_date} · 🕒 {b.booking_time}
+                </p>
+                <p className="text-sm text-muted-foreground mt-1">📍 {b.address}</p>
+                {b.notes && (
+                  <div className="mt-3 p-2 bg-muted/50 rounded-lg text-xs text-muted-foreground">
+                    <span className="font-semibold block text-foreground mb-0.5">Notes:</span>
+                    {b.notes}
+                  </div>
+                )}
                 {b.serviceman && (
-                  <p className="text-sm text-primary mt-2 flex items-center gap-1">
+                  <p className="text-sm text-primary mt-3 flex items-center gap-1">
                     <CheckCircle className="h-3.5 w-3.5" />
                     Assigned to: {b.serviceman.name}
                   </p>
                 )}
               </div>
               <div className="text-right">
-                <p className="font-heading font-bold text-primary">${b.amount}</p>
-                <StatusBadge status={b.status} />
-                {b.is_emergency && (
-                  <span className="inline-block mt-1 px-2 py-0.5 text-[10px] font-medium bg-destructive text-destructive-foreground rounded">
-                    EMERGENCY
+                <p className="font-heading font-bold text-primary text-lg">₹{b.amount}</p>
+                <div className="flex flex-col items-end gap-1.5 mt-1">
+                  <StatusBadge status={b.status} />
+                  <span className={`text-[10px] px-2 py-0.5 font-medium rounded uppercase ${
+                    b.payment_status === 'paid' 
+                      ? 'bg-emerald-500/10 text-emerald-500' 
+                      : 'bg-amber-500/10 text-amber-500'
+                  }`}>
+                    Payment: {b.payment_status || 'pending'}
                   </span>
-                )}
+                  {b.is_emergency && (
+                    <span className="inline-block px-2 py-0.5 text-[10px] font-medium bg-destructive text-destructive-foreground rounded">
+                      EMERGENCY
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
             

@@ -1,11 +1,22 @@
-import { Outlet } from 'react-router-dom';
+import { Outlet, useNavigate } from 'react-router-dom';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import ProviderSidebar from './ProviderSidebar';
-import { Bell, Search } from 'lucide-react';
+import { Bell, Search, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useAuthContext } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
 
 export default function ProviderLayout() {
+  const { signOut } = useAuthContext();
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    await signOut();
+    toast.success('Signed out successfully');
+    navigate('/');
+  };
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
@@ -30,6 +41,15 @@ export default function ProviderLayout() {
               <Button variant="ghost" size="icon" className="relative">
                 <Bell className="h-4 w-4" />
                 <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-destructive" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                onClick={handleSignOut}
+                title="Sign out"
+              >
+                <LogOut className="h-4 w-4" />
               </Button>
             </div>
           </header>

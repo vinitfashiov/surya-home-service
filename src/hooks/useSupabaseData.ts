@@ -196,7 +196,7 @@ export function useProviderBookings(userId?: string) {
         .select(`
           *,
           service:services(name),
-          customer:profiles!bookings_customer_id_fkey(full_name),
+          customer:profiles!bookings_customer_id_fkey(full_name, phone),
           serviceman:servicemen(name)
         `)
         .eq('provider_id', providerId)
@@ -226,7 +226,7 @@ export function useServicemanBookings(userId?: string) {
           *,
           service:services(name),
           provider:providers(company_name),
-          customer:profiles!bookings_customer_id_fkey(full_name)
+          customer:profiles!bookings_customer_id_fkey(full_name, phone)
         `)
         .eq('serviceman_id', sm.id)
         .order('created_at', { ascending: false });

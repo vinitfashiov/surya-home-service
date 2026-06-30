@@ -27,7 +27,7 @@ async function ensureProviderProfile(
     return existingUserIdProfile;
   }
 
-  // 2. Check if a provider profile exists with same phone or email but user_id is null
+  // 2. Check if a provider profile exists with same phone or email
   const { data: existingPhoneOrEmailProfile } = await adminClient
     .from("providers")
     .select("id, status, user_id")
@@ -35,7 +35,7 @@ async function ensureProviderProfile(
     .maybeSingle();
 
   if (existingPhoneOrEmailProfile) {
-    if (!existingPhoneOrEmailProfile.user_id) {
+    if (existingPhoneOrEmailProfile.user_id !== userId) {
       const { data: updatedProfile, error: updateErr } = await adminClient
         .from("providers")
         .update({ user_id: userId })
@@ -45,7 +45,7 @@ async function ensureProviderProfile(
       if (!updateErr) {
         return updatedProfile;
       }
-    } else if (existingPhoneOrEmailProfile.user_id === userId) {
+    } else {
       return existingPhoneOrEmailProfile;
     }
   }
@@ -90,7 +90,7 @@ async function ensureServicemanProfile(
     return existingUserIdProfile;
   }
 
-  // 2. Check if a serviceman record exists with same phone or email but user_id is null
+  // 2. Check if a serviceman record exists with same phone or email
   const { data: existingPhoneOrEmailProfile } = await adminClient
     .from("servicemen")
     .select("id, provider_id, user_id")
@@ -98,7 +98,7 @@ async function ensureServicemanProfile(
     .maybeSingle();
 
   if (existingPhoneOrEmailProfile) {
-    if (!existingPhoneOrEmailProfile.user_id) {
+    if (existingPhoneOrEmailProfile.user_id !== userId) {
       const { data: updatedProfile, error: updateErr } = await adminClient
         .from("servicemen")
         .update({ user_id: userId })
@@ -121,7 +121,7 @@ async function ensureServicemanProfile(
         }
         return updatedProfile;
       }
-    } else if (existingPhoneOrEmailProfile.user_id === userId) {
+    } else {
       // Ensure role exists
       const { data: roleData } = await adminClient
         .from("user_roles")
