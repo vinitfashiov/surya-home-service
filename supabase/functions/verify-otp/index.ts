@@ -6,6 +6,141 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
+async function ensureProviderProfile(
+  adminClient: any,
+  userId: string,
+  phone: string,
+  email: string,
+  fallbackCompany: string,
+  fallbackOwner: string,
+  fallbackAddress: string,
+  fallbackCityId: string | null
+) {
+  // 1. Check if provider profile already exists for this userId
+  const { data: existingUserIdProfile } = await adminClient
+    .from("providers")
+    .select("id, status")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (existingUserIdProfile) {
+    return existingUserIdProfile;
+  }
+
+  // 2. Check if a provider profile exists with same phone or email but user_id is null
+  const { data: existingPhoneOrEmailProfile } = await adminClient
+    .from("providers")
+    .select("id, status, user_id")
+    .or(`phone.eq.${phone},email.eq.${email}`)
+    .maybeSingle();
+
+  if (existingPhoneOrEmailProfile) {
+    if (!existingPhoneOrEmailProfile.user_id) {
+      const { data: updatedProfile, error: updateErr } = await adminClient
+        .from("providers")
+        .update({ user_id: userId })
+        .eq("id", existingPhoneOrEmailProfile.id)
+        .select("id, status")
+        .single();
+      if (!updateErr) {
+        return updatedProfile;
+      }
+    } else if (existingPhoneOrEmailProfile.user_id === userId) {
+      return existingPhoneOrEmailProfile;
+    }
+  }
+
+  // 3. Insert new pending provider profile if fallbackCompany is provided
+  if (fallbackCompany) {
+    const { data: newProfile, error: insertErr } = await adminClient
+      .from("providers")
+      .insert({
+        user_id: userId,
+        company_name: fallbackCompany,
+        owner_name: fallbackOwner,
+        email: email,
+        phone: phone,
+        address: fallbackAddress,
+        city_id: fallbackCityId,
+        status: "pending",
+      })
+      .select("id, status")
+      .single();
+    if (!insertErr) {
+      return newProfile;
+    }
+  }
+  return null;
+}
+
+async function ensureServicemanProfile(
+  adminClient: any,
+  userId: string,
+  phone: string,
+  email: string
+) {
+  // 1. Check if a serviceman record already exists for this userId
+  const { data: existingUserIdProfile } = await adminClient
+    .from("servicemen")
+    .select("id, provider_id")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (existingUserIdProfile) {
+    return existingUserIdProfile;
+  }
+
+  // 2. Check if a serviceman record exists with same phone or email but user_id is null
+  const { data: existingPhoneOrEmailProfile } = await adminClient
+    .from("servicemen")
+    .select("id, provider_id, user_id")
+    .or(`phone.eq.${phone},email.eq.${email}`)
+    .maybeSingle();
+
+  if (existingPhoneOrEmailProfile) {
+    if (!existingPhoneOrEmailProfile.user_id) {
+      const { data: updatedProfile, error: updateErr } = await adminClient
+        .from("servicemen")
+        .update({ user_id: userId })
+        .eq("id", existingPhoneOrEmailProfile.id)
+        .select("id, provider_id")
+        .single();
+      if (!updateErr) {
+        // Also assign 'serviceman' role
+        const { data: roleData } = await adminClient
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", userId)
+          .eq("role", "serviceman")
+          .maybeSingle();
+        if (!roleData) {
+          await adminClient.from("user_roles").insert({
+            user_id: userId,
+            role: "serviceman",
+          });
+        }
+        return updatedProfile;
+      }
+    } else if (existingPhoneOrEmailProfile.user_id === userId) {
+      // Ensure role exists
+      const { data: roleData } = await adminClient
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId)
+        .eq("role", "serviceman")
+        .maybeSingle();
+      if (!roleData) {
+        await adminClient.from("user_roles").insert({
+          user_id: userId,
+          role: "serviceman",
+        });
+      }
+      return existingPhoneOrEmailProfile;
+    }
+  }
+  return null;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -107,28 +242,41 @@ Deno.serve(async (req) => {
           });
         }
 
-        // Ensure provider profile exists in providers table
-        if (company_name) {
-          const { data: provData } = await adminClient
-            .from("providers")
-            .select("id")
-            .eq("user_id", userId)
-            .maybeSingle();
+        await ensureProviderProfile(
+          adminClient,
+          userId,
+          cleanPhone,
+          fakeEmail,
+          company_name || "",
+          full_name || existingUser.user_metadata?.full_name || "",
+          address || "",
+          city_id || null
+        );
+      } else {
+        // Check if they already have the provider role. If so, ensure their profile is linked.
+        const { data: roleData } = await adminClient
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", userId)
+          .eq("role", "provider")
+          .maybeSingle();
 
-          if (!provData) {
-            await adminClient.from("providers").insert({
-              user_id: userId,
-              company_name,
-              owner_name: full_name || existingUser.user_metadata?.full_name || "",
-              email: fakeEmail,
-              phone: cleanPhone,
-              address: address || "",
-              city_id: city_id || null,
-              status: "pending",
-            });
-          }
+        if (roleData) {
+          await ensureProviderProfile(
+            adminClient,
+            userId,
+            cleanPhone,
+            fakeEmail,
+            "",
+            existingUser.user_metadata?.full_name || "",
+            "",
+            null
+          );
         }
       }
+
+      // Check if they are a serviceman and link/assign role if so
+      await ensureServicemanProfile(adminClient, userId, cleanPhone, fakeEmail);
     } else {
       // Create new user
       const assignedRole = role || "customer";
@@ -159,18 +307,21 @@ Deno.serve(async (req) => {
       });
 
       // If provider, create provider record
-      if (assignedRole === "provider" && company_name) {
-        await adminClient.from("providers").insert({
-          user_id: userId,
-          company_name,
-          owner_name: full_name || "",
-          email: fakeEmail,
-          phone: cleanPhone,
-          address: address || "",
-          city_id: city_id || null,
-          status: "pending",
-        });
+      if (assignedRole === "provider") {
+        await ensureProviderProfile(
+          adminClient,
+          userId,
+          cleanPhone,
+          fakeEmail,
+          company_name || "",
+          full_name || "",
+          address || "",
+          city_id || null
+        );
       }
+
+      // Check if they are a serviceman and link/assign role if so
+      await ensureServicemanProfile(adminClient, userId, cleanPhone, fakeEmail);
     }
 
     // Generate a magic link to get a session token
