@@ -54,6 +54,9 @@ export default function BookingPage() {
   const handleConfirm = async () => {
     if (!user) { toast.error('Please log in to book a service.'); return; }
     try {
+      const latitude = selectedAddress?.latitude ? Number(selectedAddress.latitude) : null;
+      const longitude = selectedAddress?.longitude ? Number(selectedAddress.longitude) : null;
+
       await createBooking.mutateAsync({
         customer_id: user.id,
         service_id: service.id,
@@ -63,6 +66,8 @@ export default function BookingPage() {
         address: finalAddress,
         notes: notes || undefined,
         amount: Number(service.price),
+        latitude,
+        longitude,
       });
       // Send notification to customer
       await createNotification.mutateAsync({

@@ -115,7 +115,6 @@ export default function ProviderLoginPage() {
       const isAuthorized =
         roles.includes('provider') ||
         roles.includes('provider_employee') ||
-        roles.includes('serviceman') ||
         roles.includes('admin');
 
       if (!isAuthorized) {
@@ -126,11 +125,7 @@ export default function ProviderLoginPage() {
       }
 
       toast.success('Welcome to Partner Portal! 🚀');
-      if (roles.includes('serviceman') && !roles.includes('provider') && !roles.includes('admin')) {
-        navigate('/serviceman');
-      } else {
-        navigate('/provider');
-      }
+      navigate('/provider');
     } catch (err: any) {
       toast.error(err.message || 'Verification error');
       await signOut();

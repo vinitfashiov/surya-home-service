@@ -111,8 +111,7 @@ export function useMyBookings(userId?: string) {
         .select(`
           *,
           service:services(name, duration),
-          provider:providers(company_name),
-          serviceman:servicemen(name)
+          provider:providers(company_name)
         `)
         .eq('customer_id', userId)
         .order('created_at', { ascending: false });
@@ -132,8 +131,7 @@ export function useAllBookings() {
         .select(`
           *,
           service:services(name),
-          provider:providers(company_name),
-          serviceman:servicemen(name)
+          provider:providers(company_name)
         `)
         .order('created_at', { ascending: false });
 
@@ -196,8 +194,7 @@ export function useProviderBookings(userId?: string) {
         .select(`
           *,
           service:services(name),
-          customer:profiles!bookings_customer_id_fkey(full_name, phone),
-          serviceman:servicemen(name)
+          customer:profiles!bookings_customer_id_fkey(full_name, phone)
         `)
         .eq('provider_id', providerId)
         .order('created_at', { ascending: false });
@@ -208,36 +205,19 @@ export function useProviderBookings(userId?: string) {
   });
 }
 
-export function useServicemanBookings(userId?: string) {
-  return useQuery({
-    queryKey: ['serviceman-bookings', userId],
-    queryFn: async () => {
-      if (!userId) return [];
-      const { data: sm } = await supabase
-        .from('servicemen')
-        .select('id')
-        .eq('user_id', userId)
-        .single();
-      if (!sm) return [];
-
-      const { data, error } = await supabase
-        .from('bookings')
-        .select(`
-          *,
-          service:services(name),
-          provider:providers(company_name),
-          customer:profiles!bookings_customer_id_fkey(full_name, phone)
-        `)
-        .eq('serviceman_id', sm.id)
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!userId,
-  });
+// Mutations
+function getDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
+  const R = 6371; // Radius of the earth in km
+  const dLat = (lat2 - lat1) * (Math.PI / 180);
+  const dLon = (lon2 - lon1) * (Math.PI / 180);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
 }
 
-// Mutations
 export function useCreateBooking() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -251,10 +231,72 @@ export function useCreateBooking() {
       address: string;
       notes?: string;
       amount: number;
+      latitude?: number | null;
+      longitude?: number | null;
     }) => {
+      let assignedProviderId = booking.provider_id;
+
+      try {
+        // Query the service's city and provider fallback
+        const { data: serviceData } = await supabase
+          .from('services')
+          .select('city_id, provider_id')
+          .eq('id', booking.service_id)
+          .single();
+
+        if (booking.latitude && booking.longitude && serviceData?.city_id) {
+          // Query active providers in this city
+          const { data: activeProviders } = await supabase
+            .from('providers')
+            .select('id, latitude, longitude')
+            .eq('city_id', serviceData.city_id)
+            .eq('status', 'active');
+
+          if (activeProviders && activeProviders.length > 0) {
+            let minDistance = Infinity;
+            let closestProviderId = null;
+
+            for (const provider of activeProviders) {
+              if (provider.latitude !== null && provider.longitude !== null) {
+                const dist = getDistance(
+                  booking.latitude,
+                  booking.longitude,
+                  Number(provider.latitude),
+                  Number(provider.longitude)
+                );
+                if (dist < minDistance) {
+                  minDistance = dist;
+                  closestProviderId = provider.id;
+                }
+              }
+            }
+
+            if (closestProviderId) {
+              assignedProviderId = closestProviderId;
+            }
+          }
+        } else if (serviceData?.provider_id) {
+          assignedProviderId = serviceData.provider_id;
+        }
+      } catch (e) {
+        console.error('Error during auto-assignment of provider, using fallback provider_id:', e);
+      }
+
       const { data, error } = await supabase
         .from('bookings')
-        .insert(booking)
+        .insert({
+          customer_id: booking.customer_id,
+          service_id: booking.service_id,
+          variant_id: booking.variant_id,
+          provider_id: assignedProviderId,
+          booking_date: booking.booking_date,
+          booking_time: booking.booking_time,
+          address: booking.address,
+          notes: booking.notes,
+          amount: booking.amount,
+          latitude: booking.latitude,
+          longitude: booking.longitude,
+        })
         .select()
         .single();
       if (error) throw error;
@@ -285,7 +327,6 @@ export function useUpdateBookingStatus() {
       queryClient.invalidateQueries({ queryKey: ['my-bookings'] });
       queryClient.invalidateQueries({ queryKey: ['all-bookings'] });
       queryClient.invalidateQueries({ queryKey: ['provider-bookings'] });
-      queryClient.invalidateQueries({ queryKey: ['serviceman-bookings'] });
     },
   });
 }
@@ -352,20 +393,6 @@ export function useMyProvider(userId?: string) {
       return null;
     },
     enabled: !!userId,
-  });
-}
-
-// Servicemen
-export function useServicemen(providerId?: string) {
-  return useQuery({
-    queryKey: ['servicemen', providerId],
-    queryFn: async () => {
-      let query = supabase.from('servicemen').select('*').order('name');
-      if (providerId) query = query.eq('provider_id', providerId);
-      const { data, error } = await query;
-      if (error) throw error;
-      return data;
-    },
   });
 }
 

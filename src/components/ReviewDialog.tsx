@@ -24,7 +24,6 @@ export default function ReviewDialog({ open, onOpenChange, booking, userId }: Re
       await createReview.mutateAsync({
         booking_id: booking.id,
         customer_id: userId,
-        serviceman_id: booking.serviceman_id || undefined,
         provider_id: booking.provider_id,
         rating,
         comment: comment.trim() || undefined,

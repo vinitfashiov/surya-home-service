@@ -24,7 +24,6 @@ const roleLabels: Record<string, string> = {
   customer: 'Customer',
   provider: 'Provider',
   provider_employee: 'Staff',
-  serviceman: 'Serviceman',
 };
 
 const roleColors: Record<string, string> = {
@@ -33,7 +32,6 @@ const roleColors: Record<string, string> = {
   customer: 'bg-primary/10 text-primary',
   provider: 'bg-accent/10 text-accent',
   provider_employee: 'bg-accent/10 text-accent',
-  serviceman: 'bg-success/10 text-success',
 };
 
 export default function Navbar() {
@@ -65,15 +63,11 @@ export default function Navbar() {
   if (roles.includes('provider') || roles.includes('provider_employee')) {
     dashboardLinks.push({ to: '/provider', label: 'Provider Panel' });
   }
-  if (roles.includes('serviceman')) {
-    dashboardLinks.push({ to: '/serviceman', label: 'My Jobs' });
-  }
 
   const links = [...dashboardLinks, ...customerLinks];
 
   const isDashboard = location.pathname.startsWith('/admin') ||
-                      location.pathname.startsWith('/provider') ||
-                      location.pathname.startsWith('/serviceman');
+                      location.pathname.startsWith('/provider');
 
   if (isDashboard) return null;
 
@@ -112,7 +106,7 @@ export default function Navbar() {
           {/* Right actions */}
           <div className="flex items-center gap-1 md:gap-2 shrink-0">
             <ThemeToggle />
-            {!loading && user && !roles.includes('admin') && !roles.includes('provider') && !roles.includes('serviceman') && (
+            {!loading && user && !roles.includes('admin') && !roles.includes('provider') && (
               <Link to="/cart" className="relative p-1.5 md:p-2 rounded-lg hover:bg-muted transition-colors">
                 <ShoppingCart className="h-4 w-4 md:h-5 md:w-5 text-muted-foreground" />
                 {cartCount > 0 && (
@@ -167,11 +161,7 @@ export default function Navbar() {
                         <Building2 className="h-4 w-4 mr-2 text-primary" /> Provider Panel
                       </DropdownMenuItem>
                     )}
-                    {roles.includes('serviceman') && (
-                      <DropdownMenuItem onClick={() => navigate('/serviceman')} className="cursor-pointer">
-                        <Briefcase className="h-4 w-4 mr-2 text-primary" /> Serviceman Panel
-                      </DropdownMenuItem>
-                    )}
+
                     <DropdownMenuItem onClick={() => navigate('/profile')} className="cursor-pointer">
                       <User className="h-4 w-4 mr-2" /> My Profile
                     </DropdownMenuItem>

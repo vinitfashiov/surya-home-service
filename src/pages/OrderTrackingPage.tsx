@@ -16,13 +16,12 @@ import { supabase } from '@/integrations/supabase/client';
 const statusSteps = [
   { key: 'pending', label: 'Booking Confirmed', icon: CheckCircle },
   { key: 'accepted', label: 'Accepted by Provider', icon: CheckCircle },
-  { key: 'assigned', label: 'Serviceman Assigned', icon: User },
   { key: 'on_the_way', label: 'On the Way', icon: MapPin },
   { key: 'started', label: 'Service Started', icon: Clock },
   { key: 'completed', label: 'Completed', icon: CheckCircle },
 ];
 
-const statusOrder = ['pending', 'accepted', 'assigned', 'on_the_way', 'started', 'completed'];
+const statusOrder = ['pending', 'accepted', 'on_the_way', 'started', 'completed'];
 
 export default function OrderTrackingPage() {
   const { bookingId } = useParams();
@@ -127,12 +126,7 @@ export default function OrderTrackingPage() {
             <MapPin className="h-4 w-4 flex-shrink-0" />
             <span>{booking.address}</span>
           </div>
-          {booking.serviceman?.name && (
-            <div className="flex items-center gap-2 text-muted-foreground col-span-2">
-              <User className="h-4 w-4" />
-              <span>Serviceman: <span className="font-medium text-foreground">{booking.serviceman.name}</span></span>
-            </div>
-          )}
+
         </div>
         <Separator className="my-4" />
         <div className="flex justify-between items-center">

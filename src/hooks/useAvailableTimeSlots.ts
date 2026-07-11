@@ -60,35 +60,22 @@ export function useAvailableTimeSlots({ date, providerIds, duration = 60 }: UseA
       // Fetch all bookings for this date and these providers
       const { data: bookings, error } = await supabase
         .from('bookings')
-        .select('booking_time, provider_id, serviceman_id, service_id, services(duration)')
+        .select('booking_time, provider_id, service_id, services(duration)')
         .eq('booking_date', date)
         .in('provider_id', providerIds)
         .not('status', 'eq', 'cancelled');
 
       if (error) throw error;
 
-      // Fetch servicemen for these providers
-      const { data: servicemen } = await supabase
-        .from('servicemen')
-        .select('id, provider_id')
-        .in('provider_id', providerIds)
-        .eq('status', 'available');
-
-      // Count servicemen per provider
-      const servicemenPerProvider: Record<string, number> = {};
-      (servicemen || []).forEach((sm: any) => {
-        servicemenPerProvider[sm.provider_id] = (servicemenPerProvider[sm.provider_id] || 0) + 1;
-      });
-
       // For each allowed time slot, check if ALL providers have capacity
       const availableSlots = allowedSlots.filter(slot => {
         return providerIds.every(providerId => {
           const setting = availMap[providerId];
-          // Use custom max_bookings_per_slot if set (> 0), otherwise use servicemen count
+          // Use custom max_bookings_per_slot if set (> 0), otherwise default to 5
           const customMax = setting?.max_bookings_per_slot;
           const maxCapacity = (customMax && customMax > 0)
             ? customMax
-            : Math.max(servicemenPerProvider[providerId] || 1, 1);
+            : 5;
 
           const bookingsAtSlot = (bookings || []).filter(
             (b: any) => b.booking_time === slot && b.provider_id === providerId

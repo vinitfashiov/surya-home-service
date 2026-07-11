@@ -226,6 +226,9 @@ export default function CheckoutPage() {
         for (let q = 0; q < item.quantity; q++) {
           const pricedItem = pricedItems.find(p => p.serviceId === item.serviceId && p.variantId === item.variantId);
           const bookingAmount = (pricedItem?.dynamicPrice ?? item.price) + item.addonsTotal;
+          const latitude = mapLocation?.lat || (selectedAddress?.latitude ? Number(selectedAddress.latitude) : null);
+          const longitude = mapLocation?.lng || (selectedAddress?.longitude ? Number(selectedAddress.longitude) : null);
+
           const booking = await createBooking.mutateAsync({
             customer_id: user.id,
             service_id: item.serviceId,
@@ -236,6 +239,8 @@ export default function CheckoutPage() {
             address: finalAddress,
             notes: notes || undefined,
             amount: bookingAmount,
+            latitude,
+            longitude,
           });
           bookingIds.push(booking.id);
         }

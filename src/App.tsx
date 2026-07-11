@@ -40,13 +40,11 @@ import ProviderLayout from "@/components/provider/ProviderLayout";
 import ProviderDashboard from "@/pages/provider/ProviderDashboard";
 import ProviderAnalytics from "@/pages/provider/ProviderAnalytics";
 import ProviderBookings from "@/pages/provider/ProviderBookings";
-import ProviderServicemen from "@/pages/provider/ProviderServicemen";
 import ProviderEmployees from "@/pages/provider/ProviderEmployees";
 import ProviderProfile from "@/pages/provider/ProviderProfile";
 import ProviderAvailability from "@/pages/provider/ProviderAvailability";
 import ProviderAdsPage from "@/pages/provider/ProviderAdsPage";
 import ProfilePage from "@/pages/ProfilePage";
-import ServicemanDashboard from "@/pages/serviceman/ServicemanDashboard";
 import LoginPage from "@/pages/auth/LoginPage";
 import SignupPage from "@/pages/auth/SignupPage";
 import ProviderSignupPage from "@/pages/auth/ProviderSignupPage";
@@ -93,9 +91,8 @@ const AppLayout = () => {
 
   const isAdminPath = location.pathname.startsWith('/admin');
   const isProviderPath = location.pathname.startsWith('/provider');
-  const isServicemanPath = location.pathname.startsWith('/serviceman');
   const isProviderSignupPath = location.pathname === '/provider-signup';
-  const isDashboardPath = isAdminPath || isProviderPath || isServicemanPath || isProviderSignupPath;
+  const isDashboardPath = isAdminPath || isProviderPath || isProviderSignupPath;
 
   const showCityGate = !selectedCityId && !isDashboardPath;
 
@@ -165,22 +162,12 @@ const AppLayout = () => {
             <Route index element={<ProviderDashboard />} />
             <Route path="analytics" element={<ProviderAnalytics />} />
             <Route path="bookings" element={<ProviderBookings />} />
-            <Route path="servicemen" element={<ProviderServicemen />} />
             <Route path="team" element={<ProviderEmployees />} />
             <Route path="profile" element={<ProviderProfile />} />
             <Route path="availability" element={<ProviderAvailability />} />
             <Route path="campaigns" element={<ProviderAdsPage />} />
           </Route>
 
-          {/* Employee/Serviceman routes */}
-          <Route
-            path="/serviceman"
-            element={
-              <ProtectedRoute requiredRole="serviceman">
-                <ServicemanDashboard />
-              </ProtectedRoute>
-            }
-          />
 
           {/* Public / Customer routes */}
           <Route path="/" element={<HomePage />} />

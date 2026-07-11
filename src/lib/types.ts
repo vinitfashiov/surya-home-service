@@ -1,4 +1,4 @@
-export type UserRole = 'admin' | 'employee' | 'customer' | 'provider' | 'serviceman';
+export type UserRole = 'admin' | 'employee' | 'customer' | 'provider';
 
 export interface User {
   id: string;
@@ -41,8 +41,6 @@ export interface Booking {
   serviceName: string;
   providerId: string;
   providerName: string;
-  servicemanId?: string;
-  servicemanName?: string;
   date: string;
   time: string;
   address: string;
@@ -53,7 +51,7 @@ export interface Booking {
   notes?: string;
 }
 
-export type BookingStatus = 'pending' | 'accepted' | 'assigned' | 'on_the_way' | 'started' | 'completed' | 'cancelled';
+export type BookingStatus = 'pending' | 'accepted' | 'on_the_way' | 'started' | 'completed' | 'cancelled';
 
 export interface Provider {
   id: string;
@@ -63,23 +61,9 @@ export interface Provider {
   phone: string;
   address: string;
   serviceCount: number;
-  servicemanCount: number;
   rating: number;
   status: 'active' | 'inactive' | 'pending';
   createdAt: string;
-}
-
-export interface Serviceman {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  providerId: string;
-  providerName: string;
-  skills: string[];
-  rating: number;
-  status: 'available' | 'busy' | 'offline';
-  completedJobs: number;
 }
 
 export interface Employee {

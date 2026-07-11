@@ -1,5 +1,5 @@
-import { useAllBookings, useUpdateBookingStatus, useProviders, useServicemen } from '@/hooks/useSupabaseData';
-import { useAssignProvider, useAssignServiceman, useToggleEmergency } from '@/hooks/useBookingAssignment';
+import { useAllBookings, useUpdateBookingStatus, useProviders } from '@/hooks/useSupabaseData';
+import { useAssignProvider, useToggleEmergency } from '@/hooks/useBookingAssignment';
 import StatusBadge from '@/components/StatusBadge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -7,11 +7,11 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { CalendarDays, AlertTriangle, UserCog, Users } from 'lucide-react';
+import { CalendarDays, AlertTriangle, UserCog } from 'lucide-react';
 import { toast } from 'sonner';
 import { useState, useEffect } from 'react';
 
-const statusFilters = ['all', 'pending', 'accepted', 'assigned', 'on_the_way', 'started', 'completed', 'cancelled'] as const;
+const statusFilters = ['all', 'pending', 'accepted', 'on_the_way', 'started', 'completed', 'cancelled'] as const;
 
 export default function AdminBookings() {
   const { data: bookings = [], isLoading, error: bookingsError } = useAllBookings();
@@ -22,7 +22,6 @@ export default function AdminBookings() {
   
   const [filter, setFilter] = useState('all');
   const [assigningBooking, setAssigningBooking] = useState<any>(null);
-  const [assignServicemanBooking, setAssignServicemanBooking] = useState<any>(null);
 
   useEffect(() => {
     if (bookingsError) toast.error(`Failed to load bookings: ${bookingsError.message}`);
@@ -101,7 +100,6 @@ export default function AdminBookings() {
                       <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wider">Customer</th>
                       <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wider">Service</th>
                       <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wider">Provider</th>
-                      <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wider">Serviceman</th>
                       <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wider">Date</th>
                       <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wider">Amount</th>
                       <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wider">Status</th>
@@ -133,26 +131,11 @@ export default function AdminBookings() {
                             </Button>
                           </div>
                         </td>
-                        <td className="px-4 py-3.5">
-                          <div className="flex items-center gap-2">
-                            <span className="text-muted-foreground">{b.serviceman?.name || '—'}</span>
-                            {b.provider_id && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-6 w-6 p-0"
-                                onClick={() => setAssignServicemanBooking(b)}
-                              >
-                                <Users className="h-3.5 w-3.5 text-primary" />
-                              </Button>
-                            )}
-                          </div>
-                        </td>
                         <td className="px-4 py-3.5 text-muted-foreground">
                           <div>{b.booking_date}</div>
                           <div className="text-xs">{b.booking_time}</div>
                         </td>
-                        <td className="px-4 py-3.5 font-semibold text-foreground">${b.amount}</td>
+                        <td className="px-4 py-3.5 font-semibold text-foreground">₹{b.amount}</td>
                         <td className="px-4 py-3.5"><StatusBadge status={b.status} /></td>
                         <td className="px-4 py-3.5">
                           <div className="flex flex-wrap gap-1.5">
@@ -191,13 +174,6 @@ export default function AdminBookings() {
         providers={providers.filter((p: any) => p.status === 'active')}
         onAssign={handleAssignProvider}
         isLoading={assignProvider.isPending}
-      />
-
-      {/* Assign Serviceman Dialog */}
-      <AssignServicemanDialog
-        open={!!assignServicemanBooking}
-        onOpenChange={(open) => !open && setAssignServicemanBooking(null)}
-        booking={assignServicemanBooking}
       />
     </div>
   );
@@ -257,79 +233,6 @@ function AssignProviderDialog({ open, onOpenChange, booking, providers, onAssign
               disabled={!selectedProvider || isLoading}
             >
               {isLoading ? 'Assigning...' : 'Assign Provider'}
-            </Button>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-function AssignServicemanDialog({ open, onOpenChange, booking }: { open: boolean; onOpenChange: (open: boolean) => void; booking: any }) {
-  const { data: servicemen = [] } = useServicemen(booking?.provider_id);
-  const assignServiceman = useAssignServiceman();
-  const [selectedServiceman, setSelectedServiceman] = useState<string>('');
-
-  useEffect(() => {
-    if (booking) {
-      setSelectedServiceman(booking.serviceman_id || '');
-    }
-  }, [booking]);
-
-  const handleAssign = () => {
-    if (!booking || !selectedServiceman) return;
-    
-    assignServiceman.mutate(
-      { bookingId: booking.id, servicemanId: selectedServiceman },
-      {
-        onSuccess: () => {
-          toast.success('Serviceman assigned');
-          onOpenChange(false);
-        },
-        onError: (err) => toast.error(err.message),
-      }
-    );
-  };
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Assign Serviceman</DialogTitle>
-          <DialogDescription>
-            Select a serviceman from {booking?.provider?.company_name}
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="space-y-4 py-4">
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Select Serviceman</label>
-            <Select value={selectedServiceman} onValueChange={setSelectedServiceman}>
-              <SelectTrigger>
-                <SelectValue placeholder="Choose a serviceman..." />
-              </SelectTrigger>
-              <SelectContent>
-                {servicemen.filter((s: any) => s.status === 'available').map((s: any) => (
-                  <SelectItem key={s.id} value={s.id}>
-                    {s.name} {s.rating ? `(⭐ ${s.rating})` : ''}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {servicemen.filter((s: any) => s.status === 'available').length === 0 && (
-              <p className="text-xs text-muted-foreground">No available servicemen for this provider</p>
-            )}
-          </div>
-
-          <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
-            <Button
-              onClick={handleAssign}
-              disabled={!selectedServiceman || assignServiceman.isPending}
-            >
-              {assignServiceman.isPending ? 'Assigning...' : 'Assign Serviceman'}
             </Button>
           </div>
         </div>

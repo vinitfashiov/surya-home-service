@@ -1,4 +1,4 @@
-import { useAuth, useProviderBookings, useMyProvider, useServicemen, useCategories, useServices } from '@/hooks/useSupabaseData';
+import { useAuth, useProviderBookings, useMyProvider, useCategories, useServices } from '@/hooks/useSupabaseData';
 import ProviderOnboarding from '@/components/provider/ProviderOnboarding';
 import { useReviewsForProvider } from '@/hooks/useReviews';
 import StatCard from '@/components/StatCard';
@@ -13,7 +13,6 @@ export default function ProviderDashboard() {
   const { user } = useAuth();
   const { data: provider, error: providerError } = useMyProvider(user?.id);
   const { data: bookings = [], isLoading, error: bookingsError } = useProviderBookings(user?.id);
-  const { data: myServicemen = [], error: servicemenError } = useServicemen(provider?.id);
   const { data: reviews = [], error: reviewsError } = useReviewsForProvider(provider?.id);
   const { data: categories = [] } = useCategories();
   const { data: services = [] } = useServices();
@@ -21,9 +20,8 @@ export default function ProviderDashboard() {
   useEffect(() => {
     if (providerError) toast.error(`Failed to load provider: ${providerError.message}`);
     if (bookingsError) toast.error(`Failed to load bookings: ${bookingsError.message}`);
-    if (servicemenError) toast.error(`Failed to load servicemen: ${servicemenError.message}`);
     if (reviewsError) toast.error(`Failed to load reviews: ${reviewsError.message}`);
-  }, [providerError, bookingsError, servicemenError, reviewsError]);
+  }, [providerError, bookingsError, reviewsError]);
 
   if (!user) {
     return <div className="container mx-auto px-4 py-20 text-center text-muted-foreground">Please log in as a provider.</div>;
@@ -60,7 +58,7 @@ export default function ProviderDashboard() {
       {/* Earnings overview */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-8">
         <StatCard title="Active Bookings" value={activeBookings} icon={CalendarDays} />
-        <StatCard title="Servicemen" value={myServicemen.length} icon={Users} />
+        <StatCard title="Completed Jobs" value={completedBookings} icon={Users} />
         <StatCard title="Total Earnings" value={`₹${totalEarnings.toLocaleString()}`} icon={DollarSign} />
         <StatCard title="Net Earnings" value={`₹${Math.round(netEarnings).toLocaleString()}`} icon={TrendingUp} />
       </div>

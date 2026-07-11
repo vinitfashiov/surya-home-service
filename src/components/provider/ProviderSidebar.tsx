@@ -33,7 +33,6 @@ import { useNavigate } from 'react-router-dom';
 const mainNav = [
   { title: 'Dashboard', url: '/provider', icon: LayoutDashboard },
   { title: 'Bookings', url: '/provider/bookings', icon: CalendarDays },
-  { title: 'Servicemen', url: '/provider/servicemen', icon: Users },
   { title: 'Team', url: '/provider/team', icon: Shield },
   { title: 'Availability', url: '/provider/availability', icon: Clock },
 ];

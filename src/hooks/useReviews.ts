@@ -41,7 +41,6 @@ export function useCreateReview() {
     mutationFn: async (review: {
       booking_id: string;
       customer_id: string;
-      serviceman_id?: string;
       provider_id: string;
       rating: number;
       comment?: string;

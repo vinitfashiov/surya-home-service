@@ -11,7 +11,7 @@ interface ProtectedRouteProps {
 // Determine default redirect based on role
 function getDefaultRedirect(requiredRole: string): string {
   if (requiredRole === 'admin') return '/admin/login';
-  if (requiredRole === 'provider' || requiredRole === 'serviceman' || requiredRole === 'provider_employee') {
+  if (requiredRole === 'provider' || requiredRole === 'provider_employee') {
     return '/provider/login';
   }
   return '/login';
