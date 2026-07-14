@@ -267,10 +267,10 @@ export default function ProviderAvailabilityPage() {
                           value={maxBookings}
                           onChange={e => setMaxBookings(Number(e.target.value))}
                           min={0}
-                          placeholder="0 = use default (servicemen count)"
+                          placeholder="0 = use default (5 bookings per slot)"
                         />
                         <p className="text-xs text-muted-foreground flex items-center gap-1">
-                          <Info className="h-3 w-3" /> 0 means auto-calculate from servicemen count
+                          <Info className="h-3 w-3" /> 0 means default of 5 bookings per slot
                         </p>
                       </div>
                     </>

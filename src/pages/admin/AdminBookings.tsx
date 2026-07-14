@@ -7,7 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { CalendarDays, AlertTriangle, UserCog } from 'lucide-react';
+import { CalendarDays, AlertTriangle, UserCog, Zap } from 'lucide-react';
 import { toast } from 'sonner';
 import { useState, useEffect } from 'react';
 
@@ -41,6 +41,77 @@ export default function AdminBookings() {
       onSuccess: () => {
         toast.success('Provider assigned successfully');
         setAssigningBooking(null);
+      },
+      onError: (err) => toast.error(err.message),
+    });
+  };
+
+  const handleAutoAssign = async (booking: any) => {
+    // 1. Filter online/active providers
+    const activeProviders = providers.filter((p: any) => p.status === 'active');
+    if (activeProviders.length === 0) {
+      toast.error('No active/online providers available.');
+      return;
+    }
+
+    // 2. Find closest provider
+    let chosenProvider: any = null;
+    let minDistance = Infinity;
+
+    const bLat = booking.latitude ? Number(booking.latitude) : null;
+    const bLng = booking.longitude ? Number(booking.longitude) : null;
+
+    if (bLat && bLng) {
+      // Calculate distance using Haversine formula
+      const toRad = (x: number) => (x * Math.PI) / 180;
+      activeProviders.forEach((prov: any) => {
+        const pLat = prov.latitude ? Number(prov.latitude) : null;
+        const pLng = prov.longitude ? Number(prov.longitude) : null;
+
+        if (pLat && pLng) {
+          const R = 6371; // Earth's radius in km
+          const dLat = toRad(pLat - bLat);
+          const dLng = toRad(pLng - bLng);
+          const a =
+            Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(toRad(bLat)) *
+              Math.cos(toRad(pLat)) *
+              Math.sin(dLng / 2) *
+              Math.sin(dLng / 2);
+          const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+          const d = R * c;
+
+          if (d < minDistance) {
+            minDistance = d;
+            chosenProvider = prov;
+          }
+        }
+      });
+    }
+
+    // 3. Fallback: match by city_id
+    if (!chosenProvider) {
+      const cityId = booking.service?.provider?.city_id || booking.city_id;
+      const cityProviders = activeProviders.filter((p: any) => p.city_id === cityId);
+      if (cityProviders.length > 0) {
+        chosenProvider = cityProviders[0];
+      }
+    }
+
+    // 4. Fallback 2: pick the first active provider
+    if (!chosenProvider && activeProviders.length > 0) {
+      chosenProvider = activeProviders[0];
+    }
+
+    if (!chosenProvider) {
+      toast.error('No suitable online provider found in this area.');
+      return;
+    }
+
+    // Execute assignment
+    assignProvider.mutate({ bookingId: booking.id, providerId: chosenProvider.id }, {
+      onSuccess: () => {
+        toast.success(`Assigned to ${chosenProvider.company_name} ${minDistance === Infinity ? '' : `(${minDistance.toFixed(2)} km away)`}`);
       },
       onError: (err) => toast.error(err.message),
     });
@@ -120,15 +191,33 @@ export default function AdminBookings() {
                         <td className="px-4 py-3.5 text-foreground">{b.service?.name}</td>
                         <td className="px-4 py-3.5">
                           <div className="flex items-center gap-2">
-                            <span className="text-muted-foreground">{b.provider?.company_name || '—'}</span>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-6 w-6 p-0"
-                              onClick={() => setAssigningBooking(b)}
-                            >
-                              <UserCog className="h-3.5 w-3.5 text-primary" />
-                            </Button>
+                            {b.provider?.company_name ? (
+                              <>
+                                <span className="text-muted-foreground">{b.provider.company_name}</span>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-6 w-6 p-0"
+                                  onClick={() => setAssigningBooking(b)}
+                                >
+                                  <UserCog className="h-3.5 w-3.5 text-primary" />
+                                </Button>
+                              </>
+                            ) : (
+                              <>
+                                <Badge variant="outline" className="bg-amber-500/10 text-amber-600 border-amber-500/20 font-bold uppercase text-[9px] px-1.5 py-0.5">
+                                  Unassigned
+                                </Badge>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-6 w-6 p-0"
+                                  onClick={() => setAssigningBooking(b)}
+                                >
+                                  <UserCog className="h-3.5 w-3.5 text-muted-foreground" />
+                                </Button>
+                              </>
+                            )}
                           </div>
                         </td>
                         <td className="px-4 py-3.5 text-muted-foreground">
@@ -144,6 +233,18 @@ export default function AdminBookings() {
                                 <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => handleStatusChange(b.id, 'accepted')}>Accept</Button>
                                 <Button size="sm" variant="outline" className="h-7 text-xs text-destructive border-destructive/30 hover:bg-destructive/10" onClick={() => handleStatusChange(b.id, 'cancelled')}>Cancel</Button>
                               </>
+                            )}
+                            {!b.provider_id && b.status === 'pending' && (
+                              <Button
+                                size="sm"
+                                variant="secondary"
+                                className="h-7 text-xs bg-emerald-50 text-emerald-600 hover:bg-emerald-100/80 border border-emerald-200/50 gap-1 font-bold"
+                                onClick={() => handleAutoAssign(b)}
+                                disabled={assignProvider.isPending}
+                              >
+                                <Zap className="h-3 w-3 fill-emerald-600" />
+                                Auto-Assign
+                              </Button>
                             )}
                             <Button
                               size="sm"

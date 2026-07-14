@@ -53,7 +53,7 @@ export function useCreateProvider() {
 export function useUpdateProvider() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, ...updates }: { id: string; status?: string; company_name?: string; owner_name?: string; email?: string; phone?: string; address?: string; city_id?: string; zone_id?: string; latitude?: number; longitude?: number }) => {
+    mutationFn: async ({ id, ...updates }: { id: string; status?: string; company_name?: string; owner_name?: string; email?: string; phone?: string; address?: string; city_id?: string; zone_id?: string; latitude?: number; longitude?: number; aadhaar_number?: string; aadhaar_verified?: boolean; gst_number?: string; pan_number?: string; bank_account_number?: string; bank_name?: string; bank_ifsc?: string; bank_account_name?: string; is_verified?: boolean }) => {
       const { data, error } = await supabase.from('providers').update(updates).eq('id', id).select().single();
       if (error) throw error;
       return data;

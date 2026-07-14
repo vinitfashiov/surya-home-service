@@ -1,193 +1,212 @@
 import { useState, useEffect } from 'react';
 import { useAuth, useMyProvider } from '@/hooks/useSupabaseData';
-import { useCities } from '@/hooks/useCities';
+import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import ImageUpload from '@/components/ImageUpload';
-import ProviderDocuments from '@/components/provider/ProviderDocuments';
-import { useQueryClient } from '@tanstack/react-query';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Building2, Save, Loader2, ShieldCheck } from 'lucide-react';
+import { useProviderTranslation } from '@/hooks/useProviderTranslation';
+import { ProviderLanguage } from '@/utils/providerTranslations';
+import { 
+  UserCheck, History, MapPin, Landmark, 
+  GraduationCap, HelpCircle, ShoppingBag, Award, 
+  Settings, ChevronRight, Share2, LogOut, MessageSquareCode,
+  Wallet
+} from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function ProviderProfile() {
   const { user } = useAuth();
-  const { data: provider, isLoading, error: providerError } = useMyProvider(user?.id);
-  const { data: cities = [], error: citiesError } = useCities();
+  const navigate = useNavigate();
+  const { data: provider } = useMyProvider(user?.id);
+  const { t, language, changeLanguage } = useProviderTranslation();
 
-  useEffect(() => {
-    if (providerError) toast.error(`Failed to load provider: ${providerError.message}`);
-    if (citiesError) toast.error(`Failed to load cities: ${citiesError.message}`);
-  }, [providerError, citiesError]);
-  const queryClient = useQueryClient();
-  const [saving, setSaving] = useState(false);
-
-  const [form, setForm] = useState({
-    company_name: '',
-    owner_name: '',
-    email: '',
-    phone: '',
-    address: '',
-    city_id: '',
-  });
+  // State for whatsapp toggle
+  const [whatsappUpdates, setWhatsappUpdates] = useState(true);
 
   useEffect(() => {
     if (provider) {
-      setForm({
-        company_name: provider.company_name || '',
-        owner_name: provider.owner_name || '',
-        email: provider.email || '',
-        phone: provider.phone || '',
-        address: provider.address || '',
-        city_id: provider.city_id || '',
-      });
+      const localWa = localStorage.getItem(`provider_wa_${provider.id}`) !== 'false';
+      setWhatsappUpdates(provider.whatsapp_updates ?? localWa);
     }
   }, [provider]);
 
-  if (!user) {
-    return <div className="container mx-auto px-4 py-20 text-center text-muted-foreground">Please log in as a provider.</div>;
-  }
-
-  if (isLoading) {
-    return <div className="container mx-auto px-4 py-20 flex justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
-  }
-
-  if (!provider) {
-    return <div className="container mx-auto px-4 py-20 text-center text-muted-foreground">No provider profile found.</div>;
-  }
-
-  const handleSave = async () => {
-    if (!form.company_name.trim() || !form.owner_name.trim() || !form.email.trim()) {
-      toast.error('Company name, owner name, and email are required.');
-      return;
+  const handleWaToggle = async (checked: boolean) => {
+    setWhatsappUpdates(checked);
+    if (!provider) return;
+    try {
+      const { error } = await supabase
+        .from('providers')
+        .update({ whatsapp_updates: checked } as any)
+        .eq('id', provider.id);
+      if (error) throw error;
+      toast.success('WhatsApp updates preference updated');
+    } catch {
+      localStorage.setItem(`provider_wa_${provider.id}`, String(checked));
+      toast.success('WhatsApp preference saved locally');
     }
-    setSaving(true);
-    const { error } = await supabase
-      .from('providers')
-      .update({
-        company_name: form.company_name.trim(),
-        owner_name: form.owner_name.trim(),
-        email: form.email.trim(),
-        phone: form.phone.trim(),
-        address: form.address.trim(),
-        city_id: form.city_id || null,
-      })
-      .eq('id', provider.id);
-    setSaving(false);
-    if (error) {
-      toast.error('Failed to update profile');
+  };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    toast.success('Logged out successfully');
+    navigate('/provider/login');
+  };
+
+  const handleShareDetails = () => {
+    if (navigator.share) {
+      navigator.share({
+        title: provider?.company_name || 'Surya Service Provider',
+        text: `Check out our service profile: ${provider?.company_name}`,
+        url: window.location.href,
+      }).catch(() => {});
     } else {
-      toast.success('Profile updated successfully');
-      queryClient.invalidateQueries({ queryKey: ['my-provider'] });
+      navigator.clipboard.writeText(window.location.href);
+      toast.success('Profile URL copied to clipboard');
     }
   };
 
-  const statusColor: Record<string, string> = {
-    active: 'bg-success/10 text-success',
-    pending: 'bg-warning/10 text-warning',
-    rejected: 'bg-destructive/10 text-destructive',
-    inactive: 'bg-muted text-muted-foreground',
-  };
+  if (!user) return <div className="container mx-auto px-4 py-20 text-center text-muted-foreground">Please log in as a provider.</div>;
+  if (!provider) return <div className="container mx-auto px-4 py-20 text-center text-muted-foreground">No provider profile found.</div>;
+
+  const menuItems = [
+    { label: t('profile.verify_aadhaar'), path: '/provider/verify-aadhaar', icon: UserCheck, desc: t('profile.verify_aadhaar_desc') },
+    { label: t('profile.payouts'), path: '/provider/payouts', icon: Wallet, desc: t('profile.payouts_desc') },
+    { label: t('profile.past_jobs'), path: '/provider/past-bookings', icon: History, desc: t('profile.past_jobs_desc') },
+    { label: t('profile.my_hub'), path: '/provider/hub', icon: MapPin, desc: t('profile.my_hub_desc') },
+    { label: t('profile.loans'), path: '/provider/loans', icon: Landmark, desc: t('profile.loans_desc') },
+    { label: t('profile.training'), path: '/provider/training', icon: GraduationCap, desc: t('profile.training_desc') },
+    { label: t('profile.help'), path: '/provider/help', icon: HelpCircle, desc: t('profile.help_desc') },
+    { label: t('profile.shop'), path: '/provider/shop', icon: ShoppingBag, desc: t('profile.shop_desc') },
+    { label: t('profile.skill_cert'), path: '/provider/skill-certificate', icon: Award, desc: t('profile.skill_cert_desc') },
+  ];
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-2xl">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
-          <Building2 className="h-5 w-5 text-primary" />
+    <div className="min-h-screen bg-muted/20 pb-20">
+      {/* Header Profile Info Card */}
+      <div className="bg-background border-b pt-6 pb-5 px-4 shadow-sm max-w-lg mx-auto">
+        <div className="flex items-center gap-4">
+          <Avatar className="h-16 w-16 border-2 border-primary/20">
+            <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${provider.owner_name}`} />
+            <AvatarFallback>{provider.owner_name.slice(0, 2).toUpperCase()}</AvatarFallback>
+          </Avatar>
+          <div className="flex-1 min-w-0">
+            <h2 className="font-heading font-bold text-lg text-foreground truncate">{provider.owner_name}</h2>
+            <p className="text-xs text-muted-foreground mt-0.5 truncate">{provider.company_name}</p>
+            <div className="flex items-center gap-2 mt-2">
+              <Badge variant="secondary" className="bg-amber-500/10 text-amber-600 border-0 text-[10px] font-bold">
+                {provider.rating ? `${provider.rating} ★` : '4.85 ★'}
+              </Badge>
+              <Badge variant="outline" className={`text-[10px] uppercase font-bold ${
+                provider.is_verified ? 'border-emerald-500/30 text-emerald-600 bg-emerald-50/50' : 'border-amber-500/30 text-amber-600 bg-amber-50/50'
+              }`}>
+                {provider.is_verified ? 'Verified' : 'Pending Verification'}
+              </Badge>
+            </div>
+          </div>
+          <Button variant="ghost" size="icon" className="rounded-full shrink-0 text-muted-foreground" onClick={handleShareDetails}>
+            <Share2 className="h-5 w-5" />
+          </Button>
         </div>
-        <div>
-          <h1 className="text-2xl font-heading font-bold text-foreground">Provider Profile</h1>
-          <p className="text-sm text-muted-foreground">Update your company details and contact information</p>
-        </div>
-        <Badge className={`ml-auto ${statusColor[provider.status] || statusColor.inactive} border-0`}>
-          {provider.status}
-        </Badge>
       </div>
 
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="text-lg">Company Logo</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ImageUpload
-            bucket="provider-logos"
-            path={`${provider.id}/logo`}
-            currentUrl={null}
-            onUpload={(url) => {
-              // Logo is visual-only for now; could be stored in a column later
-              toast.success('Logo uploaded');
-            }}
-          />
-        </CardContent>
-      </Card>
+      <div className="container mx-auto px-4 py-4 max-w-lg space-y-4">
+        {/* Navigation Menu List */}
+        <Card className="border shadow-sm">
+          <CardContent className="p-0 divide-y">
+            {menuItems.map((item) => (
+              <Link 
+                key={item.path} 
+                to={item.path}
+                className="flex items-center justify-between p-4 hover:bg-muted/10 transition-colors"
+              >
+                <div className="flex items-center gap-3.5 min-w-0">
+                  <div className="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                    <item.icon className="h-5 w-5 text-primary" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold text-foreground leading-none">{item.label}</p>
+                    <p className="text-[10px] text-muted-foreground mt-1 truncate">{item.desc}</p>
+                  </div>
+                </div>
+                <ChevronRight className="h-4 w-4 text-muted-foreground/60 shrink-0" />
+              </Link>
+            ))}
+          </CardContent>
+        </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Company Details</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="company_name">Company Name *</Label>
-              <Input id="company_name" value={form.company_name} onChange={e => setForm(f => ({ ...f, company_name: e.target.value }))} maxLength={100} />
+        {/* Bottom Options (Vitteey vivaran, WhatsApp status, App language) */}
+        <Card className="border shadow-sm">
+          <CardContent className="p-0 divide-y">
+            {/* Vitteey vivaran */}
+            <Link 
+              to="/provider/financial-details"
+              className="flex items-center justify-between p-4 hover:bg-muted/10 transition-colors"
+            >
+              <div className="flex items-center gap-3.5">
+                <div className="h-9 w-9 rounded-xl bg-violet-600/10 flex items-center justify-center">
+                  <Landmark className="h-5 w-5 text-violet-700" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-foreground leading-none">{t('profile.financial_details')}</p>
+                  <p className="text-[10px] text-muted-foreground mt-1">{t('profile.financial_details_desc')}</p>
+                </div>
+              </div>
+              <ChevronRight className="h-4 w-4 text-muted-foreground/60" />
+            </Link>
+
+            {/* WhatsApp Updates Switch Toggle */}
+            <div className="flex items-center justify-between p-4">
+              <div className="flex items-center gap-3.5">
+                <div className="h-9 w-9 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+                  <MessageSquareCode className="h-5 w-5 text-emerald-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-foreground leading-none">{t('profile.whatsapp_updates')}</p>
+                  <p className="text-[10px] text-muted-foreground mt-1">{t('profile.whatsapp_updates_desc')}</p>
+                </div>
+              </div>
+              <Switch checked={whatsappUpdates} onCheckedChange={handleWaToggle} />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="owner_name">Owner Name *</Label>
-              <Input id="owner_name" value={form.owner_name} onChange={e => setForm(f => ({ ...f, owner_name: e.target.value }))} maxLength={100} />
+
+            {/* Change Language Select Dropdown */}
+            <div className="flex items-center justify-between p-4">
+              <div className="flex items-center gap-3.5">
+                <div className="h-9 w-9 rounded-xl bg-amber-500/10 flex items-center justify-center">
+                  <Settings className="h-5 w-5 text-amber-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-foreground leading-none">{t('profile.change_lang')}</p>
+                  <p className="text-[10px] text-muted-foreground mt-1">{t('profile.change_lang_desc')}</p>
+                </div>
+              </div>
+              <div className="w-32 shrink-0">
+                <Select value={language} onValueChange={(val) => changeLanguage(val as ProviderLanguage)}>
+                  <SelectTrigger className="h-8 text-xs font-semibold">
+                    <SelectValue placeholder="Language" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="hinglish">Hinglish</SelectItem>
+                    <SelectItem value="hindi">हिन्दी (Hindi)</SelectItem>
+                    <SelectItem value="english">English</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-          </div>
+          </CardContent>
+        </Card>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email *</Label>
-              <Input id="email" type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} maxLength={255} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="phone">Phone</Label>
-              <Input id="phone" value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} maxLength={20} />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="city">City</Label>
-            <Select value={form.city_id} onValueChange={v => setForm(f => ({ ...f, city_id: v }))}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select city" />
-              </SelectTrigger>
-              <SelectContent>
-                {cities.map((c: any) => (
-                  <SelectItem key={c.id} value={c.id}>{c.name}{c.state ? `, ${c.state}` : ''}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="address">Address</Label>
-            <Textarea id="address" value={form.address} onChange={e => setForm(f => ({ ...f, address: e.target.value }))} maxLength={500} rows={3} />
-          </div>
-
-          <Button onClick={handleSave} disabled={saving} className="w-full sm:w-auto">
-            {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
-            Save Changes
-          </Button>
-        </CardContent>
-      </Card>
-
-      {/* Verification Documents */}
-      <div className="mt-6">
-        {(provider as any).is_verified && (
-          <div className="flex items-center gap-2 mb-4 p-3 rounded-lg bg-success/5 border border-success/20">
-            <ShieldCheck className="h-5 w-5 text-success" />
-            <span className="text-sm font-medium text-success">Your account is verified</span>
-          </div>
-        )}
-        <ProviderDocuments providerId={provider.id} />
+        {/* Logout Button */}
+        <Button 
+          variant="outline" 
+          className="w-full h-11 border-destructive/20 text-destructive hover:bg-destructive/5 gap-2 font-bold text-xs rounded-xl"
+          onClick={handleLogout}
+        >
+          <LogOut className="h-4 w-4" /> {t('profile.logout')}
+        </Button>
       </div>
     </div>
   );

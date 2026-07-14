@@ -242,6 +242,13 @@ Deno.serve(async (req) => {
           });
         }
 
+        // ── Role Isolation: Remove customer role when registering as provider ──
+        await adminClient
+          .from("user_roles")
+          .delete()
+          .eq("user_id", userId)
+          .eq("role", "customer");
+
         await ensureProviderProfile(
           adminClient,
           userId,
@@ -305,6 +312,15 @@ Deno.serve(async (req) => {
         user_id: userId,
         role: assignedRole,
       });
+
+      // ── Role Isolation: If registering as provider, ensure no customer role exists ──
+      if (assignedRole === "provider") {
+        await adminClient
+          .from("user_roles")
+          .delete()
+          .eq("user_id", userId)
+          .eq("role", "customer");
+      }
 
       // If provider, create provider record
       if (assignedRole === "provider") {

@@ -11,18 +11,39 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Star, Pencil, Trash2, Building2, Search, CheckCircle, XCircle, Shield, Plus, ShieldCheck, FileText } from 'lucide-react';
+import { Star, Pencil, Trash2, Building2, Search, CheckCircle, XCircle, Shield, Plus, ShieldCheck, FileText, UserCheck, CreditCard, Landmark } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
-const emptyForm = { company_name: '', owner_name: '', email: '', phone: '', address: '', status: 'pending', city_id: '', zone_id: 'none', latitude: null as number | null, longitude: null as number | null };
+const emptyForm = {
+  company_name: '',
+  owner_name: '',
+  email: '',
+  phone: '',
+  address: '',
+  status: 'pending',
+  city_id: '',
+  zone_id: 'none',
+  latitude: null as number | null,
+  longitude: null as number | null,
+  aadhaar_number: '',
+  aadhaar_verified: false,
+  gst_number: '',
+  pan_number: '',
+  bank_account_number: '',
+  bank_name: '',
+  bank_ifsc: '',
+  bank_account_name: '',
+  is_verified: false
+};
 
 export default function AdminProviders() {
   const { data: providers = [], isLoading, error: providersError } = useProviders();
@@ -58,7 +79,27 @@ export default function AdminProviders() {
   const openEdit = (p: any) => {
     setEditProvider(p);
     setIsAdding(false);
-    setForm({ company_name: p.company_name, owner_name: p.owner_name, email: p.email, phone: p.phone || '', address: p.address || '', status: p.status, city_id: p.city_id || '', zone_id: p.zone_id || 'none', latitude: p.latitude || null, longitude: p.longitude || null });
+    setForm({
+      company_name: p.company_name,
+      owner_name: p.owner_name,
+      email: p.email,
+      phone: p.phone || '',
+      address: p.address || '',
+      status: p.status,
+      city_id: p.city_id || '',
+      zone_id: p.zone_id || 'none',
+      latitude: p.latitude || null,
+      longitude: p.longitude || null,
+      aadhaar_number: p.aadhaar_number || '',
+      aadhaar_verified: !!p.aadhaar_verified,
+      gst_number: p.gst_number || '',
+      pan_number: p.pan_number || '',
+      bank_account_number: p.bank_account_number || '',
+      bank_name: p.bank_name || '',
+      bank_ifsc: p.bank_ifsc || '',
+      bank_account_name: p.bank_account_name || '',
+      is_verified: !!p.is_verified
+    });
   };
 
   const openAdd = () => {
@@ -116,7 +157,26 @@ export default function AdminProviders() {
   const handleSave = async () => {
     if (!editProvider) return;
     try {
-      const updates: any = { id: editProvider.id, company_name: form.company_name, owner_name: form.owner_name, email: form.email, phone: form.phone, address: form.address, status: form.status, latitude: form.latitude, longitude: form.longitude };
+      const updates: any = {
+        id: editProvider.id,
+        company_name: form.company_name,
+        owner_name: form.owner_name,
+        email: form.email,
+        phone: form.phone,
+        address: form.address,
+        status: form.status,
+        latitude: form.latitude,
+        longitude: form.longitude,
+        aadhaar_number: form.aadhaar_number,
+        aadhaar_verified: form.aadhaar_verified,
+        gst_number: form.gst_number,
+        pan_number: form.pan_number,
+        bank_account_number: form.bank_account_number,
+        bank_name: form.bank_name,
+        bank_ifsc: form.bank_ifsc,
+        bank_account_name: form.bank_account_name,
+        is_verified: form.is_verified
+      };
       if (form.city_id && form.city_id !== 'none') updates.city_id = form.city_id;
       if (form.zone_id) updates.zone_id = form.zone_id === 'none' ? null : form.zone_id;
       await updateMut.mutateAsync(updates);
@@ -158,7 +218,16 @@ export default function AdminProviders() {
         latitude: form.latitude || undefined,
         longitude: form.longitude || undefined,
         status: form.status,
-      });
+        aadhaar_number: form.aadhaar_number || undefined,
+        aadhaar_verified: form.aadhaar_verified,
+        gst_number: form.gst_number || undefined,
+        pan_number: form.pan_number || undefined,
+        bank_account_number: form.bank_account_number || undefined,
+        bank_name: form.bank_name || undefined,
+        bank_ifsc: form.bank_ifsc || undefined,
+        bank_account_name: form.bank_account_name || undefined,
+        is_verified: form.is_verified
+      } as any);
       toast.success('Provider created');
       setIsAdding(false);
     } catch (e: any) { toast.error(e.message); }
@@ -259,6 +328,7 @@ export default function AdminProviders() {
                           <th className="text-left px-6 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wider">Owner</th>
                           <th className="text-left px-6 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wider">Contact</th>
                           <th className="text-left px-6 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wider">City</th>
+                          <th className="text-left px-6 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wider">KYC Verification</th>
                           <th className="text-left px-6 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wider">Rating</th>
                           <th className="text-left px-6 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wider">Status</th>
                           <th className="text-left px-6 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wider">Actions</th>
@@ -281,6 +351,26 @@ export default function AdminProviders() {
                             <td className="px-6 py-3.5 text-muted-foreground">
                               {cityName(p.city_id)}
                               {p.zone_id && <div className="text-xs opacity-70">{zones.find((z:any)=>z.id===p.zone_id)?.name}</div>}
+                            </td>
+                            <td className="px-6 py-3.5">
+                              <div className="flex flex-col gap-1.5">
+                                <span className="flex items-center gap-1.5">
+                                  <span className="text-[11px] font-semibold text-muted-foreground">Aadhaar:</span>
+                                  {p.aadhaar_verified ? (
+                                    <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-0 text-[10px] py-0 px-2 font-black">Verified</Badge>
+                                  ) : (
+                                    <Badge variant="outline" className="bg-amber-500/10 text-amber-600 border-0 text-[10px] py-0 px-2 font-black">Pending</Badge>
+                                  )}
+                                </span>
+                                <span className="flex items-center gap-1.5">
+                                  <span className="text-[11px] font-semibold text-muted-foreground">Bank A/C:</span>
+                                  {p.bank_account_number ? (
+                                    <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-0 text-[10px] py-0 px-2 font-black">Configured</Badge>
+                                  ) : (
+                                    <Badge variant="outline" className="bg-destructive/10 text-destructive border-0 text-[10px] py-0 px-2 font-black">Missing</Badge>
+                                  )}
+                                </span>
+                              </div>
                             </td>
                             <td className="px-6 py-3.5">
                               <span className="flex items-center gap-1"><Star className="h-3.5 w-3.5 text-warning fill-warning" />{p.rating}</span>
@@ -323,42 +413,51 @@ export default function AdminProviders() {
       <Dialog open={dialogOpen} onOpenChange={o => !o && closeDialog()}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle>{isAdding ? 'Add Provider' : 'Edit Provider'}</DialogTitle></DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-1.5"><Label>Company Name</Label><Input value={form.company_name} onChange={e => setForm(f => ({ ...f, company_name: e.target.value }))} /></div>
-            <div className="space-y-1.5"><Label>Owner Name</Label><Input value={form.owner_name} onChange={e => setForm(f => ({ ...f, owner_name: e.target.value }))} /></div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1.5"><Label>Email</Label><Input value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} /></div>
-              <div className="space-y-1.5"><Label>Phone</Label><Input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} /></div>
-            </div>
-            
-            <div className="space-y-1.5 pt-2">
-              <Label>Exact Map Location</Label>
-              <GoogleMapsProvider>
-                <LocationPicker 
-                  initialLocation={form.latitude && form.longitude ? { lat: form.latitude, lng: form.longitude } : undefined}
-                  onLocationSelect={(loc) => {
-                    setForm(f => ({ 
-                      ...f, 
-                      latitude: loc.lat, 
-                      longitude: loc.lng,
-                      address: f.address || loc.address // Auto-fill address if empty
-                    }));
-                  }}
-                  className="bg-muted/10 p-2 rounded-lg border shadow-sm"
+          
+          <Tabs defaultValue="basic" className="w-full mt-4">
+            <TabsList className="grid w-full grid-cols-3 mb-6">
+              <TabsTrigger value="basic" className="gap-1.5"><Building2 className="h-4 w-4" /> Basic Profile</TabsTrigger>
+              <TabsTrigger value="kyc" className="gap-1.5"><UserCheck className="h-4 w-4" /> Identity KYC</TabsTrigger>
+              <TabsTrigger value="finance" className="gap-1.5"><Landmark className="h-4 w-4" /> Payout Banking</TabsTrigger>
+            </TabsList>
+
+            {/* TAB 1: BASIC PROFILE */}
+            <TabsContent value="basic" className="space-y-4">
+              <div className="space-y-1.5"><Label>Company Name</Label><Input value={form.company_name} onChange={e => setForm(f => ({ ...f, company_name: e.target.value }))} /></div>
+              <div className="space-y-1.5"><Label>Owner Name</Label><Input value={form.owner_name} onChange={e => setForm(f => ({ ...f, owner_name: e.target.value }))} /></div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5"><Label>Email</Label><Input value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} /></div>
+                <div className="space-y-1.5"><Label>Phone</Label><Input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} /></div>
+              </div>
+              
+              <div className="space-y-1.5 pt-2">
+                <Label>Exact Map Location</Label>
+                <GoogleMapsProvider>
+                  <LocationPicker 
+                    initialLocation={form.latitude && form.longitude ? { lat: form.latitude, lng: form.longitude } : undefined}
+                    onLocationSelect={(loc) => {
+                      setForm(f => ({ 
+                        ...f, 
+                        latitude: loc.lat, 
+                        longitude: loc.lng,
+                        address: f.address || loc.address
+                      }));
+                    }}
+                    className="bg-muted/10 p-2 rounded-lg border shadow-sm"
+                  />
+                </GoogleMapsProvider>
+              </div>
+              
+              <div className="space-y-1.5 pt-2">
+                <Label>Street Address</Label>
+                <Input 
+                  value={form.address} 
+                  onChange={e => setForm(f => ({ ...f, address: e.target.value }))} 
+                  placeholder="Auto-filled from map or enter manually"
                 />
-              </GoogleMapsProvider>
-            </div>
-            
-            <div className="space-y-1.5 pt-2">
-              <Label>Street Address</Label>
-              <Input 
-                value={form.address} 
-                onChange={e => setForm(f => ({ ...f, address: e.target.value }))} 
-                placeholder="Auto-filled from map or enter manually"
-              />
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <Label>City</Label>
                   <Select value={form.city_id} onValueChange={v => setForm(f => ({ ...f, city_id: v }))}>
@@ -383,19 +482,118 @@ export default function AdminProviders() {
                   </Select>
                 </div>
               </div>
+              
               <div className="space-y-1.5">
-                <Label>Status</Label>
+                <Label>Duty Status</Label>
                 <Select value={form.status} onValueChange={v => setForm(f => ({ ...f, status: v }))}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="pending">Pending Review</SelectItem>
                     <SelectItem value="active">Active</SelectItem>
                     <SelectItem value="suspended">Suspended</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-          </div>
-          <DialogFooter>
+            </TabsContent>
+
+            {/* TAB 2: IDENTITY KYC */}
+            <TabsContent value="kyc" className="space-y-5">
+              <div className="space-y-1.5">
+                <Label>Aadhaar Card Number</Label>
+                <Input 
+                  value={form.aadhaar_number} 
+                  onChange={e => setForm(f => ({ ...f, aadhaar_number: e.target.value }))} 
+                  maxLength={12} 
+                  placeholder="12 Digit Aadhaar Card Number" 
+                />
+              </div>
+              
+              <div className="flex items-center justify-between p-4 bg-muted/30 rounded-xl border">
+                <div>
+                  <Label className="font-bold text-foreground block">Aadhaar Status Verification</Label>
+                  <span className="text-[10px] text-muted-foreground">Toggle true to mark this Aadhaar ID as verified</span>
+                </div>
+                <Switch 
+                  checked={form.aadhaar_verified} 
+                  onCheckedChange={v => setForm(f => ({ ...f, aadhaar_verified: v }))} 
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label>PAN Card Number</Label>
+                  <Input 
+                    value={form.pan_number} 
+                    onChange={e => setForm(f => ({ ...f, pan_number: e.target.value.toUpperCase() }))} 
+                    maxLength={10} 
+                    placeholder="e.g. ABCDE1234F" 
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>GST Identification Number (GSTIN)</Label>
+                  <Input 
+                    value={form.gst_number} 
+                    onChange={e => setForm(f => ({ ...f, gst_number: e.target.value.toUpperCase() }))} 
+                    maxLength={15} 
+                    placeholder="e.g. 22AAAAA1111A1Z1" 
+                  />
+                </div>
+              </div>
+            </TabsContent>
+
+            {/* TAB 3: PAYOUT BANKING */}
+            <TabsContent value="finance" className="space-y-5">
+              <div className="space-y-1.5">
+                <Label>Bank Account Holder Name</Label>
+                <Input 
+                  value={form.bank_account_name} 
+                  onChange={e => setForm(f => ({ ...f, bank_account_name: e.target.value }))} 
+                  placeholder="e.g. Basant Kumar" 
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label>Bank Name</Label>
+                  <Input 
+                    value={form.bank_name} 
+                    onChange={e => setForm(f => ({ ...f, bank_name: e.target.value }))} 
+                    placeholder="e.g. HDFC Bank" 
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>IFSC Code</Label>
+                  <Input 
+                    value={form.bank_ifsc} 
+                    onChange={e => setForm(f => ({ ...f, bank_ifsc: e.target.value.toUpperCase() }))} 
+                    placeholder="e.g. HDFC0000123" 
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label>Bank Account Number</Label>
+                <Input 
+                  value={form.bank_account_number} 
+                  onChange={e => setForm(f => ({ ...f, bank_account_number: e.target.value }))} 
+                  placeholder="Account Number" 
+                />
+              </div>
+
+              <div className="flex items-center justify-between p-4 bg-primary/5 rounded-xl border border-primary/20 mt-6">
+                <div>
+                  <Label className="font-bold text-primary block">Verify Provider Profile Badge</Label>
+                  <span className="text-[10px] text-muted-foreground">Toggle to show a blue verification checkmark to customers</span>
+                </div>
+                <Switch 
+                  checked={form.is_verified} 
+                  onCheckedChange={v => setForm(f => ({ ...f, is_verified: v }))} 
+                />
+              </div>
+            </TabsContent>
+          </Tabs>
+
+          <DialogFooter className="mt-6 border-t pt-4">
             {isAdding ? (
               <Button onClick={handleCreate} disabled={createMut.isPending}>{createMut.isPending ? 'Creating…' : 'Create Provider'}</Button>
             ) : (

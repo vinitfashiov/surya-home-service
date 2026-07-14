@@ -36,6 +36,7 @@ import AdminBanners from "@/pages/admin/AdminBanners";
 import AdminPricingRules from "@/pages/admin/AdminPricingRules";
 import AdminAdsPage from "@/pages/admin/AdminAdsPage";
 import AdminLoginPage from "@/pages/admin/AdminLoginPage";
+import AdminPayouts from "@/pages/admin/AdminPayouts";
 import ProviderLayout from "@/components/provider/ProviderLayout";
 import ProviderDashboard from "@/pages/provider/ProviderDashboard";
 import ProviderAnalytics from "@/pages/provider/ProviderAnalytics";
@@ -44,6 +45,18 @@ import ProviderEmployees from "@/pages/provider/ProviderEmployees";
 import ProviderProfile from "@/pages/provider/ProviderProfile";
 import ProviderAvailability from "@/pages/provider/ProviderAvailability";
 import ProviderAdsPage from "@/pages/provider/ProviderAdsPage";
+import ProviderBookingDetail from "@/pages/provider/ProviderBookingDetail";
+import ProviderPastBookings from "@/pages/provider/ProviderPastBookings";
+import ProviderHub from "@/pages/provider/ProviderHub";
+import ProviderLoans from "@/pages/provider/ProviderLoans";
+import ProviderOnboardingPage from "@/pages/provider/ProviderOnboardingPage";
+import ProviderTraining from "@/pages/provider/ProviderTraining";
+import ProviderHelp from "@/pages/provider/ProviderHelp";
+import ProviderShop from "@/pages/provider/ProviderShop";
+import ProviderSkillCertificate from "@/pages/provider/ProviderSkillCertificate";
+import ProviderFinancialDetails from "@/pages/provider/ProviderFinancialDetails";
+import ProviderAadhaarVerify from "@/pages/provider/ProviderAadhaarVerify";
+import ProviderPayouts from "@/pages/provider/ProviderPayouts";
 import ProfilePage from "@/pages/ProfilePage";
 import LoginPage from "@/pages/auth/LoginPage";
 import SignupPage from "@/pages/auth/SignupPage";
@@ -91,6 +104,7 @@ const AppLayout = () => {
 
   const isAdminPath = location.pathname.startsWith('/admin');
   const isProviderPath = location.pathname.startsWith('/provider');
+  const isPrimaryProviderPath = ['/provider', '/provider/', '/provider/bookings', '/provider/team', '/provider/profile'].includes(location.pathname);
   const isProviderSignupPath = location.pathname === '/provider-signup';
   const isDashboardPath = isAdminPath || isProviderPath || isProviderSignupPath;
 
@@ -143,6 +157,7 @@ const AppLayout = () => {
             <Route path="coupons" element={<AdminCoupons />} />
             <Route path="banners" element={<AdminBanners />} />
             <Route path="campaigns" element={<AdminAdsPage />} />
+            <Route path="payouts" element={<AdminPayouts />} />
             <Route path="pricing-rules" element={<AdminPricingRules />} />
             <Route path="settings" element={<AdminSettings />} />
           </Route>
@@ -160,12 +175,24 @@ const AppLayout = () => {
             }
           >
             <Route index element={<ProviderDashboard />} />
+            <Route path="onboarding" element={<ProviderOnboardingPage />} />
             <Route path="analytics" element={<ProviderAnalytics />} />
             <Route path="bookings" element={<ProviderBookings />} />
             <Route path="team" element={<ProviderEmployees />} />
             <Route path="profile" element={<ProviderProfile />} />
             <Route path="availability" element={<ProviderAvailability />} />
             <Route path="campaigns" element={<ProviderAdsPage />} />
+            <Route path="booking/:bookingId" element={<ProviderBookingDetail />} />
+            <Route path="past-bookings" element={<ProviderPastBookings />} />
+            <Route path="hub" element={<ProviderHub />} />
+            <Route path="payouts" element={<ProviderPayouts />} />
+            <Route path="loans" element={<ProviderLoans />} />
+            <Route path="training" element={<ProviderTraining />} />
+            <Route path="help" element={<ProviderHelp />} />
+            <Route path="shop" element={<ProviderShop />} />
+            <Route path="skill-certificate" element={<ProviderSkillCertificate />} />
+            <Route path="financial-details" element={<ProviderFinancialDetails />} />
+            <Route path="verify-aadhaar" element={<ProviderAadhaarVerify />} />
           </Route>
 
 
@@ -201,7 +228,7 @@ const AppLayout = () => {
 
       {!hideNavs && <Footer />}
       {!hideNavs && <BottomNav />}
-      {isProviderPath && user && <ProviderBottomNav />}
+      {isProviderPath && isPrimaryProviderPath && user && <ProviderBottomNav />}
     </>
   );
 };

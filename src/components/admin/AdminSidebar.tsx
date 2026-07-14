@@ -47,6 +47,7 @@ const mainNav = [
 
 const managementNav = [
   { title: 'Providers', url: '/admin/providers', icon: Building2 },
+  { title: 'Payout Requests', url: '/admin/payouts', icon: DollarSign },
   { title: 'Employees', url: '/admin/employees', icon: Users },
   { title: 'Coupons', url: '/admin/coupons', icon: Ticket },
   { title: 'Ad Campaigns', url: '/admin/campaigns', icon: Target },

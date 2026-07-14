@@ -7,10 +7,8 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   roles: string[];
-  // OTP-based auth (customer + provider)
   sendOtp: (phone: string) => Promise<{ error: string | null }>;
   verifyOtp: (params: VerifyOtpParams) => Promise<{ error: string | null; isNewUser?: boolean }>;
-  // Email/password auth (admin only)
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signUp: (email: string, password: string, fullName: string, role?: string) => Promise<{ data: { user: User | null }; error: any }>;
   signOut: () => Promise<void>;
@@ -32,29 +30,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  // ── FIX: separate rolesLoading so ProtectedRoute waits for BOTH user AND roles ──
+  const [rolesLoading, setRolesLoading] = useState(false);
   const [roles, setRoles] = useState<string[]>([]);
 
+  // Combined loading: true while auth OR roles are still fetching
+  const isLoading = loading || rolesLoading;
+
+  const fetchRoles = async (userId: string) => {
+    setRolesLoading(true);
+    try {
+      const { data } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', userId);
+      if (data) {
+        setRoles(data.map((r: any) => r.role));
+      }
+    } catch (err) {
+      console.error('Failed to fetch roles:', err);
+    } finally {
+      setRolesLoading(false);
+    }
+  };
+
   useEffect(() => {
+    // Fallback timeout — in case Supabase is unreachable
     const timeoutId = setTimeout(() => {
-      if (loading) {
-        console.warn('Auth initialization timed out - likely a network block');
-        setLoading(false);
-      }
-    }, 3000);
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
       setLoading(false);
-      clearTimeout(timeoutId);
+      setRolesLoading(false);
+    }, 5000);
 
-      if (session?.user) {
-        setTimeout(() => fetchRoles(session.user.id), 0);
-      } else {
-        setRoles([]);
-      }
-    });
-
+    // getSession first for initial load (handles refresh correctly)
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
@@ -62,11 +69,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       clearTimeout(timeoutId);
       if (session?.user) {
         fetchRoles(session.user.id);
+      } else {
+        setRoles([]);
+        setRolesLoading(false);
       }
     }).catch(err => {
       console.error('Session fetch failed:', err);
       setLoading(false);
+      setRolesLoading(false);
       clearTimeout(timeoutId);
+    });
+
+    // Listen for auth changes (login, logout, token refresh)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        fetchRoles(session.user.id);
+      } else {
+        setRoles([]);
+        setRolesLoading(false);
+      }
     });
 
     return () => {
@@ -74,16 +97,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       clearTimeout(timeoutId);
     };
   }, []);
-
-  const fetchRoles = async (userId: string) => {
-    const { data } = await supabase
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', userId);
-    if (data) {
-      setRoles(data.map((r: any) => r.role));
-    }
-  };
 
   // ─── OTP: Send OTP via Fast2SMS (edge function) ───
   const sendOtp = async (phone: string): Promise<{ error: string | null }> => {
@@ -111,7 +124,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       const { token_hash, type, is_new_user } = data;
 
-      // Use the token to sign in
       const { data: sessionData, error: verifyError } = await supabase.auth.verifyOtp({
         token_hash,
         type: type || 'email',
@@ -142,10 +154,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       email,
       password,
       options: {
-        data: {
-          full_name: fullName,
-          role: role || 'customer'
-        },
+        data: { full_name: fullName, role: role || 'customer' },
         emailRedirectTo: window.location.origin,
       },
     });
@@ -155,22 +164,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = async () => {
     await supabase.auth.signOut();
     setRoles([]);
+    setUser(null);
+    setSession(null);
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4">
         <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4" />
-        <p className="text-muted-foreground font-medium animate-pulse">Connecting to ServisGo...</p>
-        <p className="text-[10px] text-muted-foreground/50 mt-8 max-w-[200px] text-center">
-          If this takes too long, please check your internet or try a VPN.
-        </p>
+        <p className="text-muted-foreground font-medium animate-pulse">Loading...</p>
       </div>
     );
   }
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, roles, sendOtp, verifyOtp, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={{ user, session, loading: isLoading, roles, sendOtp, verifyOtp, signIn, signUp, signOut }}>
       {children}
     </AuthContext.Provider>
   );
