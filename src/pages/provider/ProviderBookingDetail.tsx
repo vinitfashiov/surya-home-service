@@ -6,11 +6,33 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent } from '@/components/ui/card';
 import { useProviderTranslation } from '@/hooks/useProviderTranslation';
-import { ChevronLeft, Phone, MapPin, MessageSquare, AlertTriangle, Calendar, Clock, CheckCircle2, Navigation, Send } from 'lucide-react';
+import {
+  ChevronLeft, Phone, MapPin, MessageSquare, AlertTriangle,
+  Calendar, Clock, CheckCircle2, Navigation, Send,
+  Wallet, IndianRupee, BadgeCheck
+} from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import ChatDialog from '@/components/ChatDialog';
 import StatusBadge from '@/components/StatusBadge';
+
+// ── Maps URL helper: works in WebView + browser ──
+function getMapsUrl(address: string) {
+  // geo: URI scheme works in native Android (including WebView via intent)
+  // Fallback to plain Google Maps HTTPS which also works in WebView
+  const encoded = encodeURIComponent(address);
+  return `https://maps.google.com/?q=${encoded}`;
+}
+
+// Open maps — handles Android WebView intent:// errors by using plain https
+function openMaps(address: string) {
+  const url = getMapsUrl(address);
+  try {
+    window.open(url, '_blank');
+  } catch {
+    window.location.href = url;
+  }
+}
 
 export default function ProviderBookingDetail() {
   const { bookingId } = useParams<{ bookingId: string }>();
@@ -18,9 +40,10 @@ export default function ProviderBookingDetail() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [chatOpen, setChatOpen] = useState(false);
+  const [showPaymentCollect, setShowPaymentCollect] = useState(false);
+  const [paymentCollected, setPaymentCollected] = useState(false);
   const { t } = useProviderTranslation();
 
-  // Fetch single booking details
   const { data: booking, isLoading, error } = useQuery({
     queryKey: ['provider-booking-detail', bookingId],
     queryFn: async () => {
@@ -40,7 +63,6 @@ export default function ProviderBookingDetail() {
     enabled: !!bookingId,
   });
 
-  // Mutation to update booking status
   const updateStatusMutation = useMutation({
     mutationFn: async (newStatus: string) => {
       const { data, error } = await supabase
@@ -58,20 +80,14 @@ export default function ProviderBookingDetail() {
       queryClient.invalidateQueries({ queryKey: ['provider-bookings'] });
       queryClient.invalidateQueries({ queryKey: ['all-bookings'] });
     },
-    onError: (err: any) => {
-      toast.error(err.message || 'Failed to update status');
-    }
+    onError: (err: any) => toast.error(err.message || 'Failed to update status'),
   });
 
-  // Mutation to decline and re-pool the booking
   const declineMutation = useMutation({
     mutationFn: async () => {
       const { data, error } = await supabase
         .from('bookings')
-        .update({
-          provider_id: null,
-          status: 'pending'
-        } as any)
+        .update({ provider_id: null, status: 'pending' } as any)
         .eq('id', bookingId)
         .select()
         .single();
@@ -79,7 +95,6 @@ export default function ProviderBookingDetail() {
       return data;
     },
     onSuccess: () => {
-      // Save declined booking ID to local storage to filter out from lists
       const declined = JSON.parse(localStorage.getItem('provider_declined_bookings') || '[]');
       if (bookingId && !declined.includes(bookingId)) {
         declined.push(bookingId);
@@ -87,12 +102,9 @@ export default function ProviderBookingDetail() {
       }
       toast.success('You have declined the request.');
       queryClient.invalidateQueries({ queryKey: ['provider-bookings'] });
-      queryClient.invalidateQueries({ queryKey: ['all-bookings'] });
       navigate('/provider/bookings');
     },
-    onError: (err: any) => {
-      toast.error(err.message || 'Failed to decline request');
-    }
+    onError: (err: any) => toast.error(err.message || 'Failed to decline request'),
   });
 
   if (isLoading) {
@@ -114,24 +126,14 @@ export default function ProviderBookingDetail() {
     );
   }
 
-  const handleStatusChange = (status: string) => {
-    updateStatusMutation.mutate(status);
-  };
-
-  const handleDecline = () => {
-    declineMutation.mutate();
-  };
-
   const status = booking.status;
   const customer = booking.customer;
   const service = booking.service;
 
-  // Determine timeline steps active state
   const isStepActive = (stepName: string) => {
     const states = ['pending', 'accepted', 'on_the_way', 'started', 'completed'];
     const currentIdx = states.indexOf(status);
     const targetIdx = states.indexOf(stepName);
-    
     if (status === 'cancelled') return false;
     return targetIdx <= currentIdx;
   };
@@ -144,8 +146,23 @@ export default function ProviderBookingDetail() {
     { name: 'completed', label: t('booking.status.completed'), desc: 'Job finished successfully' },
   ];
 
+  // ── Handle Complete: show payment collection first ──
+  const handleCompleteClick = () => {
+    if (!paymentCollected) {
+      setShowPaymentCollect(true);
+    } else {
+      updateStatusMutation.mutate('completed');
+    }
+  };
+
+  const handleConfirmPaymentCollected = () => {
+    setPaymentCollected(true);
+    setShowPaymentCollect(false);
+    toast.success('Payment marked as collected! Now finish the job.');
+  };
+
   return (
-    <div className="min-h-screen bg-muted/20 pb-24 md:pb-8">
+    <div className="min-h-screen bg-muted/20 pb-28 md:pb-8">
       {/* Header */}
       <header className="sticky top-0 bg-background border-b h-14 flex items-center px-4 justify-between z-30">
         <div className="flex items-center gap-3">
@@ -161,18 +178,18 @@ export default function ProviderBookingDetail() {
       </header>
 
       <div className="container mx-auto px-4 py-4 max-w-lg space-y-4">
-        {/* Emergency Card */}
+        {/* Emergency */}
         {booking.is_emergency && (
           <div className="bg-destructive/10 border border-destructive/30 rounded-xl p-4 flex items-start gap-3 animate-pulse">
             <AlertTriangle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
             <div>
               <p className="font-heading font-bold text-destructive text-sm">{t('booking.emergency')}</p>
-              <p className="text-xs text-destructive/80 mt-0.5">Please contact the customer and reach the location immediately.</p>
+              <p className="text-xs text-destructive/80 mt-0.5">Please contact the customer and reach immediately.</p>
             </div>
           </div>
         )}
 
-        {/* Service Details Card */}
+        {/* Service Card */}
         <Card className="overflow-hidden border shadow-sm">
           <CardContent className="p-4 flex gap-4">
             {service?.image_url ? (
@@ -190,53 +207,50 @@ export default function ProviderBookingDetail() {
               <div className="flex items-center justify-between mt-3">
                 <p className="font-heading font-bold text-primary text-lg">₹{booking.amount}</p>
                 <span className={`text-[10px] px-2 py-0.5 font-medium rounded uppercase ${
-                  booking.payment_status === 'paid' 
-                    ? 'bg-emerald-500/10 text-emerald-500' 
+                  booking.payment_status === 'paid'
+                    ? 'bg-emerald-500/10 text-emerald-500'
                     : 'bg-amber-500/10 text-amber-500'
                 }`}>
-                  {booking.payment_status || 'Pending'}
+                  {booking.payment_status || 'Cash'}
                 </span>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Booking Schedule Details */}
+        {/* Schedule */}
         <Card className="border shadow-sm">
           <CardContent className="p-4 space-y-3">
             <div className="flex items-center justify-between text-sm">
               <div className="flex items-center gap-2 text-muted-foreground">
-                <Calendar className="h-4 w-4" />
-                <span>Date</span>
+                <Calendar className="h-4 w-4" /><span>Date</span>
               </div>
               <span className="font-medium text-foreground">{booking.booking_date}</span>
             </div>
             <div className="flex items-center justify-between text-sm">
               <div className="flex items-center gap-2 text-muted-foreground">
-                <Clock className="h-4 w-4" />
-                <span>Time Slot</span>
+                <Clock className="h-4 w-4" /><span>Time Slot</span>
               </div>
               <span className="font-medium text-foreground">{booking.booking_time}</span>
             </div>
           </CardContent>
         </Card>
 
-        {/* Customer Profile Card */}
+        {/* Customer */}
         <Card className="border shadow-sm">
           <CardContent className="p-4 space-y-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs text-muted-foreground uppercase font-semibold tracking-wider">{t('booking.cust_contact')}</p>
-                <h4 className="font-heading font-bold text-foreground text-lg mt-1">{customer?.full_name || 'Anonymous Customer'}</h4>
+                <h4 className="font-heading font-bold text-foreground text-lg mt-1">{customer?.full_name || 'Anonymous'}</h4>
               </div>
-              <Button size="icon" variant="outline" className="rounded-full h-10 w-10 text-primary border-primary/20 hover:bg-primary/5" onClick={() => setChatOpen(true)}>
+              <Button size="icon" variant="outline" className="rounded-full h-10 w-10 text-primary border-primary/20" onClick={() => setChatOpen(true)}>
                 <MessageSquare className="h-5 w-5" />
               </Button>
             </div>
-
             {customer?.phone && (
               <div className="flex gap-2.5">
-                <Button className="flex-1 gap-2 bg-primary hover:bg-primary/95 text-white" asChild>
+                <Button className="flex-1 gap-2 bg-primary text-white" asChild>
                   <a href={`tel:${customer.phone}`}>
                     <Phone className="h-4 w-4" /> {t('booking.tel_btn')}
                   </a>
@@ -251,17 +265,19 @@ export default function ProviderBookingDetail() {
           </CardContent>
         </Card>
 
-        {/* Location Address */}
+        {/* Location — Fixed Maps URL for Android WebView */}
         <Card className="border shadow-sm">
           <CardContent className="p-4 space-y-3">
             <p className="text-xs text-muted-foreground uppercase font-semibold tracking-wider flex items-center gap-1">
               <MapPin className="h-3.5 w-3.5" /> {t('booking.address')}
             </p>
             <p className="text-sm text-foreground leading-relaxed font-medium">{booking.address}</p>
-            <Button variant="outline" className="w-full gap-2 border-primary/20 text-primary hover:bg-primary/5 mt-2" asChild>
-              <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(booking.address)}`} target="_blank" rel="noopener noreferrer">
-                <Navigation className="h-4 w-4" /> {t('booking.nav_btn')}
-              </a>
+            <Button
+              variant="outline"
+              className="w-full gap-2 border-primary/20 text-primary hover:bg-primary/5 mt-2"
+              onClick={() => openMaps(booking.address)}
+            >
+              <Navigation className="h-4 w-4" /> Open in Maps
             </Button>
           </CardContent>
         </Card>
@@ -280,7 +296,6 @@ export default function ProviderBookingDetail() {
         <Card className="border shadow-sm">
           <CardContent className="p-5">
             <p className="text-xs text-muted-foreground uppercase font-semibold tracking-wider mb-4">Job Status Tracker</p>
-            
             {status === 'cancelled' ? (
               <div className="flex items-center gap-3 p-3 bg-destructive/5 rounded-xl border border-destructive/10 text-destructive">
                 <AlertTriangle className="h-5 w-5 shrink-0" />
@@ -293,21 +308,16 @@ export default function ProviderBookingDetail() {
                   return (
                     <div key={step.name} className="flex items-start gap-4 relative">
                       <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 border z-10 ${
-                        active 
-                          ? 'bg-primary border-primary text-white' 
-                          : 'bg-background border-muted-foreground/30 text-muted-foreground'
+                        active ? 'bg-primary border-primary text-white' : 'bg-background border-muted-foreground/30'
                       }`}>
-                        {active ? (
-                          <CheckCircle2 className="h-4 w-4" />
-                        ) : (
-                          <span className="w-2 h-2 rounded-full bg-muted-foreground/40" />
-                        )}
+                        {active
+                          ? <CheckCircle2 className="h-4 w-4" />
+                          : <span className="w-2 h-2 rounded-full bg-muted-foreground/40" />
+                        }
                       </div>
-                      <div>
-                        <p className={`text-sm font-bold leading-none ${active ? 'text-foreground' : 'text-muted-foreground'}`}>
-                          {step.label}
-                        </p>
-                      </div>
+                      <p className={`text-sm font-bold leading-none mt-1 ${active ? 'text-foreground' : 'text-muted-foreground'}`}>
+                        {step.label}
+                      </p>
                     </div>
                   );
                 })}
@@ -315,45 +325,107 @@ export default function ProviderBookingDetail() {
             )}
           </CardContent>
         </Card>
+
+        {/* ── Payment Collection Card (shows when started & not yet collected) ── */}
+        {status === 'started' && showPaymentCollect && !paymentCollected && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end justify-center p-4">
+            <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden">
+              {/* Jar / Wallet visual */}
+              <div className="bg-gradient-to-b from-primary to-primary/80 px-6 pt-8 pb-10 text-center text-white relative">
+                <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-lg border-4 border-white">
+                  <IndianRupee className="h-8 w-8 text-primary" />
+                </div>
+                <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3 border-2 border-white/30">
+                  <Wallet className="h-10 w-10 text-white" />
+                </div>
+                <h2 className="text-2xl font-heading font-black">Collect Payment</h2>
+                <p className="text-white/80 text-sm mt-1">Before finishing, collect the amount from customer</p>
+              </div>
+
+              <div className="px-6 pt-10 pb-6 space-y-5">
+                {/* Amount box */}
+                <div className="bg-primary/5 border border-primary/20 rounded-2xl p-5 text-center">
+                  <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider mb-1">Amount to Collect</p>
+                  <p className="text-4xl font-heading font-black text-primary">₹{booking.amount}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{service?.name}</p>
+                </div>
+
+                <p className="text-xs text-muted-foreground text-center leading-relaxed">
+                  Ask the customer to pay ₹{booking.amount} in cash or UPI before you mark the job as complete.
+                </p>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <Button
+                    variant="outline"
+                    className="h-12 text-sm font-semibold border-muted"
+                    onClick={() => setShowPaymentCollect(false)}
+                  >
+                    Not Yet
+                  </Button>
+                  <Button
+                    className="h-12 text-sm font-semibold bg-emerald-600 hover:bg-emerald-700 text-white gap-2"
+                    onClick={handleConfirmPaymentCollected}
+                  >
+                    <BadgeCheck className="h-4 w-4" /> Collected ✓
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Payment collected confirmation strip */}
+        {paymentCollected && status === 'started' && (
+          <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-4 flex items-center gap-3">
+            <BadgeCheck className="h-5 w-5 text-emerald-600 shrink-0" />
+            <div>
+              <p className="font-bold text-emerald-800 text-sm">₹{booking.amount} Collected ✓</p>
+              <p className="text-xs text-emerald-700/70">Payment received from customer. You can now finish the job.</p>
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Floating Action Bottom Bar (Mobile First) */}
+      {/* Floating Action Bar */}
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/90 border-t backdrop-blur-lg flex gap-3 z-40 max-w-lg mx-auto shadow-lg">
         {status === 'pending' && (
           <>
-            <Button variant="outline" className="flex-1 border-destructive/20 text-destructive hover:bg-destructive/5 h-11 text-sm font-semibold" onClick={handleDecline} disabled={declineMutation.isPending || updateStatusMutation.isPending}>
+            <Button variant="outline" className="flex-1 border-destructive/20 text-destructive hover:bg-destructive/5 h-11 text-sm font-semibold"
+              onClick={() => declineMutation.mutate()} disabled={declineMutation.isPending}>
               {t('booking.action.decline')}
             </Button>
-            <Button className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white h-11 text-sm font-semibold" onClick={() => handleStatusChange('accepted')} disabled={updateStatusMutation.isPending}>
+            <Button className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white h-11 text-sm font-semibold"
+              onClick={() => updateStatusMutation.mutate('accepted')} disabled={updateStatusMutation.isPending}>
               {t('booking.action.accept')}
             </Button>
           </>
         )}
-
         {status === 'accepted' && (
-          <Button className="w-full bg-primary hover:bg-primary/95 text-white h-11 text-sm font-semibold" onClick={() => handleStatusChange('on_the_way')} disabled={updateStatusMutation.isPending}>
+          <Button className="w-full bg-primary text-white h-11 text-sm font-semibold"
+            onClick={() => updateStatusMutation.mutate('on_the_way')} disabled={updateStatusMutation.isPending}>
             {t('booking.action.travel')}
           </Button>
         )}
-
         {status === 'on_the_way' && (
-          <Button className="w-full bg-amber-600 hover:bg-amber-700 text-white h-11 text-sm font-semibold" onClick={() => handleStatusChange('started')} disabled={updateStatusMutation.isPending}>
+          <Button className="w-full bg-amber-600 hover:bg-amber-700 text-white h-11 text-sm font-semibold"
+            onClick={() => updateStatusMutation.mutate('started')} disabled={updateStatusMutation.isPending}>
             {t('booking.action.start')}
           </Button>
         )}
-
         {status === 'started' && (
-          <Button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white h-11 text-sm font-semibold" onClick={() => handleStatusChange('completed')} disabled={updateStatusMutation.isPending}>
-            {t('booking.action.complete')}
+          <Button
+            className={`w-full h-11 text-sm font-semibold ${paymentCollected ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : 'bg-primary text-white'}`}
+            onClick={handleCompleteClick}
+            disabled={updateStatusMutation.isPending}
+          >
+            {paymentCollected ? '✓ Finish Job' : 'Complete & Collect Payment'}
           </Button>
         )}
-
         {status === 'completed' && (
           <Button className="w-full bg-muted text-muted-foreground h-11 text-sm font-semibold" disabled>
-            {t('booking.status.completed')}
+            ✓ Job Completed
           </Button>
         )}
-
         {status === 'cancelled' && (
           <Button className="w-full bg-muted text-muted-foreground h-11 text-sm font-semibold" disabled>
             Job Cancelled
@@ -361,7 +433,6 @@ export default function ProviderBookingDetail() {
         )}
       </div>
 
-      {/* Chat popup dialog */}
       {chatOpen && user && (
         <ChatDialog
           open={chatOpen}
