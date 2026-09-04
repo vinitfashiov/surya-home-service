@@ -55,7 +55,7 @@ export default function ProviderSidebar() {
   const handleSignOut = async () => {
     await signOut();
     toast.success('Signed out');
-    navigate('/');
+    navigate('/provider/login');
   };
 
   return (

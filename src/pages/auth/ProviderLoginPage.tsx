@@ -15,7 +15,7 @@ const OTP_LENGTH = 6;
 const RESEND_COOLDOWN = 30;
 
 export default function ProviderLoginPage() {
-  const { sendOtp, verifyOtp, signOut } = useAuthContext();
+  const { user, roles, loading: authLoading, sendOtp, verifyOtp, signOut } = useAuthContext();
   const navigate = useNavigate();
 
   const [step, setStep] = useState<'phone' | 'otp'>('phone');
@@ -25,6 +25,12 @@ export default function ProviderLoginPage() {
   const [countdown, setCountdown] = useState(0);
   const [phoneError, setPhoneError] = useState('');
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+  useEffect(() => {
+    if (!authLoading && user && (roles.includes('provider') || roles.includes('provider_employee') || roles.includes('admin'))) {
+      navigate('/provider', { replace: true });
+    }
+  }, [user, roles, authLoading, navigate]);
 
   useEffect(() => {
     if (countdown > 0) {

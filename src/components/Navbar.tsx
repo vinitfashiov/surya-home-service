@@ -44,9 +44,17 @@ export default function Navbar() {
   const primaryRole = roles[0] || 'customer';
 
   const handleSignOut = async () => {
+    const isProvider = roles.includes('provider') || roles.includes('provider_employee');
+    const isAdmin = roles.includes('admin');
     await signOut();
     toast.success('Signed out');
-    navigate('/');
+    if (isProvider) {
+      navigate('/provider/login');
+    } else if (isAdmin) {
+      navigate('/admin/login');
+    } else {
+      navigate('/');
+    }
   };
 
   const customerLinks = [

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useAuth, useMyProvider } from '@/hooks/useSupabaseData';
+import { useAuthContext } from '@/contexts/AuthContext';
+import { useMyProvider } from '@/hooks/useSupabaseData';
 import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -19,7 +20,7 @@ import {
 import { toast } from 'sonner';
 
 export default function ProviderProfile() {
-  const { user } = useAuth();
+  const { user, signOut } = useAuthContext();
   const navigate = useNavigate();
   const { data: provider } = useMyProvider(user?.id);
   const { t, language, changeLanguage } = useProviderTranslation();
@@ -51,7 +52,7 @@ export default function ProviderProfile() {
   };
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    await signOut();
     toast.success('Logged out successfully');
     navigate('/provider/login');
   };

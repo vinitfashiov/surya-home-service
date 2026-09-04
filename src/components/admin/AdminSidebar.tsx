@@ -64,7 +64,7 @@ export default function AdminSidebar() {
   const handleSignOut = async () => {
     await signOut();
     toast.success('Signed out');
-    navigate('/');
+    navigate('/admin/login');
   };
 
   return (
