@@ -14,9 +14,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import { User, Phone, Mail, CalendarDays, DollarSign, Star, MapPin, Plus, Trash2, Edit, Check, ShieldCheck } from 'lucide-react';
+import { User, Phone, Mail, CalendarDays, DollarSign, Star, MapPin, Plus, Trash2, Edit, Check, ShieldCheck, Code2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
+import TesterVerificationModal from '@/components/TesterVerificationModal';
 
 export default function ProfilePage() {
   const { user, roles } = useAuthContext();
@@ -159,6 +160,39 @@ export default function ProfilePage() {
               </div>
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      {/* DEV Team Tester Verification Option Card */}
+      <Card className="border border-emerald-500/20 bg-gradient-to-r from-emerald-50/50 via-card to-emerald-50/20 dark:from-emerald-950/20 dark:to-card shadow-sm mb-6 overflow-hidden">
+        <CardContent className="p-5 flex items-center justify-between gap-4 flex-wrap sm:flex-nowrap">
+          <div className="flex items-center gap-3.5">
+            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
+              <Code2 className="h-5 w-5 text-emerald-600" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="font-heading font-bold text-foreground text-sm sm:text-base">
+                  Tester Verification through DEV team 0.22
+                </h3>
+                <Badge className="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] px-2 py-0 border-0">
+                  DEV QA v0.22
+                </Badge>
+              </div>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Verify developer environment telemetry, tester access & privacy policy acknowledgement.
+              </p>
+            </div>
+          </div>
+          <TesterVerificationModal
+            userProfile={profile}
+            trigger={
+              <Button size="sm" className="bg-[#1DA653] hover:bg-[#15803D] text-white shrink-0 font-medium gap-1.5 text-xs px-3.5 shadow-sm">
+                <ShieldCheck className="h-4 w-4" />
+                Verify Now
+              </Button>
+            }
+          />
         </CardContent>
       </Card>
 

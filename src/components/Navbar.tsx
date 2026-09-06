@@ -1,7 +1,7 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { useCartCount } from '@/hooks/useCart';
-import { Menu, X, User, ChevronDown, LogOut, LogIn, MapPin, ShoppingCart, Heart, Shield, Building2, Briefcase } from 'lucide-react';
+import { Menu, X, User, ChevronDown, LogOut, LogIn, MapPin, ShoppingCart, Heart, Shield, Building2, Briefcase, Code2 } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
@@ -175,6 +175,9 @@ export default function Navbar() {
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => navigate('/my-addresses')} className="cursor-pointer">
                       <MapPin className="h-4 w-4 mr-2" /> My Addresses
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate('/profile')} className="cursor-pointer text-emerald-700 dark:text-emerald-400 font-medium">
+                      <Code2 className="h-4 w-4 mr-2 text-emerald-600" /> Tester Verification (DEV 0.22)
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleSignOut} className="text-destructive cursor-pointer">
