@@ -16,59 +16,60 @@ async function ensureProviderProfile(
   fallbackAddress: string,
   fallbackCityId: string | null
 ) {
-  // 1. Check if provider profile already exists for this userId
-  const { data: existingUserIdProfile } = await adminClient
-    .from("providers")
-    .select("id, status")
-    .eq("user_id", userId)
-    .maybeSingle();
+  try {
+    const { data: existingUserIdProfile } = await adminClient
+      .from("providers")
+      .select("id, status")
+      .eq("user_id", userId)
+      .maybeSingle();
 
-  if (existingUserIdProfile) {
-    return existingUserIdProfile;
-  }
+    if (existingUserIdProfile) {
+      return existingUserIdProfile;
+    }
 
-  // 2. Check if a provider profile exists with same phone or email
-  const { data: existingPhoneOrEmailProfile } = await adminClient
-    .from("providers")
-    .select("id, status, user_id")
-    .or(`phone.eq.${phone},email.eq.${email}`)
-    .maybeSingle();
+    const { data: existingPhoneOrEmailProfile } = await adminClient
+      .from("providers")
+      .select("id, status, user_id")
+      .or(`phone.eq.${phone},email.eq.${email}`)
+      .maybeSingle();
 
-  if (existingPhoneOrEmailProfile) {
-    if (existingPhoneOrEmailProfile.user_id !== userId) {
-      const { data: updatedProfile, error: updateErr } = await adminClient
+    if (existingPhoneOrEmailProfile) {
+      if (existingPhoneOrEmailProfile.user_id !== userId) {
+        const { data: updatedProfile, error: updateErr } = await adminClient
+          .from("providers")
+          .update({ user_id: userId })
+          .eq("id", existingPhoneOrEmailProfile.id)
+          .select("id, status")
+          .single();
+        if (!updateErr) {
+          return updatedProfile;
+        }
+      } else {
+        return existingPhoneOrEmailProfile;
+      }
+    }
+
+    if (fallbackCompany) {
+      const { data: newProfile, error: insertErr } = await adminClient
         .from("providers")
-        .update({ user_id: userId })
-        .eq("id", existingPhoneOrEmailProfile.id)
+        .insert({
+          user_id: userId,
+          company_name: fallbackCompany,
+          owner_name: fallbackOwner,
+          email: email,
+          phone: phone,
+          address: fallbackAddress,
+          city_id: fallbackCityId,
+          status: "pending",
+        })
         .select("id, status")
         .single();
-      if (!updateErr) {
-        return updatedProfile;
+      if (!insertErr) {
+        return newProfile;
       }
-    } else {
-      return existingPhoneOrEmailProfile;
     }
-  }
-
-  // 3. Insert new pending provider profile if fallbackCompany is provided
-  if (fallbackCompany) {
-    const { data: newProfile, error: insertErr } = await adminClient
-      .from("providers")
-      .insert({
-        user_id: userId,
-        company_name: fallbackCompany,
-        owner_name: fallbackOwner,
-        email: email,
-        phone: phone,
-        address: fallbackAddress,
-        city_id: fallbackCityId,
-        status: "pending",
-      })
-      .select("id, status")
-      .single();
-    if (!insertErr) {
-      return newProfile;
-    }
+  } catch (e) {
+    console.error("ensureProviderProfile error:", e);
   }
   return null;
 }
@@ -79,34 +80,47 @@ async function ensureServicemanProfile(
   phone: string,
   email: string
 ) {
-  // 1. Check if a serviceman record already exists for this userId
-  const { data: existingUserIdProfile } = await adminClient
-    .from("servicemen")
-    .select("id, provider_id")
-    .eq("user_id", userId)
-    .maybeSingle();
+  try {
+    const { data: existingUserIdProfile } = await adminClient
+      .from("servicemen")
+      .select("id, provider_id")
+      .eq("user_id", userId)
+      .maybeSingle();
 
-  if (existingUserIdProfile) {
-    return existingUserIdProfile;
-  }
+    if (existingUserIdProfile) {
+      return existingUserIdProfile;
+    }
 
-  // 2. Check if a serviceman record exists with same phone or email
-  const { data: existingPhoneOrEmailProfile } = await adminClient
-    .from("servicemen")
-    .select("id, provider_id, user_id")
-    .or(`phone.eq.${phone},email.eq.${email}`)
-    .maybeSingle();
+    const { data: existingPhoneOrEmailProfile } = await adminClient
+      .from("servicemen")
+      .select("id, provider_id, user_id")
+      .or(`phone.eq.${phone},email.eq.${email}`)
+      .maybeSingle();
 
-  if (existingPhoneOrEmailProfile) {
-    if (existingPhoneOrEmailProfile.user_id !== userId) {
-      const { data: updatedProfile, error: updateErr } = await adminClient
-        .from("servicemen")
-        .update({ user_id: userId })
-        .eq("id", existingPhoneOrEmailProfile.id)
-        .select("id, provider_id")
-        .single();
-      if (!updateErr) {
-        // Also assign 'serviceman' role
+    if (existingPhoneOrEmailProfile) {
+      if (existingPhoneOrEmailProfile.user_id !== userId) {
+        const { data: updatedProfile, error: updateErr } = await adminClient
+          .from("servicemen")
+          .update({ user_id: userId })
+          .eq("id", existingPhoneOrEmailProfile.id)
+          .select("id, provider_id")
+          .single();
+        if (!updateErr) {
+          const { data: roleData } = await adminClient
+            .from("user_roles")
+            .select("role")
+            .eq("user_id", userId)
+            .eq("role", "serviceman")
+            .maybeSingle();
+          if (!roleData) {
+            await adminClient.from("user_roles").insert({
+              user_id: userId,
+              role: "serviceman",
+            });
+          }
+          return updatedProfile;
+        }
+      } else {
         const { data: roleData } = await adminClient
           .from("user_roles")
           .select("role")
@@ -119,24 +133,11 @@ async function ensureServicemanProfile(
             role: "serviceman",
           });
         }
-        return updatedProfile;
+        return existingPhoneOrEmailProfile;
       }
-    } else {
-      // Ensure role exists
-      const { data: roleData } = await adminClient
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", userId)
-        .eq("role", "serviceman")
-        .maybeSingle();
-      if (!roleData) {
-        await adminClient.from("user_roles").insert({
-          user_id: userId,
-          role: "serviceman",
-        });
-      }
-      return existingPhoneOrEmailProfile;
     }
+  } catch (e) {
+    console.error("ensureServicemanProfile error:", e);
   }
   return null;
 }
@@ -161,13 +162,13 @@ Deno.serve(async (req) => {
     if (!cleanPhone || cleanPhone.length !== 10) {
       return new Response(
         JSON.stringify({ error: "Invalid phone number" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
     if (!otp || otp.length !== 6) {
       return new Response(
         JSON.stringify({ error: "Invalid OTP" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
@@ -186,12 +187,12 @@ Deno.serve(async (req) => {
         .gte("expires_at", new Date().toISOString())
         .order("created_at", { ascending: false })
         .limit(1)
-        .single();
+        .maybeSingle();
 
       if (otpError || !otpRecord) {
         return new Response(
           JSON.stringify({ error: "Invalid or expired OTP. Please request a new one." }),
-          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
 
@@ -210,8 +211,8 @@ Deno.serve(async (req) => {
       perPage: 1000,
     });
 
-    const existingUser = listData?.users?.find(
-      (u) =>
+    let existingUser = listData?.users?.find(
+      (u: any) =>
         u.email === fakeEmail ||
         u.user_metadata?.phone === cleanPhone
     );
@@ -221,7 +222,6 @@ Deno.serve(async (req) => {
     if (existingUser) {
       userId = existingUser.id;
 
-      // Update full_name in user metadata if provided
       if (full_name) {
         await adminClient.auth.admin.updateUserById(userId, {
           user_metadata: {
@@ -231,9 +231,7 @@ Deno.serve(async (req) => {
         });
       }
 
-      // If logging in / registering as a provider, ensure the role and profile exist
       if (role === "provider") {
-        // Ensure role exists in user_roles table
         const { data: roleData } = await adminClient
           .from("user_roles")
           .select("role")
@@ -248,7 +246,6 @@ Deno.serve(async (req) => {
           });
         }
 
-        // ── Role Isolation: Remove customer role when registering as provider ──
         await adminClient
           .from("user_roles")
           .delete()
@@ -266,7 +263,6 @@ Deno.serve(async (req) => {
           city_id || null
         );
       } else {
-        // Check if they already have the provider role. If so, ensure their profile is linked.
         const { data: roleData } = await adminClient
           .from("user_roles")
           .select("role")
@@ -288,17 +284,14 @@ Deno.serve(async (req) => {
         }
       }
 
-      // Check if they are a serviceman and link/assign role if so
       await ensureServicemanProfile(adminClient, userId, cleanPhone, fakeEmail);
     } else {
-      // Create new user
+      // Create new user (DO NOT pass phone param to avoid phone provider validation issues)
       const assignedRole = role || "customer";
       const { data: newUserData, error: createError } =
         await adminClient.auth.admin.createUser({
           email: fakeEmail,
           email_confirm: true,
-          phone: `+91${cleanPhone}`,
-          phone_confirm: true,
           user_metadata: {
             phone: cleanPhone,
             full_name: full_name || "",
@@ -306,12 +299,27 @@ Deno.serve(async (req) => {
           },
         });
 
-      if (createError || !newUserData?.user) {
-        console.error("Create user error:", createError);
-        throw new Error("Failed to create user account");
+      if (createError) {
+        console.warn("Create user failed, attempting lookup:", createError.message);
+        // Retry listing users to find by email
+        const { data: retryList } = await adminClient.auth.admin.listUsers({ perPage: 1000 });
+        const fallbackUser = retryList?.users?.find((u: any) => u.email === fakeEmail);
+        if (fallbackUser) {
+          userId = fallbackUser.id;
+        } else {
+          return new Response(
+            JSON.stringify({ error: createError.message || "Failed to create user account" }),
+            { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+      } else if (newUserData?.user) {
+        userId = newUserData.user.id;
+      } else {
+        return new Response(
+          JSON.stringify({ error: "Failed to create user account" }),
+          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
       }
-
-      userId = newUserData.user.id;
 
       // Assign role in user_roles table
       await adminClient.from("user_roles").insert({
@@ -319,17 +327,13 @@ Deno.serve(async (req) => {
         role: assignedRole,
       });
 
-      // ── Role Isolation: If registering as provider, ensure no customer role exists ──
       if (assignedRole === "provider") {
         await adminClient
           .from("user_roles")
           .delete()
           .eq("user_id", userId)
           .eq("role", "customer");
-      }
 
-      // If provider, create provider record
-      if (assignedRole === "provider") {
         await ensureProviderProfile(
           adminClient,
           userId,
@@ -342,11 +346,10 @@ Deno.serve(async (req) => {
         );
       }
 
-      // Check if they are a serviceman and link/assign role if so
       await ensureServicemanProfile(adminClient, userId, cleanPhone, fakeEmail);
     }
 
-    // Generate a magic link to get a session token
+    // Generate magic link token hash
     const { data: linkData, error: linkError } =
       await adminClient.auth.admin.generateLink({
         type: "magiclink",
@@ -358,7 +361,10 @@ Deno.serve(async (req) => {
 
     if (linkError || !linkData?.properties) {
       console.error("Generate link error:", linkError);
-      throw new Error("Failed to generate authentication token");
+      return new Response(
+        JSON.stringify({ error: linkError?.message || "Failed to generate authentication token" }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     return new Response(
@@ -368,14 +374,14 @@ Deno.serve(async (req) => {
         type: "email",
         is_new_user: !existingUser,
       }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error: unknown) {
     console.error("verify-otp error:", error);
     const message = error instanceof Error ? error.message : "Unknown error";
     return new Response(
       JSON.stringify({ error: message }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });

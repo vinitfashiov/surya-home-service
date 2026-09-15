@@ -128,13 +128,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
       if (error) {
-        if (TEST_PHONES.includes(cleanPhone) && params.otp === '987789') {
-          console.warn('Edge function verify-otp error for test number, proceeding with fallback check');
-        } else {
-          return { error: error.message || 'OTP verification failed' };
-        }
+        return { error: error.message || 'OTP verification failed. Please try again.' };
       }
-      if (data?.error) return { error: data.error };
+      if (data?.error) {
+        return { error: data.error };
+      }
 
       const { token_hash, type, is_new_user } = data || {};
 
