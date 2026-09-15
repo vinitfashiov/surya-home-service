@@ -100,6 +100,74 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const TEST_PHONES = ['8511137580', '8544437580'];
 
+  const handleTestLogin = async (cleanPhone: string, params: VerifyOtpParams): Promise<{ error: string | null; isNewUser?: boolean }> => {
+    const fakeEmail = `${cleanPhone}@phone.surya.app`;
+    const fakePassword = 'TestUserSecret987789!';
+
+    try {
+      // 1. Try signing in with existing password
+      const { data: signInData, error: signInErr } = await supabase.auth.signInWithPassword({
+        email: fakeEmail,
+        password: fakePassword,
+      });
+
+      if (!signInErr && signInData.session?.user) {
+        const userId = signInData.session.user.id;
+        const targetRole = params.role || 'customer';
+        try {
+          await supabase.from('user_roles').upsert({ user_id: userId, role: targetRole }, { onConflict: 'user_id,role' });
+        } catch (e) {
+          console.warn('user_roles upsert:', e);
+        }
+        await fetchRoles(userId);
+        return { error: null, isNewUser: false };
+      }
+
+      // 2. If sign in fails, create user via signUp
+      const targetRole = params.role || 'customer';
+      const { data: signUpData, error: signUpErr } = await supabase.auth.signUp({
+        email: fakeEmail,
+        password: fakePassword,
+        options: {
+          data: {
+            phone: cleanPhone,
+            full_name: params.full_name || 'Play Store Tester',
+            role: targetRole,
+          },
+        },
+      });
+
+      if (signUpErr) {
+        console.error('Test signUp error:', signUpErr);
+        return { error: signUpErr.message || 'Test authentication failed' };
+      }
+
+      let sessionUser = signUpData.session?.user;
+      if (!sessionUser) {
+        const { data: retrySignIn } = await supabase.auth.signInWithPassword({
+          email: fakeEmail,
+          password: fakePassword,
+        });
+        sessionUser = retrySignIn.session?.user ?? null;
+      }
+
+      if (sessionUser) {
+        try {
+          await supabase.from('user_roles').upsert({ user_id: sessionUser.id, role: targetRole }, { onConflict: 'user_id,role' });
+        } catch (e) {
+          console.warn('user_roles upsert:', e);
+        }
+        await fetchRoles(sessionUser.id);
+        return { error: null, isNewUser: true };
+      }
+
+      return { error: null, isNewUser: true };
+    } catch (err: any) {
+      console.error('handleTestLogin exception:', err);
+      return { error: err.message || 'Test login failed' };
+    }
+  };
+
   // ─── OTP: Send OTP via Fast2SMS (edge function) ───
   const sendOtp = async (phone: string): Promise<{ error: string | null }> => {
     const cleanPhone = phone.replace(/\D/g, '');
@@ -123,12 +191,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const verifyOtp = async (params: VerifyOtpParams): Promise<{ error: string | null; isNewUser?: boolean }> => {
     try {
       const cleanPhone = params.phone.replace(/\D/g, '');
+
+      // Direct client-side bypass for Play Store Review test credentials
+      if (TEST_PHONES.includes(cleanPhone)) {
+        return await handleTestLogin(cleanPhone, params);
+      }
+
       const { data, error } = await supabase.functions.invoke('verify-otp', {
         body: { ...params, phone: cleanPhone },
       });
 
       if (error) {
-        return { error: error.message || 'OTP verification failed. Please try again.' };
+        return { error: 'Invalid or expired OTP. Please try again.' };
       }
       if (data?.error) {
         return { error: data.error };
