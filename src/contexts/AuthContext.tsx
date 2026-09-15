@@ -101,67 +101,88 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const TEST_PHONES = ['8511137580', '8544437580'];
 
   const handleTestLogin = async (cleanPhone: string, params: VerifyOtpParams): Promise<{ error: string | null; isNewUser?: boolean }> => {
-    const fakeEmail = `${cleanPhone}@phone.surya.app`;
+    const testEmails = [
+      `tester_${cleanPhone}@suryahomeservice.in`,
+      `test_${cleanPhone}@suryahomeservice.in`,
+      `${cleanPhone}@phone.surya.app`
+    ];
     const fakePassword = 'TestUserSecret987789!';
+    const targetRole = params.role || 'customer';
 
     try {
-      // 1. Try signing in with existing password
-      const { data: signInData, error: signInErr } = await supabase.auth.signInWithPassword({
-        email: fakeEmail,
-        password: fakePassword,
-      });
-
-      if (!signInErr && signInData.session?.user) {
-        const userId = signInData.session.user.id;
-        const targetRole = params.role || 'customer';
-        try {
-          await supabase.from('user_roles').upsert({ user_id: userId, role: targetRole }, { onConflict: 'user_id,role' });
-        } catch (e) {
-          console.warn('user_roles upsert:', e);
-        }
-        await fetchRoles(userId);
-        return { error: null, isNewUser: false };
-      }
-
-      // 2. If sign in fails, create user via signUp
-      const targetRole = params.role || 'customer';
-      const { data: signUpData, error: signUpErr } = await supabase.auth.signUp({
-        email: fakeEmail,
-        password: fakePassword,
-        options: {
-          data: {
-            phone: cleanPhone,
-            full_name: params.full_name || 'Play Store Tester',
-            role: targetRole,
-          },
-        },
-      });
-
-      if (signUpErr) {
-        console.error('Test signUp error:', signUpErr);
-        return { error: signUpErr.message || 'Test authentication failed' };
-      }
-
-      let sessionUser = signUpData.session?.user;
-      if (!sessionUser) {
-        const { data: retrySignIn } = await supabase.auth.signInWithPassword({
-          email: fakeEmail,
+      for (const email of testEmails) {
+        // 1. Try signing in with password
+        const { data: signInData, error: signInErr } = await supabase.auth.signInWithPassword({
+          email,
           password: fakePassword,
         });
-        sessionUser = retrySignIn.session?.user ?? null;
-      }
 
-      if (sessionUser) {
-        try {
-          await supabase.from('user_roles').upsert({ user_id: sessionUser.id, role: targetRole }, { onConflict: 'user_id,role' });
-        } catch (e) {
-          console.warn('user_roles upsert:', e);
+        if (!signInErr && signInData.session?.user) {
+          const userId = signInData.session.user.id;
+          try {
+            await supabase.from('user_roles').upsert({ user_id: userId, role: targetRole }, { onConflict: 'user_id,role' });
+          } catch (e) {
+            console.warn('user_roles upsert:', e);
+          }
+          await fetchRoles(userId);
+          return { error: null, isNewUser: false };
         }
-        await fetchRoles(sessionUser.id);
-        return { error: null, isNewUser: true };
+
+        // 2. Try creating user via signUp
+        const { data: signUpData, error: signUpErr } = await supabase.auth.signUp({
+          email,
+          password: fakePassword,
+          options: {
+            data: {
+              phone: cleanPhone,
+              full_name: params.full_name || 'Play Store Tester',
+              role: targetRole,
+            },
+          },
+        });
+
+        if (!signUpErr) {
+          let sessionUser = signUpData.session?.user;
+          if (!sessionUser) {
+            const { data: retrySignIn } = await supabase.auth.signInWithPassword({
+              email,
+              password: fakePassword,
+            });
+            sessionUser = retrySignIn.session?.user ?? null;
+          }
+
+          if (sessionUser) {
+            try {
+              await supabase.from('user_roles').upsert({ user_id: sessionUser.id, role: targetRole }, { onConflict: 'user_id,role' });
+            } catch (e) {
+              console.warn('user_roles upsert:', e);
+            }
+            await fetchRoles(sessionUser.id);
+            return { error: null, isNewUser: true };
+          }
+        }
       }
 
-      return { error: null, isNewUser: true };
+      // 3. Edge function fallback if needed
+      try {
+        const { data, error } = await supabase.functions.invoke('verify-otp', {
+          body: { ...params, phone: cleanPhone, otp: '987789' },
+        });
+        if (!error && data?.token_hash) {
+          const { data: sessionData } = await supabase.auth.verifyOtp({
+            token_hash: data.token_hash,
+            type: data.type || 'email',
+          });
+          if (sessionData?.user) {
+            await fetchRoles(sessionData.user.id);
+            return { error: null, isNewUser: data.is_new_user };
+          }
+        }
+      } catch (e) {
+        console.warn('verify-otp edge function fallback failed:', e);
+      }
+
+      return { error: null, isNewUser: false };
     } catch (err: any) {
       console.error('handleTestLogin exception:', err);
       return { error: err.message || 'Test login failed' };
