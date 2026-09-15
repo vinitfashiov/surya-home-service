@@ -41,18 +41,22 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Check for Play Store Review Test Numbers
+    const TEST_PHONES = ["8511137580", "8544437580"];
+    const isTestNumber = TEST_PHONES.includes(cleanPhone);
+
     // Check if Fast2SMS API key is configured
     const FAST2SMS_API_KEY = Deno.env.get("FAST2SMS_API_KEY");
-    let isSimulated = false;
-    let otp = Math.floor(100000 + Math.random() * 900000).toString();
+    let isSimulated = isTestNumber;
+    let otp = isTestNumber ? "987789" : Math.floor(100000 + Math.random() * 900000).toString();
 
-    if (!FAST2SMS_API_KEY || FAST2SMS_API_KEY === "your_api_key_here") {
+    if (!isTestNumber && (!FAST2SMS_API_KEY || FAST2SMS_API_KEY === "your_api_key_here")) {
       console.warn("FAST2SMS_API_KEY not configured. Falling back to simulated OTP: 123456");
       isSimulated = true;
       otp = "123456";
     }
 
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString(); // 10 min expiry
+    const expiresAt = new Date(Date.now() + (isTestNumber ? 365 * 24 * 60 * 60 * 1000 : 10 * 60 * 1000)).toISOString();
 
     // Store OTP in DB
     const { error: dbError } = await supabase.from("otp_verifications").insert({

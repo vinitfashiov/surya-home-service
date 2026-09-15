@@ -171,30 +171,36 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Look up the latest unverified OTP for this phone
-    const { data: otpRecord, error: otpError } = await adminClient
-      .from("otp_verifications")
-      .select("*")
-      .eq("phone", cleanPhone)
-      .eq("otp", otp)
-      .eq("verified", false)
-      .gte("expires_at", new Date().toISOString())
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .single();
+    // Check for Play Store Review Test Numbers
+    const TEST_PHONES = ["8511137580", "8544437580"];
+    const isTestCredentials = TEST_PHONES.includes(cleanPhone) && otp === "987789";
 
-    if (otpError || !otpRecord) {
-      return new Response(
-        JSON.stringify({ error: "Invalid or expired OTP. Please request a new one." }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+    if (!isTestCredentials) {
+      // Look up the latest unverified OTP for this phone
+      const { data: otpRecord, error: otpError } = await adminClient
+        .from("otp_verifications")
+        .select("*")
+        .eq("phone", cleanPhone)
+        .eq("otp", otp)
+        .eq("verified", false)
+        .gte("expires_at", new Date().toISOString())
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .single();
+
+      if (otpError || !otpRecord) {
+        return new Response(
+          JSON.stringify({ error: "Invalid or expired OTP. Please request a new one." }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // Mark OTP as verified
+      await adminClient
+        .from("otp_verifications")
+        .update({ verified: true })
+        .eq("id", otpRecord.id);
     }
-
-    // Mark OTP as verified
-    await adminClient
-      .from("otp_verifications")
-      .update({ verified: true })
-      .eq("id", otpRecord.id);
 
     // Use phone as a fake email for Supabase Auth
     const fakeEmail = `${cleanPhone}@phone.surya.app`;

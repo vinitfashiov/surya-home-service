@@ -213,6 +213,7 @@ const AppLayout = () => {
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/terms" element={<TermsPage />} />
           <Route path="/privacy" element={<PrivacyPage />} />
+          <Route path="/privacy-policy" element={<PrivacyPage />} />
 
           {/* Auth routes */}
           <Route path="/login" element={<LoginPage />} />

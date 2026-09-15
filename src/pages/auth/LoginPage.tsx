@@ -233,7 +233,7 @@ export default function LoginPage() {
         <p className="text-center text-xs text-muted-foreground/60 mt-6">
           By continuing, you agree to our{' '}
           <Link to="/terms" className="hover:text-primary">Terms</Link> &{' '}
-          <Link to="/privacy" className="hover:text-primary">Privacy Policy</Link>
+          <Link to="/privacy-policy" className="hover:text-primary">Privacy Policy</Link>
         </p>
       </div>
     </div>

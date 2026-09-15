@@ -10,7 +10,7 @@ const footerLinks = {
   ],
   legal: [
     { label: 'Terms of Service', to: '/terms' },
-    { label: 'Privacy Policy', to: '/privacy' },
+    { label: 'Privacy Policy', to: '/privacy-policy' },
     { label: 'Refund Policy', to: '/terms' },
   ],
   services: [
@@ -95,7 +95,7 @@ export default function Footer() {
           <p>© {new Date().getFullYear()} ServisGo. All rights reserved.</p>
           <div className="flex items-center gap-4">
             <Link to="/terms" className="hover:text-foreground transition-colors">Terms</Link>
-            <Link to="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
+            <Link to="/privacy-policy" className="hover:text-foreground transition-colors">Privacy</Link>
             <Link to="/contact" className="hover:text-foreground transition-colors">Contact</Link>
           </div>
         </div>

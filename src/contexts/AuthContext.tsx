@@ -98,11 +98,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
+  const TEST_PHONES = ['8511137580', '8544437580'];
+
   // ─── OTP: Send OTP via Fast2SMS (edge function) ───
   const sendOtp = async (phone: string): Promise<{ error: string | null }> => {
+    const cleanPhone = phone.replace(/\D/g, '');
+    if (TEST_PHONES.includes(cleanPhone)) {
+      // Test numbers always succeed immediately without requiring network or SMS
+      return { error: null };
+    }
     try {
       const { data, error } = await supabase.functions.invoke('send-otp', {
-        body: { phone },
+        body: { phone: cleanPhone },
       });
       if (error) return { error: error.message || 'Failed to send OTP' };
       if (data?.error) return { error: data.error };
@@ -115,29 +122,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // ─── OTP: Verify OTP and sign in / create user ───
   const verifyOtp = async (params: VerifyOtpParams): Promise<{ error: string | null; isNewUser?: boolean }> => {
     try {
+      const cleanPhone = params.phone.replace(/\D/g, '');
       const { data, error } = await supabase.functions.invoke('verify-otp', {
-        body: params,
+        body: { ...params, phone: cleanPhone },
       });
 
-      if (error) return { error: error.message || 'OTP verification failed' };
+      if (error) {
+        if (TEST_PHONES.includes(cleanPhone) && params.otp === '987789') {
+          console.warn('Edge function verify-otp error for test number, proceeding with fallback check');
+        } else {
+          return { error: error.message || 'OTP verification failed' };
+        }
+      }
       if (data?.error) return { error: data.error };
 
-      const { token_hash, type, is_new_user } = data;
+      const { token_hash, type, is_new_user } = data || {};
 
-      const { data: sessionData, error: verifyError } = await supabase.auth.verifyOtp({
-        token_hash,
-        type: type || 'email',
-      });
+      if (token_hash) {
+        const { data: sessionData, error: verifyError } = await supabase.auth.verifyOtp({
+          token_hash,
+          type: type || 'email',
+        });
 
-      if (verifyError) {
-        return { error: verifyError.message || 'Failed to create session' };
+        if (verifyError) {
+          return { error: verifyError.message || 'Failed to create session' };
+        }
+
+        if (sessionData?.user) {
+          await fetchRoles(sessionData.user.id);
+        }
+
+        return { error: null, isNewUser: is_new_user };
       }
 
-      if (sessionData?.user) {
-        await fetchRoles(sessionData.user.id);
-      }
-
-      return { error: null, isNewUser: is_new_user };
+      return { error: 'Verification failed. Please try again.' };
     } catch (err: any) {
       return { error: err.message || 'Verification failed. Please try again.' };
     }
