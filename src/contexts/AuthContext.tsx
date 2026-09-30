@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useRef, useState, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -33,11 +33,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // ── FIX: separate rolesLoading so ProtectedRoute waits for BOTH user AND roles ──
   const [rolesLoading, setRolesLoading] = useState(false);
   const [roles, setRoles] = useState<string[]>([]);
+  // Full-screen loader only on first app load. Showing it later unmounts the whole
+  // tree and resets page state (e.g. the OTP step on login pages).
+  const [initialized, setInitialized] = useState(false);
+  const rolesUserIdRef = useRef<string | null>(null);
 
   // Combined loading: true while auth OR roles are still fetching
   const isLoading = loading || rolesLoading;
 
   const fetchRoles = async (userId: string) => {
+    rolesUserIdRef.current = userId;
     setRolesLoading(true);
     try {
       const { data } = await supabase
@@ -59,6 +64,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const timeoutId = setTimeout(() => {
       setLoading(false);
       setRolesLoading(false);
+      setInitialized(true);
     }, 5000);
 
     // getSession first for initial load (handles refresh correctly)
@@ -68,15 +74,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
       clearTimeout(timeoutId);
       if (session?.user) {
-        fetchRoles(session.user.id);
+        fetchRoles(session.user.id).finally(() => setInitialized(true));
       } else {
         setRoles([]);
         setRolesLoading(false);
+        setInitialized(true);
       }
     }).catch(err => {
       console.error('Session fetch failed:', err);
       setLoading(false);
       setRolesLoading(false);
+      setInitialized(true);
       clearTimeout(timeoutId);
     });
 
@@ -85,8 +93,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        fetchRoles(session.user.id);
+        // Token refreshes fire this too — only refetch roles when the user actually changes
+        if (session.user.id !== rolesUserIdRef.current) fetchRoles(session.user.id);
       } else {
+        rolesUserIdRef.current = null;
         setRoles([]);
         setRolesLoading(false);
       }
@@ -175,7 +185,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setSession(null);
   };
 
-  if (isLoading) {
+  if (!initialized) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4">
         <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4" />
