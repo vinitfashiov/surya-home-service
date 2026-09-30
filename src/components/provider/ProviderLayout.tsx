@@ -1,6 +1,7 @@
 import { Outlet } from 'react-router-dom';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import ProviderSidebar from './ProviderSidebar';
+import ProviderHelpFab from './ProviderHelpFab';
 import { Bell, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -40,6 +41,7 @@ export default function ProviderLayout() {
           </main>
         </div>
       </div>
+      <ProviderHelpFab />
     </SidebarProvider>
   );
 }
