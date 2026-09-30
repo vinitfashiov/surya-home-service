@@ -98,157 +98,53 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  const TEST_PHONES = ['8511137580', '8544437580'];
-
-  const handleTestLogin = async (cleanPhone: string, params: VerifyOtpParams): Promise<{ error: string | null; isNewUser?: boolean }> => {
-    const testEmails = [
-      `tester_${cleanPhone}@suryahomeservice.in`,
-      `test_${cleanPhone}@suryahomeservice.in`,
-      `${cleanPhone}@phone.surya.app`
-    ];
-    const fakePassword = 'TestUserSecret987789!';
-    const targetRole = params.role || 'customer';
-
-    try {
-      for (const email of testEmails) {
-        // 1. Try signing in with password
-        const { data: signInData, error: signInErr } = await supabase.auth.signInWithPassword({
-          email,
-          password: fakePassword,
-        });
-
-        if (!signInErr && signInData.session?.user) {
-          const userId = signInData.session.user.id;
-          try {
-            await supabase.from('user_roles').upsert({ user_id: userId, role: targetRole }, { onConflict: 'user_id,role' });
-          } catch (e) {
-            console.warn('user_roles upsert:', e);
-          }
-          await fetchRoles(userId);
-          return { error: null, isNewUser: false };
-        }
-
-        // 2. Try creating user via signUp
-        const { data: signUpData, error: signUpErr } = await supabase.auth.signUp({
-          email,
-          password: fakePassword,
-          options: {
-            data: {
-              phone: cleanPhone,
-              full_name: params.full_name || 'Play Store Tester',
-              role: targetRole,
-            },
-          },
-        });
-
-        if (!signUpErr) {
-          let sessionUser = signUpData.session?.user;
-          if (!sessionUser) {
-            const { data: retrySignIn } = await supabase.auth.signInWithPassword({
-              email,
-              password: fakePassword,
-            });
-            sessionUser = retrySignIn.session?.user ?? null;
-          }
-
-          if (sessionUser) {
-            try {
-              await supabase.from('user_roles').upsert({ user_id: sessionUser.id, role: targetRole }, { onConflict: 'user_id,role' });
-            } catch (e) {
-              console.warn('user_roles upsert:', e);
-            }
-            await fetchRoles(sessionUser.id);
-            return { error: null, isNewUser: true };
-          }
-        }
-      }
-
-      // 3. Edge function fallback if needed
-      try {
-        const { data, error } = await supabase.functions.invoke('verify-otp', {
-          body: { ...params, phone: cleanPhone, otp: '987789' },
-        });
-        if (!error && data?.token_hash) {
-          const { data: sessionData } = await supabase.auth.verifyOtp({
-            token_hash: data.token_hash,
-            type: data.type || 'email',
-          });
-          if (sessionData?.user) {
-            await fetchRoles(sessionData.user.id);
-            return { error: null, isNewUser: data.is_new_user };
-          }
-        }
-      } catch (e) {
-        console.warn('verify-otp edge function fallback failed:', e);
-      }
-
-      return { error: null, isNewUser: false };
-    } catch (err: any) {
-      console.error('handleTestLogin exception:', err);
-      return { error: err.message || 'Test login failed' };
-    }
-  };
-
-  // ─── OTP: Send OTP via Fast2SMS (edge function) ───
+  // ─── OTP: Send OTP via Fast2SMS (send-otp edge function) ───
   const sendOtp = async (phone: string): Promise<{ error: string | null }> => {
     const cleanPhone = phone.replace(/\D/g, '');
-    if (TEST_PHONES.includes(cleanPhone)) {
-      // Test numbers always succeed immediately without requiring network or SMS
-      return { error: null };
-    }
     try {
       const { data, error } = await supabase.functions.invoke('send-otp', {
         body: { phone: cleanPhone },
       });
-      if (error) return { error: error.message || 'Failed to send OTP' };
-      if (data?.error) return { error: data.error };
+      if (error) {
+        console.error('send-otp invoke error:', error);
+        return { error: 'Could not send OTP. Please check your internet and try again.' };
+      }
+      if (!data?.success) {
+        return { error: data?.error || 'Could not send OTP. Please try again.' };
+      }
       return { error: null };
     } catch (err: any) {
-      return { error: err.message || 'Network error. Please try again.' };
+      console.error('send-otp exception:', err);
+      return { error: 'Could not send OTP. Please try again.' };
     }
   };
 
-  // ─── OTP: Verify OTP and sign in / create user ───
+  // ─── OTP: Verify OTP and sign in / create user (verify-otp edge function) ───
   const verifyOtp = async (params: VerifyOtpParams): Promise<{ error: string | null; isNewUser?: boolean }> => {
     try {
       const cleanPhone = params.phone.replace(/\D/g, '');
-
-      // Direct client-side bypass for Play Store Review test credentials
-      if (TEST_PHONES.includes(cleanPhone)) {
-        return await handleTestLogin(cleanPhone, params);
-      }
-
       const { data, error } = await supabase.functions.invoke('verify-otp', {
         body: { ...params, phone: cleanPhone },
       });
-
       if (error) {
-        return { error: 'Invalid or expired OTP. Please try again.' };
+        console.error('verify-otp invoke error:', error);
+        return { error: 'Verification failed. Please check your internet and try again.' };
       }
-      if (data?.error) {
-        return { error: data.error };
-      }
-
-      const { token_hash, type, is_new_user } = data || {};
-
-      if (token_hash) {
-        const { data: sessionData, error: verifyError } = await supabase.auth.verifyOtp({
-          token_hash,
-          type: type || 'email',
-        });
-
-        if (verifyError) {
-          return { error: verifyError.message || 'Failed to create session' };
-        }
-
-        if (sessionData?.user) {
-          await fetchRoles(sessionData.user.id);
-        }
-
-        return { error: null, isNewUser: is_new_user };
+      if (data?.error || !data?.token_hash) {
+        return { error: data?.error || 'Verification failed. Please try again.' };
       }
 
-      return { error: 'Verification failed. Please try again.' };
+      const { data: sessionData, error: verifyError } = await supabase.auth.verifyOtp({
+        token_hash: data.token_hash,
+        type: data.type || 'email',
+      });
+      if (verifyError || !sessionData?.user) {
+        console.error('Session creation failed:', verifyError);
+        return { error: 'Login failed. Please request a new OTP and try again.' };
+      }
+
+      await fetchRoles(sessionData.user.id);
+      return { error: null, isNewUser: data.is_new_user };
     } catch (err: any) {
       return { error: err.message || 'Verification failed. Please try again.' };
     }

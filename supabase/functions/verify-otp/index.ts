@@ -142,6 +142,24 @@ async function ensureServicemanProfile(
   return null;
 }
 
+const MAX_VERIFY_ATTEMPTS = 5;
+// Roles a user may pick for themselves at signup; admin/serviceman are granted elsewhere
+const SELF_ASSIGNABLE_ROLES = ["customer", "provider"];
+
+async function findUser(adminClient: any, email: string, phone: string) {
+  for (let page = 1; page <= 50; page++) {
+    const { data, error } = await adminClient.auth.admin.listUsers({ page, perPage: 1000 });
+    if (error) break;
+    const users = data?.users ?? [];
+    const match = users.find(
+      (u: any) => u.email === email || u.user_metadata?.phone === phone
+    );
+    if (match) return match;
+    if (users.length < 1000) break;
+  }
+  return undefined;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -172,50 +190,58 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Check for Play Store Review Test Numbers
-    const TEST_PHONES = ["8511137580", "8544437580"];
-    const isTestCredentials = TEST_PHONES.includes(cleanPhone) && otp === "987789";
+    // Only the latest unexpired OTP for this phone is valid
+    const { data: otpRecord, error: otpError } = await adminClient
+      .from("otp_verifications")
+      .select("*")
+      .eq("phone", cleanPhone)
+      .eq("verified", false)
+      .gte("expires_at", new Date().toISOString())
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
 
-    if (!isTestCredentials) {
-      // Look up the latest unverified OTP for this phone
-      const { data: otpRecord, error: otpError } = await adminClient
-        .from("otp_verifications")
-        .select("*")
-        .eq("phone", cleanPhone)
-        .eq("otp", otp)
-        .eq("verified", false)
-        .gte("expires_at", new Date().toISOString())
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
+    if (otpError || !otpRecord) {
+      return new Response(
+        JSON.stringify({ error: "Invalid or expired OTP. Please request a new one." }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
-      if (otpError || !otpRecord) {
-        return new Response(
-          JSON.stringify({ error: "Invalid or expired OTP. Please request a new one." }),
-          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-
-      // Mark OTP as verified
+    const attempts = otpRecord.attempts ?? 0;
+    if (attempts >= MAX_VERIFY_ATTEMPTS) {
       await adminClient
         .from("otp_verifications")
-        .update({ verified: true })
+        .update({ expires_at: new Date().toISOString() })
         .eq("id", otpRecord.id);
+      return new Response(
+        JSON.stringify({ error: "Too many wrong attempts. Please request a new OTP." }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
+
+    if (otpRecord.otp !== otp.toString()) {
+      await adminClient
+        .from("otp_verifications")
+        .update({ attempts: attempts + 1 })
+        .eq("id", otpRecord.id);
+      return new Response(
+        JSON.stringify({ error: "Incorrect OTP. Please check and try again." }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Mark OTP as verified
+    await adminClient
+      .from("otp_verifications")
+      .update({ verified: true })
+      .eq("id", otpRecord.id);
 
     // Use phone as a fake email for Supabase Auth
     const fakeEmail = `${cleanPhone}@phone.surya.app`;
 
     // Check if user already exists
-    const { data: listData } = await adminClient.auth.admin.listUsers({
-      perPage: 1000,
-    });
-
-    let existingUser = listData?.users?.find(
-      (u: any) =>
-        u.email === fakeEmail ||
-        u.user_metadata?.phone === cleanPhone
-    );
+    let existingUser = await findUser(adminClient, fakeEmail, cleanPhone);
 
     let userId: string;
 
@@ -287,7 +313,7 @@ Deno.serve(async (req) => {
       await ensureServicemanProfile(adminClient, userId, cleanPhone, fakeEmail);
     } else {
       // Create new user (DO NOT pass phone param to avoid phone provider validation issues)
-      const assignedRole = role || "customer";
+      const assignedRole = SELF_ASSIGNABLE_ROLES.includes(role) ? role : "customer";
       const { data: newUserData, error: createError } =
         await adminClient.auth.admin.createUser({
           email: fakeEmail,
@@ -302,8 +328,7 @@ Deno.serve(async (req) => {
       if (createError) {
         console.warn("Create user failed, attempting lookup:", createError.message);
         // Retry listing users to find by email
-        const { data: retryList } = await adminClient.auth.admin.listUsers({ perPage: 1000 });
-        const fallbackUser = retryList?.users?.find((u: any) => u.email === fakeEmail);
+        const fallbackUser = await findUser(adminClient, fakeEmail, cleanPhone);
         if (fallbackUser) {
           userId = fallbackUser.id;
         } else {
@@ -349,11 +374,15 @@ Deno.serve(async (req) => {
       await ensureServicemanProfile(adminClient, userId, cleanPhone, fakeEmail);
     }
 
+    // Older accounts may use a different email than fakeEmail — sign in with the account's own email
+    const { data: authUser } = await adminClient.auth.admin.getUserById(userId);
+    const loginEmail = authUser?.user?.email || fakeEmail;
+
     // Generate magic link token hash
     const { data: linkData, error: linkError } =
       await adminClient.auth.admin.generateLink({
         type: "magiclink",
-        email: fakeEmail,
+        email: loginEmail,
         options: {
           redirectTo: `${req.headers.get("origin") || supabaseUrl}`,
         },

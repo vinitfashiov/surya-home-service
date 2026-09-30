@@ -37,11 +37,11 @@ export default function Footer() {
               Your trusted platform for home services. Quality professionals, transparent pricing, hassle-free booking.
             </p>
             <div className="space-y-2 text-sm text-muted-foreground">
-              <a href="mailto:support@servisgo.com" className="flex items-center gap-2 hover:text-foreground transition-colors">
-                <Mail className="h-3.5 w-3.5" /> support@servisgo.com
+              <a href="mailto:suryahomeservice@gmail.com" className="flex items-center gap-2 hover:text-foreground transition-colors">
+                <Mail className="h-3.5 w-3.5" /> suryahomeservice@gmail.com
               </a>
-              <a href="tel:+911234567890" className="flex items-center gap-2 hover:text-foreground transition-colors">
-                <Phone className="h-3.5 w-3.5" /> +91 123 456 7890
+              <a href="tel:+916205178716" className="flex items-center gap-2 hover:text-foreground transition-colors">
+                <Phone className="h-3.5 w-3.5" /> +91 62051 78716
               </a>
             </div>
           </div>

@@ -43,7 +43,7 @@ export default function ContactPage() {
               <Mail className="h-5 w-5 text-primary mt-0.5" />
               <div>
                 <h3 className="font-medium text-foreground text-sm">Email</h3>
-                <a href="mailto:support@servisgo.com" className="text-sm text-muted-foreground hover:text-primary">support@servisgo.com</a>
+                <a href="mailto:suryahomeservice@gmail.com" className="text-sm text-muted-foreground hover:text-primary">suryahomeservice@gmail.com</a>
               </div>
             </CardContent>
           </Card>
@@ -52,7 +52,7 @@ export default function ContactPage() {
               <Phone className="h-5 w-5 text-primary mt-0.5" />
               <div>
                 <h3 className="font-medium text-foreground text-sm">Phone</h3>
-                <a href="tel:+911234567890" className="text-sm text-muted-foreground hover:text-primary">+91 123 456 7890</a>
+                <a href="tel:+916205178716" className="text-sm text-muted-foreground hover:text-primary">+91 62051 78716</a>
                 <p className="text-xs text-muted-foreground">Mon–Sat, 9AM–6PM IST</p>
               </div>
             </CardContent>

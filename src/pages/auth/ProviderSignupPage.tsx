@@ -281,7 +281,7 @@ export default function ProviderSignupPage() {
           <div className="bg-card rounded-2xl p-6 shadow-xl border border-border/60 space-y-5 w-full">
             <div className="space-y-3">
               <Label>Enter 6-digit OTP</Label>
-              <p className="text-sm text-muted-foreground">Sent to +91 {form.phone} · Use <strong>123456</strong> if SMS is delayed</p>
+              <p className="text-sm text-muted-foreground">Sent to +91 {form.phone} · Valid for 10 minutes</p>
               <div className="flex gap-2 justify-center" onPaste={handleOtpPaste}>
                 {otpDigits.map((digit, i) => (
                   <input

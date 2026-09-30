@@ -64,7 +64,7 @@ export default function TermsPage() {
         <section>
           <h2 className="text-xl font-heading font-semibold text-foreground">8. Contact</h2>
           <p className="text-muted-foreground leading-relaxed">
-            For questions regarding these Terms, contact us at <a href="mailto:legal@servisgo.com" className="text-primary hover:underline">legal@servisgo.com</a>.
+            For questions regarding these Terms, contact us at <a href="mailto:suryahomeservice@gmail.com" className="text-primary hover:underline">suryahomeservice@gmail.com</a>.
           </p>
         </section>
       </div>

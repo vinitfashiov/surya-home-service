@@ -22,7 +22,7 @@ export default function PrivacyPage() {
 
         <div className="bg-muted/40 p-4 rounded-lg space-y-1 text-sm border">
           <p><strong>Package Name:</strong> surya.storek.com</p>
-          <p><strong>Contact Email:</strong> <a href="mailto:operations.storekriti@gmail.com" className="text-primary hover:underline">operations.storekriti@gmail.com</a></p>
+          <p><strong>Contact Email:</strong> <a href="mailto:suryahomeservice@gmail.com" className="text-primary hover:underline">suryahomeservice@gmail.com</a></p>
         </div>
 
         <section>
@@ -114,7 +114,7 @@ export default function PrivacyPage() {
           <ul className="list-disc pl-5 mt-2 space-y-1 text-muted-foreground">
             <li><strong>App:</strong> Surya Home Service's</li>
             <li><strong>Developer:</strong> AEC Technology</li>
-            <li><strong>Email:</strong> <a href="mailto:operations.storekriti@gmail.com" className="text-primary hover:underline">operations.storekriti@gmail.com</a></li>
+            <li><strong>Email:</strong> <a href="mailto:suryahomeservice@gmail.com" className="text-primary hover:underline">suryahomeservice@gmail.com</a></li>
           </ul>
         </section>
       </div>

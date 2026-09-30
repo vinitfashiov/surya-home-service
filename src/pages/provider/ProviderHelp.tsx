@@ -99,8 +99,8 @@ export default function ProviderHelp() {
       {/* Sticky Bottom Contact button (Sampark Karein) */}
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/90 border-t backdrop-blur-lg z-40 max-w-lg mx-auto shadow-lg">
         <Button className="w-full bg-violet-700 hover:bg-violet-800 text-white h-11 text-xs font-bold gap-2" asChild>
-          <a href="tel:+918000000000">
-            <Phone className="h-4 w-4" /> Support Se Sampark Karein (Call Support)
+          <a href="tel:+916205178716">
+            <Phone className="h-4 w-4" /> Support Se Sampark Karein (+91 62051 78716)
           </a>
         </Button>
       </div>
@@ -128,8 +128,8 @@ export default function ProviderHelp() {
               </a>
             </Button>
             <Button className="w-full gap-2 bg-rose-600 hover:bg-rose-700 text-white justify-start" asChild>
-              <a href="tel:+918888888888">
-                <Phone className="h-4 w-4" /> Surya Safety Desk
+              <a href="tel:+916205178716">
+                <Phone className="h-4 w-4" /> Surya Safety Desk (+91 62051 78716)
               </a>
             </Button>
           </div>

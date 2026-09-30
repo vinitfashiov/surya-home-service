@@ -30,3 +30,15 @@ dist-ssr
 # Supabase CLI cache
 supabase/.temp/
 supabase/.branches/
+
+# Secrets & one-off migration scripts containing keys — never commit
+secrets.txt
+deploy_missing_functions.js
+dump_functions.js
+dump_old_supabase.js
+fix_schema_and_complete_transfer.js
+setup_admin_and_clean_cities.js
+setup_provider.js
+test_connections.js
+transfer_exact_live_data.js
+transfer_remaining_tables.js

@@ -121,11 +121,11 @@ export default function AdminSettings() {
             </div>
             <div className="space-y-1.5">
               <Label>Email</Label>
-              <Input type="email" value={form.business_email || ''} onChange={e => set('business_email', e.target.value)} placeholder="contact@example.com" />
+              <Input type="email" value={form.business_email || ''} onChange={e => set('business_email', e.target.value)} placeholder="suryahomeservice@gmail.com" />
             </div>
             <div className="space-y-1.5">
               <Label>Phone</Label>
-              <Input value={form.business_phone || ''} onChange={e => set('business_phone', e.target.value)} placeholder="+1 (555) 000-0000" />
+              <Input value={form.business_phone || ''} onChange={e => set('business_phone', e.target.value)} placeholder="+91 62051 78716" />
             </div>
             <div className="space-y-1.5">
               <Label>Address</Label>

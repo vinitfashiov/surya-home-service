@@ -212,7 +212,7 @@ export default function ProviderLoginPage() {
                 <>
                   <div className="space-y-3">
                     <Label>Enter 6-digit OTP</Label>
-                    <p className="text-sm text-muted-foreground">Sent to +91 {phone}</p>
+                    <p className="text-sm text-muted-foreground">Sent to +91 {phone} · Valid for 10 minutes</p>
                     <div className="flex gap-2 justify-center" onPaste={handleOtpPaste}>
                       {otpDigits.map((digit, i) => (
                         <input
@@ -290,7 +290,7 @@ export default function ProviderLoginPage() {
         </Tabs>
 
         <div className="text-center mt-8 text-xs text-muted-foreground/60">
-          Need help? Contact <span className="font-semibold text-primary">support@suryahomeservice.in</span>
+          Need help? Contact <span className="font-semibold text-primary">suryahomeservice@gmail.com</span>
         </div>
       </div>
     </div>
