@@ -154,7 +154,7 @@ export default function ServiceDetailsPage() {
                       <p className="text-[15px] font-bold text-[#1F2937] mb-1">{v.name}</p>
                       <div className="flex items-center gap-1.5 text-[12px] text-gray-400">
                         <Clock className="w-3.5 h-3.5" />
-                        <span>{v.duration} hours</span>
+                        <span>{v.duration} min</span>
                       </div>
                     </div>
                     <div className="flex items-center gap-4">

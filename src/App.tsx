@@ -71,6 +71,7 @@ import PrivacyPage from "@/pages/PrivacyPage";
 import NotFound from "./pages/NotFound";
 import Footer from "@/components/Footer";
 import BottomNav from "@/components/BottomNav";
+import HelpFab from "@/components/HelpFab";
 import ProviderBottomNav from "@/components/provider/ProviderBottomNav";
 import { usePWA } from "@/hooks/usePWA";
 
@@ -229,6 +230,7 @@ const AppLayout = () => {
 
       {!hideNavs && <Footer />}
       {!hideNavs && <BottomNav />}
+      {!hideNavs && <HelpFab />}
       {isProviderPath && isPrimaryProviderPath && user && <ProviderBottomNav />}
     </>
   );

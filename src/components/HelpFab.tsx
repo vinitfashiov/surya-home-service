@@ -2,8 +2,8 @@ import { Headset } from 'lucide-react';
 
 const SUPPORT_PHONE = '+916205178716';
 
-// Always-visible support button for the partner app; sits above the mobile bottom nav
-export default function ProviderHelpFab() {
+// Floating support button (partner app + customer pages); sits above the mobile bottom nav
+export default function HelpFab() {
   return (
     <a
       href={`tel:${SUPPORT_PHONE}`}

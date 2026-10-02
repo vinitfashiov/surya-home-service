@@ -63,33 +63,34 @@ export default function ProviderAadhaarVerify() {
     setUploading(true);
     try {
       // Upload front photo
-      const frontPath = `provider-kyc/${provider.id}/aadhaar_front_${Date.now()}.${frontFile.name.split('.').pop()}`;
+      const frontPath = `${provider.id}/aadhaar_front_${Date.now()}.${frontFile.name.split('.').pop()}`;
       const { error: frontErr } = await supabase.storage.from('provider-documents').upload(frontPath, frontFile, { upsert: true });
       if (frontErr) throw frontErr;
 
       // Upload back photo
-      const backPath = `provider-kyc/${provider.id}/aadhaar_back_${Date.now()}.${backFile.name.split('.').pop()}`;
+      const backPath = `${provider.id}/aadhaar_back_${Date.now()}.${backFile.name.split('.').pop()}`;
       const { error: backErr } = await supabase.storage.from('provider-documents').upload(backPath, backFile, { upsert: true });
       if (backErr) throw backErr;
 
       // Save aadhaar number to provider record
-      await supabase.from('providers').update({ aadhaar_number: cleanNum } as any).eq('id', provider.id);
+      const { error: providerErr } = await supabase.from('providers').update({ aadhaar_number: cleanNum } as any).eq('id', provider.id);
+      if (providerErr) throw providerErr;
 
-      // Save document records
-      await supabase.from('provider_documents').insert([
-        { provider_id: provider.id, document_type: 'aadhaar_front', file_path: frontPath, status: 'pending' },
-        { provider_id: provider.id, document_type: 'aadhaar_back', file_path: backPath, status: 'pending' },
-      ] as any);
+      // Save document records (same file_url format as useProviderDocuments)
+      const publicUrl = (path: string) => supabase.storage.from('provider-documents').getPublicUrl(path).data.publicUrl;
+      const { error: docErr } = await supabase.from('provider_documents').insert([
+        { provider_id: provider.id, document_type: 'aadhaar_front', document_name: 'Aadhaar Front', file_url: publicUrl(frontPath), status: 'pending' },
+        { provider_id: provider.id, document_type: 'aadhaar_back', document_name: 'Aadhaar Back', file_url: publicUrl(backPath), status: 'pending' },
+      ]);
+      if (docErr) throw docErr;
 
       toast.success('Aadhaar documents submitted! Admin will verify shortly.');
       setVerifiedState(true);
       localStorage.setItem(`provider_aadhaar_verified_${provider.id}`, 'true');
       refetch();
     } catch (err: any) {
-      // Fallback: save locally even if upload fails
-      toast.success('Documents submitted for review!');
-      localStorage.setItem(`provider_aadhaar_verified_${provider.id}`, 'true');
-      setVerifiedState(true);
+      console.error('Aadhaar submission failed:', err);
+      toast.error(err?.message || 'Could not submit documents. Please try again.');
     } finally {
       setUploading(false);
     }
